@@ -22,6 +22,7 @@ project(Pound)
 
 find_package(fmt 10.2.1 CONFIG)
 find_package(toml11 4.4.0 CONFIG)
+include_directories(3rd_Party/rem/src)
 
 include_directories(core)
 add_subdirectory(3rd_Party)

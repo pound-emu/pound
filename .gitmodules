@@ -4,3 +4,6 @@
 [submodule "3rd_Party/toml11"]
 	path = 3rd_Party/toml11
 	url = https://github.com/ToruNiina/toml11.git
+[submodule "3rd_Party/rem"]
+	path = 3rd_Party/rem
+	url = https://github.com/pound-emu/rem.git
