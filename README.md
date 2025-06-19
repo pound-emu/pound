@@ -1,38 +1,50 @@
 <h1 align="center">
-<img src="/assets/Logo(1024x1024).webp" height="150px">
-<br><br>
-<img src="https://img.shields.io/github/stars/pound-emu/pound" width="100">
-  <a href="https://github.com/pound-emu/pound/actions?query=branch%3Amain"><img src="https://img.shields.io/badge/Latest Builds-Here-aa00aa.svg" width="150"></a>
-<br><br>
-Pound
+  <img src="/assets/Logo(1024x1024).webp" height="150px">
+  <br><br>
+  <img src="https://img.shields.io/github/stars/pound-emu/pound" width="100">
+  <a href="https://github.com/pound-emu/pound/actions?query=branch%3Amain">
+    <img src="https://img.shields.io/badge/Latest Builds-Here-aa00aa.svg" width="150">
+  </a>
+  <br><br>
+  Pound
 </h1>
 
-<p align="center">“i think of getting pounded when i see that [name]” - Satisfied Customer</p>
+<p align="center"><em>“i think of getting pounded when i see that [name]” – Satisfied Customer</em></p>
 
 ## Overview
 
 Join the [**Pound Discord Server**](https://discord.gg/aMmTmKsVC7)!
 
-**Pound** is an early **Nintendo Switch 2** emulator for Android, macOS (Intel and ARM), Windows and Linux (Intel and ARM).
+**Pound** is an early-stage emulator for the **Nintendo Switch 2**, targeting **Android**, **macOS** (Intel and ARM), **Windows**, and **Linux** (Intel and ARM).
 
-> [!IMPORTANT]
-> Pound is very early in development, don't expect any miracles.
+> [!IMPORTANT]  
+> Pound is still in early development — don't expect miracles.
 
-Development will begin with the **CPU**, as its architecture is nearly identical to the original Switch. After that, work will focus on bridging the differences between the two hardware generations.
+Initial focus is on implementing the **CPU**, leveraging its architectural similarities to the original Nintendo Switch. Later stages will address differences in hardware between the two console generations.
 
-## How to compile Pound
 
-See [documentation](/docs/compguide.md)
+## How to Compile Pound
+
+See the [**compilation guide**](/docs/compguide.md) for detailed instructions.
+
 
 ## Codebase
 
-Pound may reuse certain components from existing Nintendo Switch 1 emulators, such as **Yuzu**.
-All reused code will be explicitly documented and credited in the appropriate sections of the repository.
+Pound reuses selected components from existing Nintendo Switch 1 emulators, primarily **Yuzu**.  
+All third-party code is clearly documented and properly attributed in the relevant parts of the repository.
 
-## Contributing and working on Pound
+
+## Contributing
 
 (coming soon)
 
+
 ## License
 
-- [**GPL-3.0 license**](https://github.com/pound-emu/pound/blob/main/LICENSE)
+- Distributed under the [**GPL-3.0 license**](https://github.com/pound-emu/pound/blob/main/LICENSE)
+
+
+## Credits
+
+- Parts of the emulator are based on code from the Yuzu project.
+- The phrase *"don't expect miracles"* is borrowed from the [**oboromi**](https://github.com/Nikilites/oboromi) project by **Nikilite** — a Nintendo Switch 2 emulator written in Rust.
