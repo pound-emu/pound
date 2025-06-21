@@ -41,11 +41,30 @@ Now:
 ``git clone https://www.github.com/pound-emu/pound.git``
 
 then:
+
 ``
 cd pound
 ``
 
+``
+cd 3rd_Party
+``
+
+``
+git submodule update --init --recursive
+``
+
+``
+cd ..
+``
+
 lastly:
+
 ``
 cmake -G Ninja -B . -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++
 ``
+
+or in one command:
+```
+git clone https://www.github.com/pound-emu/pound.git && cd pound/3rd_Party && git submodule update --init --recursive && cd .. && cmake -G Ninja -B . -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++
+```
