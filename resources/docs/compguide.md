@@ -32,6 +32,13 @@ git clone https://www.github.com/pound-emu/pound.git
 cd pound
 ```
 
+Initialize the submodules:
+
+```bash
+cd 3rd_Party
+git submodule update --init --recursive
+cd ..
+```
 and then:
 
 `cmake -G Ninja -B . -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++`
