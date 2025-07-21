@@ -30,6 +30,7 @@ Now run the following:
 ```bash
 git clone https://www.github.com/pound-emu/pound.git
 cd pound
+git submodule update --init --recursive
 ```
 
 and then:
