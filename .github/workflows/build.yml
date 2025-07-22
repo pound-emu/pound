@@ -98,7 +98,7 @@ jobs:
 
   macOS-x86_64:
     name: macOS x86_64
-    runs-on: macos-14
+    runs-on: macos-13
     needs: get-info
     steps:
       - uses: actions/checkout@main
