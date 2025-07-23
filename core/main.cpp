@@ -10,9 +10,11 @@
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_opengl.h>
 
-#include "ARM/cpu.h"
+//#include "ARM/cpu.h"
 #include "Base/Config.h"
-#include "JIT/jit.h"
+//#include "JIT/jit.h"
+#include "Base/Logging/Log.h"
+
 
 SDL_Window* Window{};
 SDL_GLContext gl_context{};
@@ -63,6 +65,7 @@ void deinitializeSDL3() {
     SDL_Quit();
 }
 
+/* using REM instead
 void cpuTest() {
     CPU cpu;
     cpu.pc = 0;
@@ -82,6 +85,7 @@ void cpuTest() {
 
     LOG_INFO(ARM, "X0 = {}", cpu.x(0));
 }
+*/
 
 int main() {
     Base::Log::Initialize();
@@ -117,7 +121,7 @@ int main() {
         ImGui::Begin("Pound Emulator");
 
         if (ImGui::Button("Run CPU Test")) {
-            cpuTest();
+            //cpuTest();  // outdated cpu implementation 
             show_popup = true; // Trigger the popup after running the test
         }
 

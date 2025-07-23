@@ -4,6 +4,7 @@
 
 #include "ARM/cpu.h"
 
+[[deprecated("using rem instead")]]
 class JIT {
 public:
     void translate_and_run(CPU& cpu);

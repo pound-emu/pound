@@ -6,6 +6,7 @@
 
 #include "Base/Logging/Log.h"
 
+[[deprecated("using rem instead")]]
 struct CPU {
     u64 regs[31] = {0}; // X0–X30
     u64 pc = 0;
