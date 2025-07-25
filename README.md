@@ -1,5 +1,5 @@
 <h1 align="center">
-  <img src="/resources/Logo(1024x1024).webp" height="150px">
+  <img src="/resources/pound.png" height="150px">
   <br><br>
   <img src="https://img.shields.io/github/stars/pound-emu/pound" width="100">
   <a href="https://github.com/pound-emu/pound/actions?query=branch%3Amain">
