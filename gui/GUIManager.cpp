@@ -132,7 +132,7 @@ namespace Pound::GUI
 
             if (ImGui::BeginMenu("Emulation"))
             {
-                if (ImGui::MenuItem("Run CPU Test"))
+                if (ImGui::MenuItem("Mario Kart World"))
                 {
                     if (cpu_test_callback)
                     {
