@@ -1,15 +1,15 @@
 <h1 align="center">
-  <img src="/resources/pound.png" height="150px">
+<img width="150" height="150" alt="image" src="https://github.com/user-attachments/assets/68ca4267-fdce-44f1-ba3e-731cdeeb8edd" />
   <br><br>
-  <img src="https://img.shields.io/github/stars/pound-emu/pound" width="100">
-  <a href="https://github.com/pound-emu/pound/actions?query=branch%3Amain">
+  <img src="https://img.shields.io/github/stars/Hassaku-emu/Hassaku" width="100">
+  <a href="https://github.com/Hassaku-emu/Hassaku/actions?query=branch%3Amain">
     <img src="https://img.shields.io/badge/Latest Builds-Here-aa00aa.svg" width="150">
   </a>
   <br><br>
-  Pound
+  Hassaku
 </h1>
 
-<p align="center"><em>“i think of getting pounded when i see that [name]” – Satisfied Customer</em></p>
+<p align="center"><em>“i think of getting Hassakued when i see that [name]” – Satisfied Customer</em></p>
 
 
 > [!NOTE]
@@ -18,9 +18,9 @@
 
 ## Overview
 
-Join the [**Pound Discord Server**](https://discord.gg/aMmTmKsVC7)!
+Join the [**Hassaku Discord Server**](https://discord.gg/aMmTmKsVC7)!
 
-**Pound** is an early-stage emulator for the **Nintendo Switch 2**, targeting **Windows**, **Linux** and **macOS** (Intel).
+**Hassaku** is an early-stage emulator for the **Nintendo Switch 2**, targeting **Windows**, **Linux** and **macOS** (Intel).
 
 Future Supports: **Android**, **macOS ARM**
 
@@ -37,14 +37,14 @@ legally purchased devices and games and information made public on the internet
 with Nintendo or NVidia.
 
 
-## How to Compile Pound
+## How to Compile Hassaku
 
-See the [**compilation guide**](/resources/docs/compguide.md) for detailed instructions on how to compile Pound.
+See the [**compilation guide**](/resources/docs/compguide.md) for detailed instructions on how to compile Hassaku.
 
 
 ## Codebase
 
-Pound reuses selected components from existing Nintendo Switch 1 emulators, primarily **Yuzu**.  
+Hassaku reuses selected components from existing Nintendo Switch 1 emulators, primarily **Yuzu**.  
 All third-party code is clearly documented and properly attributed in the relevant parts of the repository.
 
 
@@ -55,7 +55,7 @@ All third-party code is clearly documented and properly attributed in the releva
 
 ## License
 
-- Distributed under the [**GNU GPL-2.0 license**](https://github.com/pound-emu/pound/blob/main/LICENSE)
+- Distributed under the [**GNU GPL-2.0 license**](https://github.com/Hassaku-emu/Hassaku/blob/main/LICENSE)
 
 
 ## Credits
