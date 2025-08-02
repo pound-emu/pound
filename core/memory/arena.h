@@ -5,21 +5,24 @@
 #include <cstdint>
 #include <cstdlib>
 
-namespace Memory {
+namespace memory
+{
 
 /* Defines the default size (in bytes) for memory arenas created via arena_init() */
 #define MEMORY_CAPACITY 20480  // 20 KB
 
+#define POISON_PATTERN 0xAA
+
 /*
  *  NAME
- *      Arena - Memory management structure for efficient allocation and de-allocation.
+ *      arena_t - memory management structure for efficient allocation and de-allocation.
  *
  *  SYNOPSIS
  *      typedef struct {
  *          std::size_t capacity;   Total number of bytes allocated.
  *          std::size_t size;       The current number of bytes consumed.
- *          uint8_t* data;          A pointer to the base address of the allocated memory buffer.
- *      } Arena;
+ *          void* data;          A pointer to the base address of the allocated memory buffer.
+ *      } arena_t;
  *
  *  DESCRIPTION
  *      The arena struct handles allocating and managing contiguous memory blocks.
@@ -29,18 +32,19 @@ namespace Memory {
  *      maintaining a single contiguous block eliminates heap fragmentation
  *      that occurs with frequent small allocations.
  */
-typedef struct {
+typedef struct
+{
     std::size_t capacity;
     std::size_t size;
-    uint8_t* data;
-} Arena;
+    void* data;
+} arena_t;
 
 /*
  *  NAME
  *      arena_init - Initialize a memory arena with default capacity.
  *
  *  SYNOPSIS
- *      Arena Memory::arena_init();
+ *      arema_t memory::arena_init();
  *
  *  DESCRIPTION
  *     The function creates and returns a new memory arena instance with a
@@ -48,16 +52,16 @@ typedef struct {
  *     default capacity.
  *
  *  RETURN VALUE
- *     Returns a valid Arena object on success.
+ *     Returns a valid arema_t object on success.
  */
-extern Arena arena_init();
+extern memory::arena_t arena_init(size_t capacity);
 
 /*
  *  NAME
  *      arena_allocate - Allocate memory from a pre-initialized arena.
  *
  *  SYNOPSIS
- *      const uint8_t Memory::arena_allocate(Memory::Arena* arena, std::size_t size);
+ *      const void* memory::arena_allocate(memory::arena_t* arena, std::size_t size);
  *
  *  DESCRIPTION
  *      The function allocates size bytes from the specified arena. It assumes
@@ -69,19 +73,19 @@ extern Arena arena_init();
  *      pointer is valid until the arena is reset or destroyed.
  *
  *  NOTES
- *      Requires Arena to be initialized with arena_init() or similar.
+ *      Requires arema_t to be initialized with arena_init() or similar.
  */
-const uint8_t* arena_allocate(Arena* arena, std::size_t size);
+const void* arena_allocate(arena_t* arena, const std::size_t size);
 
 /*
  *  NAME
  *      arena_reset - Reset a memory arena's allocation size to zero.
  *
  *  SYNOPSIS
- *      void Memory::arena_reset(Memory::Arena* arena);
+ *      void memory::arena_reset(memory::arena_t* arena);
  *
  *  DESCRIPTION
- *      The function resets the allocation size of a pre-initialized Arena to zero.
+ *      The function resets the allocation size of a pre-initialized arema_t to zero.
  *      This effectively "frees" all memory allocated from the arena without
  *      deallocating the underlying buffer, allowing reuse of the capacity for
  *      future allocations.
@@ -91,21 +95,21 @@ const uint8_t* arena_allocate(Arena* arena, std::size_t size);
  *      Does not free the underlying memory buffer.
  *      Useful for reusing arenas without reallocation.
  */
-void arena_reset(Arena* arena);
+void arena_reset(arena_t* arena);
 
 /**
  *  NAME
  *      arena_free - Free the memory allocated by an arena
  *
  *  SYNOPSIS
- *      void Memory::arena_free(Memory::Arena* arena);
+ *      void memory::arena_free(memory::arena_t* arena);
  *
  *  DESCRIPTION
- *      The function releases the memory buffer associated with a Arena and
+ *      The function releases the memory buffer associated with a arema_t and
  *      resets its capacity and size to zero. This marks the arena as invalid for
  *      future allocation unless reinitialized.
  */
-void arena_free(Memory::Arena* arena);
+void arena_free(memory::arena_t* arena);
 
-}  // namespace Memory
+}  // namespace memory
 #endif  //POUND_ARENA_H
