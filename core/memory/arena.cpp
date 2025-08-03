@@ -4,43 +4,50 @@
 #include <sys/mman.h>
 #endif
 
-Memory::Arena Memory::arena_init() {
-    // TODO(GloriousEggroll): Replace malloc with a windows memory mapping API.
+memory::arena_t memory::arena_init(size_t capacity)
+{
+
+    // TODO(GloriousTaco:memory): Replace malloc with a windows memory mapping API.
 #ifdef WIN32
-    auto data =
-        static_cast<uint8_t*>(malloc(sizeof(uint8_t) * MEMORY_CAPACITY));
+    auto data = static_cast<uint8_t*>(malloc(sizeof(uint8_t) * MEMORY_CAPACITY));
 #else
-    void* data = mmap(nullptr, MEMORY_CAPACITY, PROT_READ | PROT_WRITE,
-                      MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-    if (data == MAP_FAILED) {
+    void* data = ::mmap(nullptr, capacity, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+    if (data == MAP_FAILED)
+    {
         return {0, 0, nullptr};  // Return invalid arena on failure
     }
 #endif
-    Memory::Arena arena = {
-        .capacity = MEMORY_CAPACITY,
+
+    (void)std::memset(data, POISON_PATTERN, capacity);
+    memory::arena_t arena = {
+        .capacity = capacity,
         .size = 0,
-        .data = static_cast<uint8_t*>(data),
+        .data = data,
     };
     return arena;
 }
 // new more memsafe code (ownedbywuigi) (i give up on windows compatibility for now, will stick to the old unsafe code)
 
-const uint8_t* Memory::arena_allocate(Memory::Arena* arena,
-                                      const std::size_t size) {
+const void* memory::arena_allocate(memory::arena_t* arena, const std::size_t size)
+{
     ASSERT(arena != nullptr);
     ASSERT(arena->size + size < arena->capacity);
-    const uint8_t* const data = &(arena->data[arena->size]);
+    const void* const data = &arena->data + arena->size;
     arena->size += size;
     return data;
 }
-void Memory::arena_reset(Memory::Arena* arena) {
-    ASSERT(arena != nullptr);
+void memory::arena_reset(memory::arena_t* arena)
+{
+    ASSERT(nullptr != arena);
+    ASSERT(nullptr != arena->data);
     arena->size = 0;
+    std::memset(arena->data, POISON_PATTERN, arena->capacity);
 }
-void Memory::arena_free(Memory::Arena* arena) {
+void memory::arena_free(memory::arena_t* arena)
+{
     ASSERT(arena != nullptr);
     arena->capacity = 0;
     arena->size = 0;
-    // TODO(GloriousTaco): Replace free with a memory safe alternative.
+    // TODO(GloriousTaco:memory): Replace free with a memory safe alternative.
     free(arena->data);
 }

@@ -20,12 +20,13 @@
 
 Join the [**Pound Discord Server**](https://discord.gg/aMmTmKsVC7)!
 
-**Pound** is an early-stage emulator for the **Nintendo Switch 2**, targeting **Windows**, **Linux** and **macOS** (Intel).
+**Pound** is an early-stage emulator for the **Nintendo Switch 2**, targeting **Windows**, **Linux** and **macOS** (
+Intel).
 
 Future Supports: **Android**, **macOS ARM**
 
-
-Initial focus is on implementing the architectural similarities to the original Nintendo Switch. Later stages of development will address differences in hardware between the two console generations.
+Initial focus is on implementing the architectural similarities to the original Nintendo Switch. Later stages of
+development will address differences in hardware between the two console generations.
 
 ## Disclaimer
 
@@ -36,27 +37,22 @@ legally purchased devices and games and information made public on the internet
 (you'd be surprised what's indexed on Google...). We are not any way affiliated
 with Nintendo or NVidia.
 
-
 ## How to Compile Pound
 
 See the [**compilation guide**](/resources/docs/compguide.md) for detailed instructions on how to compile Pound.
-
 
 ## Codebase
 
 Pound reuses selected components from existing Nintendo Switch 1 emulators, primarily **Yuzu**.  
 All third-party code is clearly documented and properly attributed in the relevant parts of the repository.
 
-
 ## Contributing
 
-(coming soon)
-
+See [**here**](/CONTRIBUTING.md) before submitting a pull request.
 
 ## License
 
 - Distributed under the [**GNU GPL-2.0 license**](https://github.com/pound-emu/pound/blob/main/LICENSE)
-
 
 ## Credits
 
