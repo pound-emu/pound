@@ -31,8 +31,8 @@ memory::arena_t memory::arena_init(size_t capacity)
 const void* memory::arena_allocate(memory::arena_t* arena, const std::size_t size)
 {
     ASSERT(arena != nullptr);
-    ASSERT(arena->size + size < arena->capacity);
-    const void* const data = &arena->data + arena->size;
+    ASSERT(arena->size + size <= arena->capacity);
+    const void* const data = static_cast<uint8_t*>(arena->data) + arena->size;
     arena->size += size;
     return data;
 }
