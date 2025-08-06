@@ -48,11 +48,19 @@ void JIT::translate_and_run(CPU& cpu) {
 
     JitFunc fn = reinterpret_cast<JitFunc>(code);
     u64 result;
+#if defined(__x86_64__)
     asm volatile("call *%1\n"
                  "mov %%rax, %0\n"
                  : "=r"(result)
                  : "r"(fn)
                  : "%rax");
+#elif defined(__aarch64__)
+        asm volatile("blr %1\n"
+                     "mov %0, x0\n"
+                     : "=r"(result)
+                     : "r"(fn)
+                     : "x0");
+#endif
 
     cpu.regs[0] = result;
 }
