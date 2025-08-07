@@ -137,7 +137,13 @@ bool gui::init_imgui(gui::window_t* main_window)
         return false;
     }
 
+#ifdef __APPLE__ && (__aarch64__)
+    ret = ::ImGui_ImplOpenGL3_Init("#version 120");
+#elif __APPLE__ && (__x86_64__)
+    ret = ::ImGui_ImplOpenGL3_Init("#version 150");
+#else
     ret = ::ImGui_ImplOpenGL3_Init("#version 330");
+#endif
     if (false == ret)
     {
         LOG_ERROR(Render, "Failed to init OpenGL3: {}", SDL_GetError());
