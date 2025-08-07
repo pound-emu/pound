@@ -21,9 +21,7 @@
 Join the [**Pound Discord Server**](https://discord.gg/aMmTmKsVC7)!
 
 **Pound** is an early-stage emulator for the **Nintendo Switch 2**, targeting **Windows**, **Linux** and **macOS** (
-Intel).
-
-Future Supports: **Android**, **macOS ARM**
+Intel and Apple Silicon).
 
 Initial focus is on implementing the architectural similarities to the original Nintendo Switch. Later stages of
 development will address differences in hardware between the two console generations.
