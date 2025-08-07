@@ -138,44 +138,44 @@ jobs:
           name: Pound-macOS-x86_64-${{env.BUILD_TYPE}}-${{ needs.get-info.outputs.commit }}-${{ needs.get-info.outputs.shorthash }}
           path: artifact/
 
-  # macOS-arm64:
-  #   name: macOS ARM64
-  #   runs-on: macos-14
-  #   needs: get-info
-  #   steps:
-  #     - uses: actions/checkout@main
-  #       with:
-  #         submodules: recursive
-  #         fetch-depth: 0
+  macOS-arm64:
+    name: macOS ARM64
+    runs-on: macos-14
+    needs: get-info
+    steps:
+      - uses: actions/checkout@main
+        with:
+          submodules: recursive
+          fetch-depth: 0
 
-  #     - name: Setup latest Xcode
-  #       uses: maxim-lobanov/setup-xcode@v1
-  #       with:
-  #         xcode-version: latest-stable
+      - name: Setup latest Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
 
-  #     - name: Install Dependencies
-  #       run: |
-  #         brew install ninja llvm
+      - name: Install Dependencies
+        run: |
+          brew install ninja llvm
 
-  #     - name: Configure CMake (ARM64)
-  #       run: >
-  #         cmake -G Ninja -B "${{env.BUILD_DIR}}"
-  #         -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
-  #         -DCMAKE_C_COMPILER=$(brew --prefix llvm)/bin/clang
-  #         -DCMAKE_CXX_COMPILER=$(brew --prefix llvm)/bin/clang++
-  #         -DCMAKE_OSX_ARCHITECTURES=arm64
-  #         -DCMAKE_OSX_DEPLOYMENT_TARGET=10.15
+      - name: Configure CMake (ARM64)
+        run: >
+          cmake -G Ninja -B "${{env.BUILD_DIR}}"
+          -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+          -DCMAKE_C_COMPILER=$(brew --prefix llvm)/bin/clang
+          -DCMAKE_CXX_COMPILER=$(brew --prefix llvm)/bin/clang++
+          -DCMAKE_OSX_ARCHITECTURES=arm64
+          -DCMAKE_OSX_DEPLOYMENT_TARGET=10.15
 
-  #     - name: Build (ARM64)
-  #       run: cmake --build "${{env.BUILD_DIR}}" --config ${{env.BUILD_TYPE}} --parallel $(sysctl -n hw.logicalcpu)
+      - name: Build (ARM64)
+        run: cmake --build "${{env.BUILD_DIR}}" --config ${{env.BUILD_TYPE}} --parallel $(sysctl -n hw.logicalcpu)
 
-  #     - name: Prepare Artifact Folder
-  #       run: |
-  #         mkdir -p artifact
-  #         cp -r ${{env.BUILD_DIR}}/Pound artifact/Pound-arm64-macOS-${{env.BUILD_TYPE}}
+      - name: Prepare Artifact Folder
+        run: |
+          mkdir -p artifact
+          cp -r ${{env.BUILD_DIR}}/Pound artifact/Pound-arm64-macOS-${{env.BUILD_TYPE}}
 
-  #     - name: Upload Artifact
-  #       uses: actions/upload-artifact@main
-  #       with:
-  #         name: Pound-macOS-arm64-${{env.BUILD_TYPE}}-${{ needs.get-info.outputs.commit }}-${{ needs.get-info.outputs.shorthash }}
-  #         path: artifact/
+      - name: Upload Artifact
+        uses: actions/upload-artifact@main
+        with:
+          name: Pound-macOS-arm64-${{env.BUILD_TYPE}}-${{ needs.get-info.outputs.commit }}-${{ needs.get-info.outputs.shorthash }}
+          path: artifact/
