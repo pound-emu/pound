@@ -1,11 +1,16 @@
 #include "panels.h"
 #include <math.h>
-#include "ARM/cpu.h"
+#include "Base/Assert.h"
+#include "aarch64/isa.h"
 #include "imgui.h"
 
 int8_t gui::panel::render_performance_panel(gui::panel::performance_panel_t* panel, performance_data_t* data,
                                             std::chrono::steady_clock::time_point* last_render)
 {
+    ASSERT(nullptr != panel);
+    ASSERT(nullptr != data);
+    ASSERT(nullptr != last_render);
+
     bool is_visible = true;
     (void)::ImGui::Begin(PANEL_NAME_PERFORMANCE, &is_visible);
     if (false == is_visible)
@@ -77,6 +82,8 @@ int8_t gui::panel::render_performance_panel(gui::panel::performance_panel_t* pan
 
 int8_t gui::panel::render_cpu_panel(bool* show_cpu_result_popup)
 {
+    ASSERT(nullptr != show_cpu_result_popup);
+
     bool is_visible = true;
     (void)::ImGui::Begin(PANEL_NAME_CPU, &is_visible, ImGuiWindowFlags_NoCollapse);
     if (false == is_visible)
