@@ -7,10 +7,6 @@
 
 namespace memory
 {
-
-/* Defines the default size (in bytes) for memory arenas created via arena_init() */
-#define MEMORY_CAPACITY 20480  // 20 KB
-
 #define POISON_PATTERN 0xAA
 
 /*
@@ -41,21 +37,22 @@ typedef struct
 
 /*
  *  NAME
- *      arena_init - Initialize a memory arena with default capacity.
+ *      arena_init - Initialize a memory arena with specified capacity.
  *
  *  SYNOPSIS
- *      arema_t memory::arena_init();
+ *      memory::arena_t memory::arena_init(size_t capacity);
  *
  *  DESCRIPTION
- *     The function creates and returns a new memory arena instance with a
- *     pre-allocated capacity. See the definition MEMORY_CAPACITY to change the
- *     default capacity.
+ *     The function creates and returns a new memory arena instance with the
+ *     specified capacity.
+ *
+ *  PARAMETERS
+ *      capacity - Size of the memory arena to allocate in bytes
  *
  *  RETURN VALUE
- *     Returns a valid arema_t object on success.
+ *     Returns a valid memory::arena_t object on success. arena_t->data will be null on failure.
  */
-extern memory::arena_t arena_init(size_t capacity);
-
+memory::arena_t arena_init(size_t capacity);
 /*
  *  NAME
  *      arena_allocate - Allocate memory from a pre-initialized arena.
@@ -73,7 +70,7 @@ extern memory::arena_t arena_init(size_t capacity);
  *      pointer is valid until the arena is reset or destroyed.
  *
  *  NOTES
- *      Requires arema_t to be initialized with arena_init() or similar.
+ *      Requires arena_t to be initialized with arena_init() or similar.
  */
 const void* arena_allocate(arena_t* arena, const std::size_t size);
 
@@ -85,7 +82,7 @@ const void* arena_allocate(arena_t* arena, const std::size_t size);
  *      void memory::arena_reset(memory::arena_t* arena);
  *
  *  DESCRIPTION
- *      The function resets the allocation size of a pre-initialized arema_t to zero.
+ *      The function resets the allocation size of a pre-initialized arena_t to zero.
  *      This effectively "frees" all memory allocated from the arena without
  *      deallocating the underlying buffer, allowing reuse of the capacity for
  *      future allocations.
@@ -105,7 +102,7 @@ void arena_reset(arena_t* arena);
  *      void memory::arena_free(memory::arena_t* arena);
  *
  *  DESCRIPTION
- *      The function releases the memory buffer associated with a arema_t and
+ *      The function releases the memory buffer associated with a arena_t and
  *      resets its capacity and size to zero. This marks the arena as invalid for
  *      future allocation unless reinitialized.
  */
