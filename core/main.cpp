@@ -4,7 +4,6 @@
 #include <memory>
 #include <thread>
 
-#include "ARM/cpu.h"
 #include "Base/Config.h"
 #include "Base/Logging/Backend.h"
 #include "JIT/jit.h"
@@ -41,7 +40,7 @@ int main()
 
     const size_t panels_capacity = 2;
     const char* panel_names[panels_capacity] = {PANEL_NAME_CPU, PANEL_NAME_PERFORMANCE};
-    bool panels_visibility[panels_capacity] = {false};
+    bool panels_visibility[panels_capacity] = {};
     bool imgui_demo_visible = false;
 
     gui::gui_t gui = {
@@ -60,7 +59,7 @@ int main()
     bool show_cpu_result_popup = false;
     while (true == is_running)
     {
-        SDL_Event event;
+        SDL_Event event = {};
         while (::SDL_PollEvent(&event))
         {
             (void)::ImGui_ImplSDL3_ProcessEvent(&event);
