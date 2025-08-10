@@ -1,5 +1,6 @@
-#include "cpu.h"
-#include "JIT/jit.h"
+#include "isa.h"
+#include "Base/Assert.h"
+
 void cpuTest()
 {
     CPU cpu;
@@ -12,9 +13,5 @@ void cpuTest()
     cpu.write_byte(8, 0xFF);  // RET placeholder
 
     LOG_INFO(ARM, "{}", cpu.read_byte(0));
-
-    JIT jit;
-    //jit.translate_and_run(cpu);
-
     cpu.print_debug_information();
 }

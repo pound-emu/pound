@@ -6,6 +6,35 @@
 
 #include "Base/Logging/Log.h"
 
+namespace aarch64
+{
+#define GPR_REGISTERS 32
+#define ZERO_REGISTER_INDEX 31
+
+#define FPR_REGISTERS 32
+
+typedef struct
+{
+    uint64_t gpr[GPR_REGISTERS];
+    unsigned __int128 fpr[FPR_REGISTERS];
+    uint64_t pc;
+    uint64_t sp;
+} isa_t;
+
+uint64_t read_X(uint64_t* registers, size_t n);
+void adr(uint64_t* registers, size_t n, uint64_t pc, uint64_t offset);
+//=========================================================
+// Access Floating Point Registers
+//=========================================================
+
+uint8_t B(unsigned __int128 registers, size_t n);
+uint16_t H(unsigned __int128 registers, size_t n);
+uint32_t S(unsigned __int128 registers, size_t n);
+uint64_t D(unsigned __int128 registers, size_t n);
+unsigned __int128 Q(unsigned __int128 registers, size_t n);
+
+}  // namespace aarch64
+
 struct CPU
 {
     u64 regs[31] = {0};  // X0–X30
