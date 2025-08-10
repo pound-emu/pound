@@ -60,7 +60,6 @@ typedef struct
     float_t cpu_usage;
     float_t memory_usage;
     int32_t frame_count;
-
 } performance_data_t;
 
 /*
