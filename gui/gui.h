@@ -124,10 +124,12 @@ void window_destroy(window_t* window);
  *      gui::gui_t gui;
  *
  *      // Initialize the GUI system
- *      if (!gui::init(&gui, &main_window)) {
- *          fprintf(stderr, "Failed to initialize the GUI. \n");
- *          return -1;
- *      }
+ *      if (bool return_code = gui::init_imgui(&window); false == return_code)
+ *      {
+ *           LOG_ERROR(Render, "Failed to initialize GUI");
+ *           return EXIT_FAILURE;
+ *       }
+ *
  *
  *      // Use the GUI for rendering...
  *      ...
