@@ -3,6 +3,9 @@
 
 void cpuTest()
 {
+    aarch64::vcpu_state_t vcpu_states[CPU_CORES] = {};
+
+    // Outdated Code
     CPU cpu;
     cpu.pc = 0;
 

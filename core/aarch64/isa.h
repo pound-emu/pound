@@ -3,38 +3,40 @@
 #pragma once
 
 #include <cstring>
+#include <cstdlib>
 
 #include "Base/Logging/Log.h"
 
 namespace aarch64
 {
-#define GPR_REGISTERS 32
-#define ZERO_REGISTER_INDEX 31
+/* AArch64 R0-R30 */
+#define GP_REGISTERS 31
+#define CACHE_LINE_SIZE 64
+#define CPU_CORES 8
 
-#define FPR_REGISTERS 32
-
-typedef struct
+/*
+ * vcpu_state_t - Holds the architectural state for an emulated vCPU.
+ * @r:      General purpose registers R0-R30.
+ * @pc:     Program Counter.
+ * @sp:     Stack Pointer.
+ * @pstate: Process State Register (NZCV flags, EL, etc.).
+ *
+ * This structure is aligned to the L1 cache line size to prevent false
+ * sharing when multiple host threads are emulating vCPUs on different
+ * physical cores.
+ */
+typedef struct alignas(CACHE_LINE_SIZE)
 {
-    uint64_t gpr[GPR_REGISTERS];
-    unsigned __int128 fpr[FPR_REGISTERS];
+    uint64_t r[GP_REGISTERS];
     uint64_t pc;
     uint64_t sp;
-} isa_t;
-
-uint64_t read_X(uint64_t* registers, size_t n);
-void adr(uint64_t* registers, size_t n, uint64_t pc, uint64_t offset);
-//=========================================================
-// Access Floating Point Registers
-//=========================================================
-
-uint8_t B(unsigned __int128 registers, size_t n);
-uint16_t H(unsigned __int128 registers, size_t n);
-uint32_t S(unsigned __int128 registers, size_t n);
-uint64_t D(unsigned __int128 registers, size_t n);
-unsigned __int128 Q(unsigned __int128 registers, size_t n);
-
+    uint32_t pstate;
+} vcpu_state_t;
 }  // namespace aarch64
 
+//=========================================================
+// OUTDATED CODE
+//=========================================================
 struct CPU
 {
     u64 regs[31] = {0};  // X0–X30
