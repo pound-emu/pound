@@ -2,9 +2,10 @@
 
 #pragma once
 
-#include "ARM/cpu.h"
+#include "aarch64/isa.h"
 
-class JIT {
-public:
+class JIT
+{
+   public:
     void translate_and_run(CPU& cpu);
 };
