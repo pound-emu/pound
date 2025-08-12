@@ -9,16 +9,20 @@
 
 namespace aarch64
 {
-/* AArch64 R0-R30 */
-#define GP_REGISTERS 31
+/* AArch64 R0-R31 */
+#define GP_REGISTERS 32
+
+/* AArch64 V0-V31 */
+#define FP_REGISTERS 32
+
 #define CACHE_LINE_SIZE 64
 #define CPU_CORES 8
 
 /*
  * vcpu_state_t - Holds the architectural state for an emulated vCPU.
- * @r:      General purpose registers R0-R30.
+ * @v:      The 128-bit vector registers V0-V31.
+ * @r:      General purpose registers R0-R31.
  * @pc:     Program Counter.
- * @sp:     Stack Pointer.
  * @pstate: Process State Register (NZCV flags, EL, etc.).
  *
  * This structure is aligned to the L1 cache line size to prevent false
@@ -27,9 +31,9 @@ namespace aarch64
  */
 typedef struct alignas(CACHE_LINE_SIZE)
 {
+    unsigned __int128 v[FP_REGISTERS];
     uint64_t r[GP_REGISTERS];
     uint64_t pc;
-    uint64_t sp;
     uint32_t pstate;
 } vcpu_state_t;
 }  // namespace aarch64
