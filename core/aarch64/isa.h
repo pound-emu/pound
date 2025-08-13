@@ -47,7 +47,7 @@ namespace memory
  */
 typedef struct
 {
-    void* base;
+    uint8_t* base;
     uint64_t size;
 } guest_memory_t;
 
@@ -74,7 +74,7 @@ typedef struct
  *
  * Return: A valid host virtual address pointer corresponding to the GPA.
  */
-static inline void* gpa_to_hva(guest_memory_t* memory, uint64_t gpa);
+static inline uint8_t* gpa_to_hva(guest_memory_t* memory, uint64_t gpa);
 }  // namespace memory
 }  // namespace aarch64
 
