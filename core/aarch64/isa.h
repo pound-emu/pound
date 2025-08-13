@@ -2,8 +2,8 @@
 
 #pragma once
 
-#include <cstring>
 #include <cstdlib>
+#include <cstring>
 
 #include "Base/Logging/Log.h"
 
@@ -16,6 +16,7 @@ namespace aarch64
 #define FP_REGISTERS 32
 
 #define CACHE_LINE_SIZE 64
+#define GUEST_RAM_SIZE 10240  // 10KiB
 #define CPU_CORES 8
 
 /*
@@ -36,6 +37,45 @@ typedef struct alignas(CACHE_LINE_SIZE)
     uint64_t pc;
     uint32_t pstate;
 } vcpu_state_t;
+
+namespace memory
+{
+/*
+ * guest_memory_t - Describes a contiguous block of guest physical RAM.
+ * @base: Pointer to the start of the host-allocated memory block.
+ * @size: The size of the memory block in bytes.
+ */
+typedef struct
+{
+    void* base;
+    uint64_t size;
+} guest_memory_t;
+
+/*
+ * gpa_to_hva() - Translate a Guest Physical Address to a Host Virtual Address.
+ * @memory: The guest memory region to translate within.
+ * @gpa: The Guest Physical Address (offset) to translate.
+ *
+ * This function provides a fast, direct translation for a flat guest memory
+ * model. It relies on the critical pre-condition that the guest's physical
+ * RAM is backed by a single, contiguous block of virtual memory in the host's
+ * userspace (typically allocated with mmap()).
+ *
+ * In this model, memory->base is the Host Virtual Address (HVA) of the start of
+ * the backing host memory. The provided Guest Physical Address (gpa) is not
+ * treated as a pointer, but as a simple byte offset from the start of the guest's
+ * physical address space (PAS).
+ *
+ * The translatiom is therefore a single pointer-offset calculation. This establishes
+ * a direct 1:1 mapping between the guest's PAS and the host's virtual memory block.
+ *
+ * The function asserts that GPA is within bounds. The caller is responsible for
+ * ensuring the validity of the GPA prior to calling.
+ *
+ * Return: A valid host virtual address pointer corresponding to the GPA.
+ */
+static inline void* gpa_to_hva(guest_memory_t* memory, uint64_t gpa);
+}  // namespace memory
 }  // namespace aarch64
 
 //=========================================================
