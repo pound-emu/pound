@@ -94,7 +94,7 @@ int8_t gui::panel::render_cpu_panel(bool* show_cpu_result_popup)
 
     if (::ImGui::Button("Run CPU Test", ImVec2(120, 0)))
     {
-        ::cpuTest();
+        pound::aarch64::cpuTest();
         *show_cpu_result_popup = true;
     }
     if (true == *show_cpu_result_popup)

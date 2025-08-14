@@ -7,7 +7,7 @@
 
 #include "Base/Logging/Log.h"
 
-namespace aarch64
+namespace pound::aarch64
 {
 /* AArch64 R0-R31 */
 #define GP_REGISTERS 32
@@ -38,8 +38,6 @@ typedef struct alignas(CACHE_LINE_SIZE)
     uint32_t pstate;
 } vcpu_state_t;
 
-namespace memory
-{
 /*
  * guest_memory_t - Describes a contiguous block of guest physical RAM.
  * @base: Pointer to the start of the host-allocated memory block.
@@ -66,7 +64,7 @@ typedef struct
  * treated as a pointer, but as a simple byte offset from the start of the guest's
  * physical address space (PAS).
  *
- * The translatiom is therefore a single pointer-offset calculation. This establishes
+ * The translation is therefore a single pointer-offset calculation. This establishes
  * a direct 1:1 mapping between the guest's PAS and the host's virtual memory block.
  *
  * The function asserts that GPA is within bounds. The caller is responsible for
@@ -75,8 +73,85 @@ typedef struct
  * Return: A valid host virtual address pointer corresponding to the GPA.
  */
 static inline uint8_t* gpa_to_hva(guest_memory_t* memory, uint64_t gpa);
-}  // namespace memory
-}  // namespace aarch64
+
+/*
+ * ============================================================================
+ *                          Guest Memory Read Functions
+ * ============================================================================
+ */
+
+/**
+ * guest_mem_readb() - Read one byte from guest memory.
+ * @memory: The guest memory region.
+ * @gpa:    The Guest Physical Address to read from.
+ * Returns the 8-bit value read from memory.
+ */
+static inline uint8_t guest_mem_readb(guest_memory_t* memory, uint64_t gpa);
+
+/**
+ * guest_mem_readw() - Read a 16-bit word from guest memory.
+ * @memory: The guest memory region.
+ * @gpa:    The Guest Physical Address to read from (must be 2-byte aligned).
+ * Returns the 16-bit value, corrected for host endianness.
+ */
+static inline uint16_t guest_mem_readw(guest_memory_t* memory, uint64_t gpa);
+
+/**
+ * guest_mem_readl() - Read a 32-bit long-word from guest memory.
+ * @memory: The guest memory region.
+ * @gpa:    The Guest Physical Address to read from (must be 4-byte aligned).
+ * Returns the 32-bit value, corrected for host endianness.
+ */
+static inline uint32_t guest_mem_readl(guest_memory_t* memory, uint64_t gpa);
+
+/**
+ * guest_mem_readq() - Read a 64-bit quad-word from guest memory.
+ * @memory: The guest memory region.
+ * @gpa:    The Guest Physical Address to read from (must be 8-byte aligned).
+ * Returns the 64-bit value, corrected for host endianness.
+ */
+static inline uint64_t guest_mem_readq(guest_memory_t* memory, uint64_t gpa);
+
+/*
+ * ============================================================================
+ *                          Guest Memory Write Functions
+ * ============================================================================
+ */
+
+/**
+ * guest_mem_writeb() - Write one byte to guest memory.
+ * @memory: The guest memory region.
+ * @gpa:    The Guest Physical Address to write to.
+ * @val:    The 8-bit value to write.
+ */
+static inline void guest_mem_writeb(guest_memory_t* memory, uint64_t gpa, uint8_t val);
+
+/**
+ * guest_mem_writew() - Write a 16-bit word to guest memory.
+ * @memory: The guest memory region.
+ * @gpa:    The Guest Physical Address to write to (must be 2-byte aligned).
+ * @val:    The 16-bit value to write (will be converted to guest endianness).
+ */
+static inline void guest_mem_writew(guest_memory_t* memory, uint64_t gpa, uint16_t val);
+
+/**
+ * guest_mem_writel() - Write a 32-bit long-word to guest memory.
+ * @memory: The guest memory region.
+ * @gpa:    The Guest Physical Address to write to (must be 4-byte aligned).
+ * @val:    The 32-bit value to write.
+ */
+static inline void guest_mem_writel(guest_memory_t* memory, uint64_t gpa, uint32_t val);
+
+/**
+ * guest_mem_writeq() - Write a 64-bit quad-word to guest memory.
+ * @memory: The guest memory region.
+ * @gpa:    The Guest Physical Address to write to (must be 8-byte aligned).
+ * @val:    The 64-bit value to write.
+ */
+static inline void guest_mem_writeq(guest_memory_t* memory, uint64_t gpa, uint64_t val);
+
+void cpuTest();
+}  // namespace pound::aarch64
 
 //=========================================================
 // OUTDATED CODE
@@ -120,5 +195,3 @@ struct CPU
         }
     }
 };
-
-void cpuTest();
