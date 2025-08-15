@@ -20,15 +20,20 @@ namespace pound::aarch64
 #define CPU_CORES 8
 
 /*
- * vcpu_state_t - Holds the architectural state for an emulated vCPU.
- * @v:      The 128-bit vector registers V0-V31.
- * @r:      General purpose registers R0-R31.
+ * vcpu_state_t - Holds the architectural and selected system-register state for an emulated vCPU.
+ * @v:      128-bit SIMD/FP vector registers V0–V31.
+ * @r:      General-purpose registers X0–X31 (X31 as SP/ZR as appropriate).
  * @pc:     Program Counter.
- * @pstate: Process State Register (NZCV flags, EL, etc.).
+ * @pstate: Process State Register (NZCV, DAIF, EL, etc.).
  *
- * This structure is aligned to the L1 cache line size to prevent false
- * sharing when multiple host threads are emulating vCPUs on different
- * physical cores.
+ * System registers (subset mirrored for fast-path emulation at EL0):
+ * - ctr_el0, dczid_el0: Cache/type identification.
+ * - tpidrro_el0, tpidr_el0: Thread pointers (host-mapped TLS pointers).
+ * - cntfrq_el0, cntpct_el0, cntvct_el0, cntv_ctl_el0, cntv_cval_el0: Generic timers/counters.
+ * - pmccntr_el0, pmcr_el0: PMU cycle counter and control.
+ *
+ * This structure is aligned to the L1 cache line size to prevent false sharing
+ * when multiple host threads are emulating vCPUs on different physical cores.
  */
 typedef struct alignas(CACHE_LINE_SIZE)
 {
@@ -36,6 +41,25 @@ typedef struct alignas(CACHE_LINE_SIZE)
     uint64_t r[GP_REGISTERS];
     uint64_t pc;
     uint32_t pstate;
+
+    // ========================= System Registers ==================================
+    // Basics
+    uint32_t ctr_elo;               // cache-type register 
+    uint32_t dczid_elo;             // data cache zero-ID
+    const uint64_t* tpidrro_e10;    // thread pointer ID register, read-only
+    uint64_t* tpidr_e10;            // thread pointer ID register
+    
+    // Counters
+    uint64_t cntfreq_elo;           // counter frequency
+    uint64_t cntvct_el0;     // Virtual counter - CRITICAL for timing
+    uint64_t cntpct_el0;     // Physical counter
+    uint32_t cntv_ctl_el0;   // Virtual timer control
+    uint64_t cntv_cval_el0;  // Virtual timer compare value
+
+    // Performance monitoring (if games use them):
+    uint64_t pmccntr_el0;    // Cycle counter
+    uint32_t pmcr_el0;       // Performance monitor control
+    // =============================================================================
 } vcpu_state_t;
 
 /*
