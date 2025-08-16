@@ -7,7 +7,7 @@
 
 #include "Base/Logging/Log.h"
 
-namespace pound::aarch64
+namespace pound::arm64
 {
 /* AArch64 R0-R31 */
 #define GP_REGISTERS 32
@@ -120,4 +120,4 @@ typedef struct alignas(CACHE_LINE_SIZE)
 void take_synchronous_exception(vcpu_state_t* vcpu, uint8_t exception_class, uint32_t iss, uint64_t faulting_address);
 
 void cpuTest();
-}  // namespace pound::aarch64
+}  // namespace pound::arm64

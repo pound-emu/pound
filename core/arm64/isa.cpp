@@ -3,7 +3,7 @@
 #include "memory.h"
 #include "memory/arena.h"
 
-namespace pound::aarch64
+namespace pound::arm64
 {
 void take_synchronous_exception(vcpu_state_t* vcpu, uint8_t exception_class, uint32_t iss, uint64_t faulting_address)
 {
@@ -68,7 +68,7 @@ void take_synchronous_exception(vcpu_state_t* vcpu, uint8_t exception_class, uin
  * @param memory A pointer to an initialized guest_memory_t struct.
  * @return true if all tests pass, false otherwise.
  */
-bool test_guest_ram_access(pound::aarch64::memory::guest_memory_t* memory)
+bool test_guest_ram_access(pound::arm64::memory::guest_memory_t* memory)
 {
     LOG_INFO(Memory, "--- [ Starting Guest RAM Access Test ] ---");
     if (memory == nullptr || memory->base == nullptr || memory->size < 4096)
@@ -158,10 +158,10 @@ void cpuTest()
     pound::memory::arena_t guest_memory_arena = pound::memory::arena_init(GUEST_RAM_SIZE);
     ASSERT(nullptr != guest_memory_arena.data);
 
-    pound::aarch64::memory::guest_memory_t guest_ram = {};
+    pound::arm64::memory::guest_memory_t guest_ram = {};
     guest_ram.base = static_cast<uint8_t*>(guest_memory_arena.data);
     guest_ram.size = guest_memory_arena.capacity;
 
     (void)test_guest_ram_access(&guest_ram);
 }
-}  // namespace pound::aarch64
+}  // namespace pound::armv64
