@@ -4,7 +4,8 @@
 #include <sys/mman.h>
 #endif
 
-memory::arena_t memory::arena_init(size_t capacity)
+namespace pound::memory {
+arena_t arena_init(size_t capacity)
 {
 
     // TODO(GloriousTaco:memory): Replace malloc with a windows memory mapping API.
@@ -28,7 +29,7 @@ memory::arena_t memory::arena_init(size_t capacity)
 }
 // new more memsafe code (ownedbywuigi) (i give up on windows compatibility for now, will stick to the old unsafe code)
 
-const void* memory::arena_allocate(memory::arena_t* arena, const std::size_t size)
+const void* arena_allocate(memory::arena_t* arena, const std::size_t size)
 {
     ASSERT(arena != nullptr);
     ASSERT(arena->size + size <= arena->capacity);
@@ -36,18 +37,19 @@ const void* memory::arena_allocate(memory::arena_t* arena, const std::size_t siz
     arena->size += size;
     return data;
 }
-void memory::arena_reset(memory::arena_t* arena)
+void arena_reset(memory::arena_t* arena)
 {
     ASSERT(nullptr != arena);
     ASSERT(nullptr != arena->data);
     arena->size = 0;
     (void)std::memset(arena->data, POISON_PATTERN, arena->capacity);
 }
-void memory::arena_free(memory::arena_t* arena)
+void arena_free(memory::arena_t* arena)
 {
     ASSERT(arena != nullptr);
     arena->capacity = 0;
     arena->size = 0;
     // TODO(GloriousTaco:memory): Replace free with a memory safe alternative.
     free(arena->data);
+}
 }

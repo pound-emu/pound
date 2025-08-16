@@ -5,7 +5,7 @@
 #include <memory>
 #include "arena.h"
 
-namespace memory
+namespace pound::memory
 {
     /**
     @brief An STL-compatible allocator that uses a custom arena for memory management.

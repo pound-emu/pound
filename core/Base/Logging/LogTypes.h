@@ -34,6 +34,7 @@ enum class Class : const u8 {
   System,                 // Base System messages
   Render,                 // OpenGL and Window messages
   ARM,
+  Memory,
   Count                   // Total number of logging classes
 };
 
