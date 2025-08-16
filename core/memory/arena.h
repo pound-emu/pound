@@ -5,7 +5,7 @@
 #include <cstdint>
 #include <cstdlib>
 
-namespace memory
+namespace pound::memory
 {
 #define POISON_PATTERN 0xAA
 
@@ -108,5 +108,5 @@ void arena_reset(arena_t* arena);
  */
 void arena_free(memory::arena_t* arena);
 
-}  // namespace memory
+}  // namespace pound::memory
 #endif  //POUND_ARENA_H
