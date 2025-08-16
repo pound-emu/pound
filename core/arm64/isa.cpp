@@ -1,6 +1,6 @@
 #include "isa.h"
 #include "Base/Assert.h"
-#include "memory.h"
+#include "guest.h"
 #include "memory/arena.h"
 
 namespace pound::arm64
