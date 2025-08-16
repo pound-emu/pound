@@ -5,8 +5,8 @@
 #include <thread>
 
 #include "Base/Config.h"
+#include "Base/Logging/Log.h"
 #include "Base/Logging/Backend.h"
-#include "JIT/jit.h"
 #include "gui/gui.h"
 #include "memory/arena.h"
 
@@ -18,10 +18,6 @@
 
 int main()
 {
-    // This is meant to replace malloc() and its related functions.
-    // TODO(GloriousTaco:memory): Implement std::allocator for this custom allocator which allows it to manage the memory of C++ standard types like std::vector.
-    memory::arena_t arena = memory::arena_init(1024);
-
     Base::Log::Initialize();
     Base::Log::Start();
 

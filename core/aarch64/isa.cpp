@@ -1,113 +1,57 @@
 #include "isa.h"
 #include "Base/Assert.h"
+#include "memory.h"
 #include "memory/arena.h"
-
-// TODO(GloriousTacoo:aarch64) Implement big to little endian conversion for guest_mem read and write functions.
 
 namespace pound::aarch64
 {
-static inline uint8_t* gpa_to_hva(guest_memory_t* memory, uint64_t gpa)
+void take_synchronous_exception(vcpu_state_t* vcpu, uint8_t exception_class, uint32_t iss, uint64_t faulting_address)
 {
-    ASSERT(nullptr != memory);
-    ASSERT(nullptr != memory->base);
-    ASSERT(gpa < memory->size);
-    uint8_t* hva = memory->base + gpa;
-    return hva;
-}
+    ASSERT(nullptr != vcpu);
+    /* An EC holds 6 bits.*/
+    ASSERT(0 == (exception_class & 11000000));
+    /* An ISS holds 25 bits */
+    ASSERT(0 == (iss & 0xFE000000));
 
-/*
- * ============================================================================
- *                          Guest Memory Read Functions
- * ============================================================================
- */
+    vcpu->elr_el1 = vcpu->pc;
+    vcpu->spsr_el1 = vcpu->pstate;
+    vcpu->esr_el1 = 0;
 
-static inline uint8_t guest_mem_readb(guest_memory_t* memory, uint64_t gpa)
-{
-    ASSERT(nullptr != memory);
-    ASSERT(nullptr != memory->base);
-    ASSERT(gpa <= memory->size);
-    uint8_t* hva = gpa_to_hva(memory, gpa);
-    return *hva;
-}
+    /* Bits [31:26] are the Exception Class (EC). */
+    /* Bits [25] is the Instruction Length (IL), 1 for a 32-bit instruction. */
+    /* Bits [24:0] are the Instruction Specific Syndrome (ISS) */
+    const uint64_t esr_il_bit = (1ULL << 25);
+    vcpu->esr_el1 = ((uint64_t)exception_class << 26) | esr_il_bit | iss;
 
-static inline uint16_t guest_mem_readw(guest_memory_t* memory, uint64_t gpa)
-{
-    ASSERT(nullptr != memory);
-    ASSERT(nullptr != memory->base);
-    ASSERT((gpa + sizeof(uint16_t)) <= memory->size);
-    // Check if gpa is aligned to 2 bytes.
-    ASSERT((gpa & 1) == 0);
-    uint16_t* hva = (uint16_t*)gpa_to_hva(memory, gpa);
-    return *hva;
-}
+    if ((exception_class == EC_DATA_ABORT) || (exception_class == EC_DATA_ABORT_LOWER_EL))
+    {
+        vcpu->far_el1 = faulting_address;
+    }
 
-static inline uint32_t guest_mem_readl(guest_memory_t* memory, uint64_t gpa)
-{
-    ASSERT(nullptr != memory);
-    ASSERT(nullptr != memory->base);
-    ASSERT((gpa + sizeof(uint32_t)) <= memory->size);
-    // Check if gpa is aligned to 4 bytes.
-    ASSERT((gpa & 3) == 0);
-    uint32_t* hva = (uint32_t*)gpa_to_hva(memory, gpa);
-    return *hva;
-}
+    /* The CPU state must be changed to a known safe state for handling */
+    vcpu->pstate &= ~0xF0000000;
 
-static inline uint64_t guest_mem_readq(guest_memory_t* memory, uint64_t gpa)
-{
-    ASSERT(nullptr != memory);
-    ASSERT(nullptr != memory->base);
-    ASSERT((gpa + sizeof(uint64_t)) <= memory->size);
-    // Check if gpa is aligned to 8 bytes.
-    ASSERT((gpa & 7) == 0);
-    uint64_t* hva = (uint64_t*)gpa_to_hva(memory, gpa);
-    return *hva;
-}
+    /* Mask asynchronous exceptions (IRQ, FIQ, SError). We dont want the
+     * Exception handler to be interruoted by a less important event. */
+    const uint32_t PSTATE_IRQ_BIT = (1 << 7);
+    const uint32_t PSTATE_FIQ_BIT = (1 << 6);
+    const uint32_t PSTATE_SERROR_BIT = (1 << 8);
+    vcpu->pstate |= (PSTATE_IRQ_BIT | PSTATE_FIQ_BIT | PSTATE_SERROR_BIT);
 
-/*
- * ============================================================================
- *                          Guest Memory Write Functions
- * ============================================================================
- */
+    /* Set the target exception level to EL1. The mode field M[3:0] is set
+     * to 0b0101 for EL1h (using SP_EL1). (page 913 in manual) */
+    const uint32_t PSTATE_EL_MASK = 0b1111;
+    vcpu->pstate &= ~PSTATE_EL_MASK;
+    const uint32_t PSTATE_EL1H = 0b0101;
+    vcpu->pstate |= PSTATE_EL1H;
 
-static inline void guest_mem_writeb(guest_memory_t* memory, uint64_t gpa, uint8_t val)
-{
-    ASSERT(nullptr != memory);
-    ASSERT(nullptr != memory->base);
-    ASSERT(gpa <= memory->size);
-    uint8_t* hva = gpa_to_hva(memory, gpa);
-    *hva = val;
-}
-
-static inline void guest_mem_writew(guest_memory_t* memory, uint64_t gpa, uint16_t val)
-{
-    ASSERT(nullptr != memory);
-    ASSERT(nullptr != memory->base);
-    ASSERT((gpa + sizeof(uint16_t)) <= memory->size);
-    // Check if gpa is aligned to 2 bytes.
-    ASSERT((gpa & 1) == 0);
-    uint16_t* hva = (uint16_t*)gpa_to_hva(memory, gpa);
-    *hva = val;
-}
-
-static inline void guest_mem_writel(guest_memory_t* memory, uint64_t gpa, uint32_t val)
-{
-    ASSERT(nullptr != memory->base);
-    ASSERT((gpa + sizeof(uint32_t)) <= memory->size);
-    // Check if gpa is aligned to 4 bytes.
-    ASSERT((gpa & 3) == 0);
-    uint32_t* hva = (uint32_t*)gpa_to_hva(memory, gpa);
-    *hva = val;
-}
-
-static inline void guest_mem_writeq(guest_memory_t* memory, uint64_t gpa, uint64_t val)
-{
-    ASSERT(nullptr != memory);
-    ASSERT(nullptr != memory->base);
-    ASSERT((gpa + sizeof(uint64_t)) <= memory->size);
-    // Check if gpa is aligned to 8 bytes.
-    ASSERT((gpa & 7) == 0);
-    uint64_t* hva = (uint64_t*)gpa_to_hva(memory, gpa);
-    *hva = val;
+    /*  TODO(GloriousTacoo:arm): DO NOT IMPLEMENT UNTIL THE INSTRUCTION
+     *  DECODER IS FINISHED.
+     *
+     *  Create an Exception Vector Table, determine
+     *  the address of the exception handler, then update the PC.
+     *  
+     *  vcpu->pc = vcpu->vbar_el1 + offset; */
 }
 
 /** THIS FUNCTION WAS MADE WITH AI AND IS CALLED WHEN RUNNING THE CPU TEST FROM THE GUI!
@@ -124,7 +68,7 @@ static inline void guest_mem_writeq(guest_memory_t* memory, uint64_t gpa, uint64
  * @param memory A pointer to an initialized guest_memory_t struct.
  * @return true if all tests pass, false otherwise.
  */
-bool test_guest_ram_access(guest_memory_t* memory)
+bool test_guest_ram_access(pound::aarch64::memory::guest_memory_t* memory)
 {
     LOG_INFO(Memory, "--- [ Starting Guest RAM Access Test ] ---");
     if (memory == nullptr || memory->base == nullptr || memory->size < 4096)
@@ -211,10 +155,10 @@ bool test_guest_ram_access(guest_memory_t* memory)
 void cpuTest()
 {
     vcpu_state_t vcpu_states[CPU_CORES] = {};
-    memory::arena_t guest_memory_arena = memory::arena_init(GUEST_RAM_SIZE);
+    pound::memory::arena_t guest_memory_arena = pound::memory::arena_init(GUEST_RAM_SIZE);
     ASSERT(nullptr != guest_memory_arena.data);
 
-    guest_memory_t guest_ram = {};
+    pound::aarch64::memory::guest_memory_t guest_ram = {};
     guest_ram.base = static_cast<uint8_t*>(guest_memory_arena.data);
     guest_ram.size = guest_memory_arena.capacity;
 
