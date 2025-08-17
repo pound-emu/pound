@@ -1,6 +1,5 @@
 #include "isa.h"
 #include "guest.h"
-#include "mmu.h"
 #include "memory/arena.h"
 #include <cassert>
 
