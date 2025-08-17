@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Base/Assert.h"
+#include <cassert>
 
 namespace pound::arm64::memory
 {
@@ -41,9 +41,9 @@ typedef struct
  */
 static inline uint8_t* gpa_to_hva(guest_memory_t* memory, uint64_t gpa)
 {
-    ASSERT(nullptr != memory);
-    ASSERT(nullptr != memory->base);
-    ASSERT(gpa < memory->size);
+    assert(nullptr != memory);
+    assert(nullptr != memory->base);
+    assert(gpa < memory->size);
     uint8_t* hva = memory->base + gpa;
     return hva;
 }
@@ -64,9 +64,9 @@ static inline uint8_t* gpa_to_hva(guest_memory_t* memory, uint64_t gpa)
  */
 static inline uint8_t guest_mem_readb(guest_memory_t* memory, uint64_t gpa)
 {
-    ASSERT(nullptr != memory);
-    ASSERT(nullptr != memory->base);
-    ASSERT(gpa <= memory->size);
+    assert(nullptr != memory);
+    assert(nullptr != memory->base);
+    assert(gpa <= memory->size);
     uint8_t* hva = gpa_to_hva(memory, gpa);
     return *hva;
 }
@@ -79,11 +79,11 @@ static inline uint8_t guest_mem_readb(guest_memory_t* memory, uint64_t gpa)
  */
 static inline uint16_t guest_mem_readw(guest_memory_t* memory, uint64_t gpa)
 {
-    ASSERT(nullptr != memory);
-    ASSERT(nullptr != memory->base);
-    ASSERT((gpa + sizeof(uint16_t)) <= memory->size);
+    assert(nullptr != memory);
+    assert(nullptr != memory->base);
+    assert((gpa + sizeof(uint16_t)) <= memory->size);
     // Check if gpa is aligned to 2 bytes.
-    ASSERT((gpa & 1) == 0);
+    assert((gpa & 1) == 0);
     uint16_t* hva = (uint16_t*)gpa_to_hva(memory, gpa);
     return *hva;
 }
@@ -96,11 +96,11 @@ static inline uint16_t guest_mem_readw(guest_memory_t* memory, uint64_t gpa)
  */
 static inline uint32_t guest_mem_readl(guest_memory_t* memory, uint64_t gpa)
 {
-    ASSERT(nullptr != memory);
-    ASSERT(nullptr != memory->base);
-    ASSERT((gpa + sizeof(uint32_t)) <= memory->size);
+    assert(nullptr != memory);
+    assert(nullptr != memory->base);
+    assert((gpa + sizeof(uint32_t)) <= memory->size);
     // Check if gpa is aligned to 4 bytes.
-    ASSERT((gpa & 3) == 0);
+    assert((gpa & 3) == 0);
     uint32_t* hva = (uint32_t*)gpa_to_hva(memory, gpa);
     return *hva;
 }
@@ -113,11 +113,11 @@ static inline uint32_t guest_mem_readl(guest_memory_t* memory, uint64_t gpa)
  */
 static inline uint64_t guest_mem_readq(guest_memory_t* memory, uint64_t gpa)
 {
-    ASSERT(nullptr != memory);
-    ASSERT(nullptr != memory->base);
-    ASSERT((gpa + sizeof(uint64_t)) <= memory->size);
+    assert(nullptr != memory);
+    assert(nullptr != memory->base);
+    assert((gpa + sizeof(uint64_t)) <= memory->size);
     // Check if gpa is aligned to 8 bytes.
-    ASSERT((gpa & 7) == 0);
+    assert((gpa & 7) == 0);
     uint64_t* hva = (uint64_t*)gpa_to_hva(memory, gpa);
     return *hva;
 }
@@ -136,9 +136,9 @@ static inline uint64_t guest_mem_readq(guest_memory_t* memory, uint64_t gpa)
  */
 static inline void guest_mem_writeb(guest_memory_t* memory, uint64_t gpa, uint8_t val)
 {
-    ASSERT(nullptr != memory);
-    ASSERT(nullptr != memory->base);
-    ASSERT(gpa <= memory->size);
+    assert(nullptr != memory);
+    assert(nullptr != memory->base);
+    assert(gpa <= memory->size);
     uint8_t* hva = gpa_to_hva(memory, gpa);
     *hva = val;
 }
@@ -151,11 +151,11 @@ static inline void guest_mem_writeb(guest_memory_t* memory, uint64_t gpa, uint8_
  */
 static inline void guest_mem_writew(guest_memory_t* memory, uint64_t gpa, uint16_t val)
 {
-    ASSERT(nullptr != memory);
-    ASSERT(nullptr != memory->base);
-    ASSERT((gpa + sizeof(uint16_t)) <= memory->size);
+    assert(nullptr != memory);
+    assert(nullptr != memory->base);
+    assert((gpa + sizeof(uint16_t)) <= memory->size);
     // Check if gpa is aligned to 2 bytes.
-    ASSERT((gpa & 1) == 0);
+    assert((gpa & 1) == 0);
     uint16_t* hva = (uint16_t*)gpa_to_hva(memory, gpa);
     *hva = val;
 }
@@ -168,10 +168,10 @@ static inline void guest_mem_writew(guest_memory_t* memory, uint64_t gpa, uint16
  */
 static inline void guest_mem_writel(guest_memory_t* memory, uint64_t gpa, uint32_t val)
 {
-    ASSERT(nullptr != memory->base);
-    ASSERT((gpa + sizeof(uint32_t)) <= memory->size);
+    assert(nullptr != memory->base);
+    assert((gpa + sizeof(uint32_t)) <= memory->size);
     // Check if gpa is aligned to 4 bytes.
-    ASSERT((gpa & 3) == 0);
+    assert((gpa & 3) == 0);
     uint32_t* hva = (uint32_t*)gpa_to_hva(memory, gpa);
     *hva = val;
 }
@@ -184,11 +184,11 @@ static inline void guest_mem_writel(guest_memory_t* memory, uint64_t gpa, uint32
  */
 static inline void guest_mem_writeq(guest_memory_t* memory, uint64_t gpa, uint64_t val)
 {
-    ASSERT(nullptr != memory);
-    ASSERT(nullptr != memory->base);
-    ASSERT((gpa + sizeof(uint64_t)) <= memory->size);
+    assert(nullptr != memory);
+    assert(nullptr != memory->base);
+    assert((gpa + sizeof(uint64_t)) <= memory->size);
     // Check if gpa is aligned to 8 bytes.
-    ASSERT((gpa & 7) == 0);
+    assert((gpa & 7) == 0);
     uint64_t* hva = (uint64_t*)gpa_to_hva(memory, gpa);
     *hva = val;
 }

@@ -41,6 +41,7 @@ namespace pound::arm64
  * @esr_el1:        Exception Syndrome Register.
  * @far_el1:        Fault Address Register.
  * @vbar_el1:       Vector Base Address Register.
+ * @sctlr_el1:      System Control Register.
  * @spsr_el1:       Saved Program Status Register.
  * @ctr_el0:        Cache-Type.
  * @cntv_ctl_el0:   Virtual Timer Control.
@@ -81,6 +82,9 @@ typedef struct alignas(CACHE_LINE_SIZE)
 
     /* The memory address that caused a Data Abort exception. */
     uint64_t far_el1;
+
+    /* SCTLR_EL1[0] bit enables the MMU. */
+    uint64_t sctlr_el1;
 
     /*
      * A snapshot of the current PSTATE register before the exception. 
