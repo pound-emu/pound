@@ -1,17 +1,17 @@
 #include "isa.h"
-#include "Base/Assert.h"
 #include "guest.h"
 #include "memory/arena.h"
+#include <cassert>
 
 namespace pound::arm64
 {
 void take_synchronous_exception(vcpu_state_t* vcpu, uint8_t exception_class, uint32_t iss, uint64_t faulting_address)
 {
-    ASSERT(nullptr != vcpu);
+    assert(nullptr != vcpu);
     /* An EC holds 6 bits.*/
-    ASSERT(0 == (exception_class & 11000000));
+    assert(0 == (exception_class & 11000000));
     /* An ISS holds 25 bits */
-    ASSERT(0 == (iss & 0xFE000000));
+    assert(0 == (iss & 0xFE000000));
 
     vcpu->elr_el1 = vcpu->pc;
     vcpu->spsr_el1 = vcpu->pstate;
@@ -156,7 +156,7 @@ void cpuTest()
 {
     vcpu_state_t vcpu_states[CPU_CORES] = {};
     pound::memory::arena_t guest_memory_arena = pound::memory::arena_init(GUEST_RAM_SIZE);
-    ASSERT(nullptr != guest_memory_arena.data);
+    assert(nullptr != guest_memory_arena.data);
 
     pound::arm64::memory::guest_memory_t guest_ram = {};
     guest_ram.base = static_cast<uint8_t*>(guest_memory_arena.data);
