@@ -1,5 +1,7 @@
 #pragma once
 
+#include "isa.h"
+
 namespace pound::arn64::memory
 {
 /*
@@ -32,5 +34,5 @@ namespace pound::arn64::memory
  * Return: 0 on successful translation. A negative error code on a translation
  * fault (e.g., for a page fault, permission error, or alignment fault).
  */
-int mmu_gva_to_gpa(vcpu_state_t* vcpu, uint64_t gva, uint64_t* out_gpa);
+int mmu_gva_to_gpa(pound::arm64::vcpu_state_t* vcpu, uint64_t gva, uint64_t* out_gpa);
 }  // namespace pound::arn64::memory
