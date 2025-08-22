@@ -13,13 +13,13 @@
 
 
 > [!NOTE]
-> Do you think the name "Pound" makes this a scam?
+> Do you think the name "Pound" makes this a scam?  
 > Do you think since the switch 2 hasn't been hacked this project is automatically a scam?
-> Do you think this project can't use switch 1 firmware dumps to set the foundation for when the switch 2 gets hacked?
-> Do you think the commits pushed to the main and arm64 branch are a scam?
-> Do you think the development progress posted on our discord are a scam?
-> If so then simply close this browser tab and move on.
-> if you have knowlege in Arm64 architecture please come to our server and help out.
+> Do you think this project can't use switch 1 firmware dumps to set the foundation for when the switch 2 gets hacked?  
+> Do you think the commits pushed to the main and arm64 branch are a scam?  
+> Do you think the development progress posted on our discord are a scam?  
+> If so then simply close this browser tab and move on.  
+> if you have knowlege in Arm64 architecture please come to our server and help out.  
 
 ## Overview
 
