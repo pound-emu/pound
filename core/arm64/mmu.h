@@ -1,12 +1,14 @@
 #pragma once
 
 #include "isa.h"
+#include "guest.h"
 
-namespace pound::arn64::memory
+namespace pound::arm64::memory
 {
 /*
  * mmu_gva_to_gpa() - Translate a Guest Virtual Address to a Guest Physical Address.
  * @vcpu:       A pointer to the vCPU state.
+ * @memory:     A pointrr to the guest's memory.
  * @gva:        The Guest Virtual Address to translate.
  * @out_gpa:    A pointer to a uint64_t where the resulting Guest Physical Address
  *              will be stored on success.
@@ -34,5 +36,5 @@ namespace pound::arn64::memory
  * Return: 0 on successful translation. A negative error code on a translation
  * fault (e.g., for a page fault, permission error, or alignment fault).
  */
-int mmu_gva_to_gpa(pound::arm64::vcpu_state_t* vcpu, uint64_t gva, uint64_t* out_gpa);
-}  // namespace pound::arn64::memory
+int mmu_gva_to_gpa(pound::arm64::vcpu_state_t* vcpu, guest_memory_t* memory, uint64_t gva, uint64_t* out_gpa);
+}  // namespace pound::arm64::memory

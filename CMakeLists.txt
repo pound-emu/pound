@@ -12,6 +12,7 @@ if (NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Debug)
 endif()
 
+
 # Optimizations
 set(CMAKE_INTERPROCEDURAL_OPTIMIZATION_RELEASE ON)
 if (WIN32)
@@ -33,6 +34,14 @@ file(GLOB_RECURSE Core core/*.cpp core/*.h)
 
 add_executable(Pound
   ${Core}
+)
+
+target_compile_options(Pound PRIVATE -Wall -Wpedantic
+-Wshadow
+-Wpointer-arith
+-Wcast-qual
+-Wcast-align
+-Wconversion
 )
 
 target_precompile_headers(Pound PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/core/Base/Types.h)

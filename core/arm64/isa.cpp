@@ -42,7 +42,6 @@ void take_synchronous_exception(vcpu_state_t* vcpu, uint8_t exception_class, uin
      * to 0b0101 for EL1h (using SP_EL1). (page 913 in manual) */
     const uint32_t PSTATE_EL_MASK = 0b1111;
     vcpu->pstate &= ~PSTATE_EL_MASK;
-    const uint32_t PSTATE_EL1H = 0b0101;
     vcpu->pstate |= PSTATE_EL1H;
 
     /*  TODO(GloriousTacoo:arm): DO NOT IMPLEMENT UNTIL THE INSTRUCTION
