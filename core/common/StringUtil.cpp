@@ -1,6 +1,7 @@
 // Copyright 2025 Xenon Emulator Project. All rights reserved.
 
 #include "StringUtil.h"
+#include "Types.h"
 
 namespace Base
 {
