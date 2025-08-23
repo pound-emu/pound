@@ -38,15 +38,13 @@ add_executable(Pound
 target_precompile_headers(Pound PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/core/Base/Types.h)
 
 # Link libraries
-target_link_libraries(Pound PRIVATE fmt::fmt rem SDL3::SDL3 toml11::toml11)
+target_link_libraries(Pound PRIVATE fmt::fmt SDL3::SDL3 toml11::toml11)
 
 if (WIN32)
   add_compile_definitions(NOMINMAX WIN32_LEAN_AND_MEAN)
 
   # Disables Warnings
   add_compile_definitions(_CRT_SECURE_NO_WARNINGS)
-
-  target_sources(Pound PRIVATE core/Pound.rc)
 endif()
 
 
