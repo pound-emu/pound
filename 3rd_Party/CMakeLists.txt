@@ -12,11 +12,6 @@ if (NOT TARGET fmt::fmt)
   add_subdirectory(fmt)
 endif()
 
-# rem
-if (NOT TARGET rem)
-  add_subdirectory(rem)
-endif()
-
 # SDL3
 if (NOT TARGET SDL3::SDL3)
   set(SDL_DISKAUDIO OFF)
