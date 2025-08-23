@@ -25,16 +25,18 @@ project(Pound)
 find_package(fmt 10.2.1 CONFIG)
 find_package(SDL3 3.2.10 CONFIG)
 find_package(toml11 4.4.0 CONFIG)
-
-include_directories(core)
 add_subdirectory(3rd_Party)
 
 
-file(GLOB_RECURSE Core core/*.cpp core/*.h)
-
 add_executable(Pound
-  ${Core}
+    core/main.cpp
 )
+
+
+add_subdirectory(core/arm64)
+add_subdirectory(core/common)
+add_subdirectory(core/frontend)
+add_subdirectory(core/host)
 
 target_compile_options(Pound PRIVATE -Wall -Wpedantic
 -Wshadow
@@ -43,8 +45,6 @@ target_compile_options(Pound PRIVATE -Wall -Wpedantic
 -Wcast-align
 -Wconversion
 )
-
-target_precompile_headers(Pound PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/core/Base/Types.h)
 
 # Link libraries
 target_link_libraries(Pound PRIVATE fmt::fmt SDL3::SDL3 toml11::toml11)
@@ -79,4 +79,3 @@ find_package(OpenGL REQUIRED)
 target_link_libraries(Pound PRIVATE OpenGL::GL)
 
 # add ./gui directory
-add_subdirectory(gui)

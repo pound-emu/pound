@@ -2,10 +2,9 @@
 
 #pragma once
 
+#include <cstdint>
 #include <cstdlib>
 #include <cstring>
-
-#include "Base/Logging/Log.h"
 
 namespace pound::arm64
 {
@@ -29,7 +28,6 @@ namespace pound::arm64
 #define PSTATE_EL0 0b0000
 #define PSTATE_EL1T 0b0100
 #define PSTATE_EL1H 0b0101
-
 
 /*
  * vcpu_state_t - Holds the architectural and selected system-register state for an emulated vCPU.
@@ -108,7 +106,7 @@ typedef struct alignas(CACHE_LINE_SIZE)
      * Bits [21:16], T1SZ, does the same for the top half of the virtual
      * address space (controlled by TTBR1). */
     uint64_t tcr_el1;
-    
+
     /*
      * Holds the 64-bit base physical address of the initial page table
      * used for translating virtual addresses in the lower half of the

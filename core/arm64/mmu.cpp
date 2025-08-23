@@ -265,7 +265,7 @@ int mmu_gva_to_gpa(pound::arm64::vcpu_state_t* vcpu, guest_memory_t* memory, uin
         case GRANULE_4KB:
             /* A 4KB granule supports up to a 4-level walk starting at L0. */
             page_table_levels = 3; /* 0..3 inclusive */
-                if (virtual_address_size > l0_shift)
+            if (virtual_address_size > l0_shift)
             {
                 starting_level = 0;
             }

@@ -4,15 +4,15 @@
 #include <memory>
 #include <thread>
 
-#include "Base/Config.h"
-#include "Base/Logging/Log.h"
-#include "Base/Logging/Backend.h"
-#include "gui/gui.h"
-#include "memory/arena.h"
+#include "common/Config.h"
+#include "common/Logging/Backend.h"
+#include "common/Logging/Log.h"
+#include "frontend/gui.h"
+#include "host/memory/arena.h"
 
 #include <SDL3/SDL_opengl.h>
-#include "gui/color.h"
-#include "gui/panels.h"
+#include "frontend/color.h"
+#include "frontend/panels.h"
 #include "imgui_impl_opengl3.h"
 #include "imgui_impl_sdl3.h"
 

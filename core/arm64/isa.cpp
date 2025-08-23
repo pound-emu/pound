@@ -1,7 +1,8 @@
 #include "isa.h"
-#include "guest.h"
-#include "memory/arena.h"
 #include <cassert>
+#include "common/Logging/Log.h"
+#include "guest.h"
+#include "host/memory/arena.h"
 
 namespace pound::arm64
 {
@@ -154,7 +155,7 @@ bool test_guest_ram_access(pound::arm64::memory::guest_memory_t* memory)
 void cpuTest()
 {
     vcpu_state_t vcpu_states[CPU_CORES] = {};
-    pound::memory::arena_t guest_memory_arena = pound::memory::arena_init(GUEST_RAM_SIZE);
+    pound::host::memory::arena_t guest_memory_arena = pound::host::memory::arena_init(GUEST_RAM_SIZE);
     assert(nullptr != guest_memory_arena.data);
 
     pound::arm64::memory::guest_memory_t guest_ram = {};
@@ -163,4 +164,4 @@ void cpuTest()
 
     (void)test_guest_ram_access(&guest_ram);
 }
-}  // namespace pound::armv64
+}  // namespace pound::arm64
