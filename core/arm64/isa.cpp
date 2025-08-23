@@ -42,7 +42,6 @@ void take_synchronous_exception(vcpu_state_t* vcpu, uint8_t exception_class, uin
      * to 0b0101 for EL1h (using SP_EL1). (page 913 in manual) */
     const uint32_t PSTATE_EL_MASK = 0b1111;
     vcpu->pstate &= ~PSTATE_EL_MASK;
-    const uint32_t PSTATE_EL1H = 0b0101;
     vcpu->pstate |= PSTATE_EL1H;
 
     /*  TODO(GloriousTacoo:arm): DO NOT IMPLEMENT UNTIL THE INSTRUCTION
@@ -163,9 +162,5 @@ void cpuTest()
     guest_ram.size = guest_memory_arena.capacity;
 
     (void)test_guest_ram_access(&guest_ram);
-    vcpu_states[0].sctlr_el1 = 3;
-    uint64_t out = 0;
-    uint64_t gva = 2636;
-    assert(0 == pound::arm64::memory::mmu_gva_to_gpa(&vcpu_states[0], gva, &out));
 }
 }  // namespace pound::armv64

@@ -25,6 +25,12 @@ namespace pound::arm64
 /* Data Abort exception from a lower Exception level. */
 #define EC_DATA_ABORT_LOWER_EL 0b100100
 
+/* Set the PSTATE exception level. (page 913 in manual) */
+#define PSTATE_EL0 0b0000
+#define PSTATE_EL1T 0b0100
+#define PSTATE_EL1H 0b0101
+
+
 /*
  * vcpu_state_t - Holds the architectural and selected system-register state for an emulated vCPU.
  * @v:              128-bit SIMD/FP vector registers V0–V31.
@@ -40,9 +46,12 @@ namespace pound::arm64
  * @elr_el1:        Exception Link Register.
  * @esr_el1:        Exception Syndrome Register.
  * @far_el1:        Fault Address Register.
- * @vbar_el1:       Vector Base Address Register.
  * @sctlr_el1:      System Control Register.
  * @spsr_el1:       Saved Program Status Register.
+ * @tcr_el1:        Translation Control Register.
+ * @ttbr0_el1:      Translation Table Base Register 0.
+ * @ttbr1_el1:      Translation Table Base Register 1.
+ * @vbar_el1:       Vector Base Address Register.
  * @ctr_el0:        Cache-Type.
  * @cntv_ctl_el0:   Virtual Timer Control.
  * @dczid_el0:      Data Cache Zero ID.
@@ -83,7 +92,7 @@ typedef struct alignas(CACHE_LINE_SIZE)
     /* The memory address that caused a Data Abort exception. */
     uint64_t far_el1;
 
-    /* SCTLR_EL1[0] bit enables the MMU. */
+    /* Bit [0] bit enables the MMU. */
     uint64_t sctlr_el1;
 
     /*
@@ -92,6 +101,29 @@ typedef struct alignas(CACHE_LINE_SIZE)
      * exception. 
      */
     uint64_t spsr_el1;
+
+    /* Bits [5:0], T0SZ, specifies the size of the bottom half of the
+     * virtual address space (the ones controlled by TTBR0).
+     *
+     * Bits [21:16], T1SZ, does the same for the top half of the virtual
+     * address space (controlled by TTBR1). */
+    uint64_t tcr_el1;
+    
+    /*
+     * Holds the 64-bit base physical address of the initial page table
+     * used for translating virtual addresses in the lower half of the
+     * virtual address space (typically userspace). The top bit of the VA
+     * (bit 63) being 0 selects TTBR0 for the page table walk.
+     */
+    uint64_t ttbr0_el1;
+
+    /*
+     * Holds the 64-bit base physical address of the initial page table
+     * used for translating virtual addresses in the upper half of the
+     * virtual address space (typically kernel space). The top bit of the VA
+     * (bit 63) being 1 selects TTBR1 for the page table walk.
+     */
+    uint64_t ttbr1_el1;
 
     /* 
      * The base address in guest memory where the Exception Vector Table
