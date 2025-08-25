@@ -1,9 +1,6 @@
 [submodule "3rd_Party/fmt"]
 	path = 3rd_Party/fmt
 	url = https://github.com/fmtlib/fmt.git
-[submodule "3rd_Party/toml11"]
-	path = 3rd_Party/toml11
-	url = https://github.com/ToruNiina/toml11.git
 [submodule "3rd_Party/SDL3"]
 	path = 3rd_Party/SDL3
 	url = https://github.com/libsdl-org/SDL.git

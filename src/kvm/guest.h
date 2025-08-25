@@ -3,7 +3,7 @@
 #include <cassert>
 #include <cstdint>
 
-namespace pound::arm64::memory
+namespace pound::kvm::memory
 {
 
 /*
@@ -193,4 +193,4 @@ static inline void guest_mem_writeq(guest_memory_t* memory, uint64_t gpa, uint64
     uint64_t* hva = (uint64_t*)gpa_to_hva(memory, gpa);
     *hva = val;
 }
-}  // namespace pound::arm64::memory
+}  // namespace pound::kvm::memory

@@ -1,18 +1,16 @@
 // Copyright 2025 Pound Emulator Project. All rights reserved.
 
 #pragma once
+#include "guest.h"
 
 #include <cstdint>
 #include <cstdlib>
 #include <cstring>
 
-namespace pound::arm64
+namespace pound::kvm
 {
 /* AArch64 R0-R31 */
 #define GP_REGISTERS 32
-
-/* AArch64 V0-V31 */
-#define FP_REGISTERS 32
 
 #define CACHE_LINE_SIZE 64
 #define GUEST_RAM_SIZE 10240  // 10KiB
@@ -30,8 +28,7 @@ namespace pound::arm64
 #define PSTATE_EL1H 0b0101
 
 /*
- * vcpu_state_t - Holds the architectural and selected system-register state for an emulated vCPU.
- * @v:              128-bit SIMD/FP vector registers V0–V31.
+ * kvm_vcpu_t - Holds the architectural and selected system-register state for an emulated vCPU.
  * @r:              General-purpose registers X0–X31 (X31 as SP/ZR as appropriate).
  * @pc:             Program Counter.
  * @cntfreq_el0:    Counter Frequency.
@@ -61,7 +58,6 @@ namespace pound::arm64
  */
 typedef struct alignas(CACHE_LINE_SIZE)
 {
-    unsigned __int128 v[FP_REGISTERS];
     uint64_t r[GP_REGISTERS];
     uint64_t pc;
     uint64_t cntfreq_el0;
@@ -134,7 +130,92 @@ typedef struct alignas(CACHE_LINE_SIZE)
     uint32_t dczid_el0;
     uint32_t pmcr_el0;
     uint32_t pstate;
-} vcpu_state_t;
+} kvm_vcpu_t;
+
+/* This is here to break the circular dependency between kvm_t and kvm_ops_t. */
+typedef struct kvm_s kvm_t;
+
+/*
+ * struct kvm_ops_t - A table of machine-specific operations.
+ * @init:       Function pointer to initialize the target machine's state.
+ *              Called once by kvm_probe(). It is responsible for setting up
+ *              the guest memory map, loading firmware, and registering all
+ *              MMIO device handlers.
+ * @mmio_read:  Function pointer to handle a guest read from an MMIO region.
+ * @mmio_write: Function pointer to handle a guest write to an MMIO region.
+ * @destroy:    Function pointer to clean up and deallocate all resources
+ *              associated with the machine instance. Called on VM shutdown.
+ *
+ * This structure acts as a "virtual table" in C, allowing the generic KVM
+ * core to call target-specific code (e.g., for a Switch 1 or Switch 2)
+ * without needing to know the implementation details. Each supported target
+ * machine must provide a globally visible instance of this struct.
+ */
+typedef struct
+{
+    /* Initialize the machine state */
+    int8_t (*init)(kvm_t* kvm);
+
+    /* Handles an MMIO read from the guest. */
+    int8_t (*mmio_read)(kvm_t* kvm, uint64_t gpa, uint8_t* data, size_t len);
+
+    /* Handles an MMIO write from the guest. */
+    int8_t (*mmio_write)(kvm_t* kvm, uint64_t gpa, uint8_t* data, size_t len);
+
+    /* Clean up on shutdown */
+    void (*destroy)(kvm_t* kvm);
+} kvm_ops_t;
+
+/*
+ * kvm_s - The main KVM instance structure.
+ * @vcpu:   The state of the emulated virtual CPU core. Contains all guest-
+ *          visible registers.
+ * @memory: A structure representing the guest's physical RAM.
+ * @ops:    A table of function pointers to the machine-specific implementation
+ *          for this KVM instance. This should only be set by kvm_probe().
+ *
+ * This structure represents a single virtual machine instance.
+ */
+struct kvm_s
+{
+    pound::kvm::kvm_vcpu_t vcpu;
+    pound::kvm::memory::guest_memory_t memory;
+    kvm_ops_t ops;
+};
+
+/**
+ * s1_ops - The machine-specific operations for the "Switch 1" target.
+ *
+ * This is the global instance of the operations table for the Switch 1.
+ * It is defined in the target-specific source file 
+ * (targets/switch1/hardware/probe.cpp) and provides the iplementations 
+ * for initializing and running the emulated Switch 1 hardware.
+ */
+extern const kvm_ops_t s1_ops;
+
+enum target_type
+{
+    KVM_TARGET_SWITCH1 = 0,
+    KVM_TARGET_SWITCH2 = 1,
+};
+
+/*
+ * kvm_probe - Probes for and initializes a target machine configuration.
+ * @kvm:  A pointer to the KVM instance to be initialized. This function will
+ *        populate the fields of this struct.
+ * @type: The type of target machine to initialize.
+ *
+ * This function is the primary factory for creating a virtual machine. It
+ * looks up the requested machine @type, attaches the corresponding operations
+ * table (e.g., s1_ops) to the @kvm instance, and calls the machine-specific
+ * init() function.
+ *
+ * On successful return, the @kvm struct will be fully configured and ready
+ * for execution.
+ *
+ * Return: 0 on success, or a negative errno code on failure.
+ */
+uint8_t kvm_probe(kvm_t* kvm, enum target_type type);
 
 /*
  * take_synchronous_exception() -  Emulates the hardware process of taking a synchronous exception to EL1.
@@ -151,7 +232,7 @@ typedef struct alignas(CACHE_LINE_SIZE)
  * program counter by branching to the appropriate offset in the EL1 vector table.
  *
  */
-void take_synchronous_exception(vcpu_state_t* vcpu, uint8_t exception_class, uint32_t iss, uint64_t faulting_address);
+void take_synchronous_exception(kvm_vcpu_t* vcpu, uint8_t exception_class, uint32_t iss, uint64_t faulting_address);
 
 void cpuTest();
-}  // namespace pound::arm64
+}  // namespace pound::kvm

@@ -1,9 +1,9 @@
 #ifndef POUND_ARENA_ALLOCATOR_H
 #define POUND_ARENA_ALLOCATOR_H
 
+#include "arena.h"
 #include <cstddef>
 #include <memory>
-#include "arena.h"
 
 namespace pound::host::memory
 {
@@ -19,7 +19,7 @@ namespace pound::host::memory
     arena_t my_arena = memory::arena_init(4096);
     arena_allocator<int> alloc(&my_arena);
     
-    std::vector<int, memory::arena_allocator<int>> vec(alloc);
+    std::vector<int, arena_allocator<int>> vec(alloc);
     vec.push_back(42);
     // ...
     arena_reset(&my_arena); // Frees all allocations in the arena

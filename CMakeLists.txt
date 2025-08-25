@@ -24,19 +24,19 @@ project(Pound)
 
 find_package(fmt 10.2.1 CONFIG)
 find_package(SDL3 3.2.10 CONFIG)
-find_package(toml11 4.4.0 CONFIG)
 add_subdirectory(3rd_Party)
 
 
 add_executable(Pound
-    core/main.cpp
+    src/main.cpp
 )
 
 
-add_subdirectory(core/arm64)
-add_subdirectory(core/common)
-add_subdirectory(core/frontend)
-add_subdirectory(core/host)
+add_subdirectory(src/kvm)
+add_subdirectory(src/common)
+add_subdirectory(src/frontend)
+add_subdirectory(src/host)
+add_subdirectory(src/targets/switch1/hardware)
 
 target_compile_options(Pound PRIVATE -Wall -Wpedantic
 -Wshadow
@@ -47,7 +47,7 @@ target_compile_options(Pound PRIVATE -Wall -Wpedantic
 )
 
 # Link libraries
-target_link_libraries(Pound PRIVATE fmt::fmt SDL3::SDL3 toml11::toml11)
+target_link_libraries(Pound PRIVATE fmt::fmt SDL3::SDL3)
 
 if (WIN32)
   add_compile_definitions(NOMINMAX WIN32_LEAN_AND_MEAN)

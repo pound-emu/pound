@@ -1,7 +1,7 @@
 #include "panels.h"
 #include <imgui.h>
 #include <math.h>
-#include "arm64/isa.h"
+#include "kvm/kvm.h"
 #include "common/Assert.h"
 
 int8_t gui::panel::render_performance_panel(gui::panel::performance_panel_t* panel, performance_data_t* data,
@@ -94,7 +94,7 @@ int8_t gui::panel::render_cpu_panel(bool* show_cpu_result_popup)
 
     if (::ImGui::Button("Run CPU Test", ImVec2(120, 0)))
     {
-        pound::arm64::cpuTest();
+        pound::kvm::cpuTest();
         *show_cpu_result_popup = true;
     }
     if (true == *show_cpu_result_popup)

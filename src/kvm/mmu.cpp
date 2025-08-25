@@ -1,8 +1,8 @@
 #include "mmu.h"
 #include <limits.h>
-#include "isa.h"
+#include "kvm.h"
 
-namespace pound::arm64::memory
+namespace pound::kvm::memory
 {
 #define GRANULE_4KB (1ULL << 12)
 #define GRANULE_16KB (1ULL << 14)
@@ -42,7 +42,7 @@ static inline uint8_t msvc_ctzll(unsigned long long val)
 /* Define the size of a page table entry (descriptor) */
 #define PAGE_TABLE_ENTRY_SHIFT 3 /* log2(8 bytes) */
 
-int mmu_gva_to_gpa(pound::arm64::vcpu_state_t* vcpu, guest_memory_t* memory, uint64_t gva, uint64_t* out_gpa)
+int mmu_gva_to_gpa(pound::kvm::kvm_vcpu_t* vcpu, guest_memory_t* memory, uint64_t gva, uint64_t* out_gpa)
 {
     const uint8_t SCTLR_EL1_M_BIT = (1 << 0);
     if (0 == (vcpu->sctlr_el1 & SCTLR_EL1_M_BIT))
@@ -392,4 +392,4 @@ int mmu_gva_to_gpa(pound::arm64::vcpu_state_t* vcpu, guest_memory_t* memory, uin
     }
     return -1;
 }
-}  // namespace pound::arm64::memory
+}  // namespace pound::kvm::memory

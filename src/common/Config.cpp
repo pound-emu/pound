@@ -3,7 +3,6 @@
 #include "Config.h"
 
 #include <fmt/core.h>
-#include <toml.hpp>
 
 namespace Config
 {
@@ -38,6 +37,7 @@ std::string logType()
 
 void Load(const std::filesystem::path& path)
 {
+    /*
     // If the configuration file does not exist, create it and return
     std::error_code error;
     if (!std::filesystem::exists(path, error))
@@ -67,10 +67,12 @@ void Load(const std::filesystem::path& path)
         logAdvanced = toml::find_or<bool>(general, "Advanced Log", false);
         typeLog = toml::find_or<std::string>(general, "Log Type", "async");
     }
+    */
 }
 
 void Save(const std::filesystem::path& path)
 {
+    /*
     toml::ordered_value data;
 
     std::error_code error;
@@ -103,6 +105,7 @@ void Save(const std::filesystem::path& path)
     std::ofstream file(path, std::ios::binary);
     file << data;
     file.close();
+    */
 }
 
 }  // namespace Config

@@ -1,12 +1,25 @@
-#include "isa.h"
+#include "kvm.h"
 #include <cassert>
 #include "common/Logging/Log.h"
 #include "guest.h"
 #include "host/memory/arena.h"
 
-namespace pound::arm64
+namespace pound::kvm
 {
-void take_synchronous_exception(vcpu_state_t* vcpu, uint8_t exception_class, uint32_t iss, uint64_t faulting_address)
+
+uint8_t kvm_probe(kvm_t* kvm, enum target_type type)
+{
+    if (type != KVM_TARGET_SWITCH1)
+    {
+        assert(!"Only Switch 1 is supported");
+    }
+    kvm->ops = s1_ops;
+    /* Go to targets/switch1/hardware/probe.cpp */
+    (void)kvm->ops.init(kvm);
+    return 0;
+}
+
+void take_synchronous_exception(kvm_vcpu_t* vcpu, uint8_t exception_class, uint32_t iss, uint64_t faulting_address)
 {
     assert(nullptr != vcpu);
     /* An EC holds 6 bits.*/
@@ -68,7 +81,7 @@ void take_synchronous_exception(vcpu_state_t* vcpu, uint8_t exception_class, uin
  * @param memory A pointer to an initialized guest_memory_t struct.
  * @return true if all tests pass, false otherwise.
  */
-bool test_guest_ram_access(pound::arm64::memory::guest_memory_t* memory)
+bool test_guest_ram_access(pound::kvm::memory::guest_memory_t* memory)
 {
     LOG_INFO(Memory, "--- [ Starting Guest RAM Access Test ] ---");
     if (memory == nullptr || memory->base == nullptr || memory->size < 4096)
@@ -154,14 +167,13 @@ bool test_guest_ram_access(pound::arm64::memory::guest_memory_t* memory)
 
 void cpuTest()
 {
-    vcpu_state_t vcpu_states[CPU_CORES] = {};
     pound::host::memory::arena_t guest_memory_arena = pound::host::memory::arena_init(GUEST_RAM_SIZE);
     assert(nullptr != guest_memory_arena.data);
 
-    pound::arm64::memory::guest_memory_t guest_ram = {};
+    pound::kvm::memory::guest_memory_t guest_ram = {};
     guest_ram.base = static_cast<uint8_t*>(guest_memory_arena.data);
     guest_ram.size = guest_memory_arena.capacity;
 
     (void)test_guest_ram_access(&guest_ram);
 }
-}  // namespace pound::arm64
+}  // namespace pound::kvm
