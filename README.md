@@ -13,32 +13,26 @@
 
 
 > [!NOTE]
-> Do you think the name "Pound" makes this a scam?  
-> Do you think since the switch 2 hasn't been hacked this project is automatically a scam?  
-> Do you think this project can't use switch 1 firmware dumps to set the foundation for when the switch 2 gets hacked?  
-> Do you think the commits pushed to the main and arm64 branch are a scam?  
-> Do you think the development progress posted on our discord are a scam?  
-> If so then simply close this browser tab and move on.  
-> if you have knowlege in Arm64 architecture please come to our server and help out.  
+> Do you think the name "Pound" makes this a scam?<br>
+> Do you think since the Switch 2 hasn't been hacked this project is automatically a scam?<br>
+> Do you think this project can't use Switch 1 firmware dumps to set the foundation for when the Switch 2 gets hacked?<br>
+> Do you think the commits pushed to the main and Arm64 branch are a scam?<br>
+> Do you think the development progress posted on our discord are a scam?<br>
+> <i>If so then simply close this browser tab and move on.</i><br><br>
+> If you have knowledge in Arm64 architecture, please come to our server and help out.
 
 ## Overview
 
 Join the [**Pound Discord Server**](https://discord.gg/aMmTmKsVC7)!
 
-**Pound** is an early-stage emulator for the **Nintendo Switch 1 and 2**, targeting **Windows**, **Linux** and **macOS** (
-Intel and Apple Silicon).
+**Pound** is an early-stage emulator for the **Nintendo Switch 1 and 2**, targeting **Windows**, **Linux** and **macOS** (Intel and Apple Silicon).
 
-Initial focus is on implementing the architectural similarities to the original Nintendo Switch. Later stages of
-development will address differences in hardware between the two console generations.
+Initial focus is on implementing the architectural similarities to the original Nintendo Switch. Later stages of development will address differences in hardware between the two console generations.
 
 ## Disclaimer
 
-The goal of this project is to experiment, research, and educate on the topic
-of emulation of modern devices and operating systems. **It is not for enabling
-illegal activity**. All information is obtained via reverse engineering of
-legally purchased devices and games and information made public on the internet
-(you'd be surprised what's indexed on Google...). We are not any way affiliated
-with Nintendo or NVidia.
+The goal of this project is to experiment, research, and educate on the topic of emulation of modern devices and operating systems. **It is not for enabling illegal activity**. All information is obtained via reverse engineering of legally purchased devices and games and information made public on the internet (you'd be surprised what's indexed on Google...).
+We are not any way affiliated with Nintendo or NVidia.
 
 ## How to Compile Pound
 
