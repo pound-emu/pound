@@ -19,7 +19,8 @@
 > Do you think the commits pushed to the main and arm64 branch are a scam?  
 > Do you think the development progress posted on our discord are a scam?  
 > If so then simply close this browser tab and move on.  
-> if you have knowlege in Arm64 architecture please come to our server and help out.  
+> if you have knowlege in Arm64 architecture please come to our server and help out.
+> We have limited resources/time at the moment, if you want to contribute you are free to do so.
 
 ## Overview
 
