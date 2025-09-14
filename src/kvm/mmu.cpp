@@ -340,7 +340,8 @@ int mmu_gva_to_gpa(pound::kvm::kvm_vcpu_t* vcpu, guest_memory_t* memory, uint64_
         }
 
         const uint64_t level_entry_address = table_address + (level_index * page_table_entry_size);
-        const uint64_t descriptor = guest_mem_readq(memory, level_entry_address);
+        uint64_t descriptor = 0;
+        guest_mem_readq(memory, level_entry_address, &descriptor);
         uint64_t offset_mask = (1ULL << offset_bits) - 1;
         uint64_t page_offset = gva & offset_mask;
         uint64_t page_address_mask = ~offset_mask;

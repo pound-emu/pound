@@ -2,6 +2,7 @@
 
 cmake_minimum_required(VERSION 3.22)
 
+
 set(CMAKE_C_STANDARD 17)
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_C_STANDARD_REQUIRED TRUE)
@@ -12,6 +13,8 @@ if (NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Debug)
 endif()
 
+# Enable asserts in release mode.
+string( REPLACE "/DNDEBUG" "" CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}")
 
 # Optimizations
 set(CMAKE_INTERPROCEDURAL_OPTIMIZATION_RELEASE ON)
@@ -21,6 +24,7 @@ if (WIN32)
 endif()
 
 project(Pound)
+
 
 find_package(fmt 10.2.1 CONFIG)
 find_package(SDL3 3.2.10 CONFIG)
@@ -37,6 +41,24 @@ add_subdirectory(src/common)
 add_subdirectory(src/frontend)
 add_subdirectory(src/host)
 add_subdirectory(src/targets/switch1/hardware)
+
+# Detect Host System Endianness.
+include(TestBigEndian)
+TEST_BIG_ENDIAN(WORDS_BIGENDIAN)
+if(WORDS_BIGENDIAN)
+    message(STATUS "Host Endianness: Big Endian")
+else()
+    message(STATUS "Host Endianness: Little Endian")
+endif()
+
+# Configure Preprocessor Definitions based on Endianness.
+if(WORDS_BIGENDIAN)
+    target_compile_definitions(Pound PRIVATE HOST_IS_BIG_ENDIAN=1)
+    target_compile_definitions(Pound PRIVATE HOST_IS_LITTLE_ENDIAN=0)
+else()
+    target_compile_definitions(Pound PRIVATE HOST_IS_BIG_ENDIAN=0)
+    target_compile_definitions(Pound PRIVATE HOST_IS_LITTLE_ENDIAN=1)
+endif()
 
 target_compile_options(Pound PRIVATE -Wall -Wpedantic
 -Wshadow

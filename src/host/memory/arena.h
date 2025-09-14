@@ -58,7 +58,7 @@ memory::arena_t arena_init(size_t capacity);
  *      arena_allocate - Allocate memory from a pre-initialized arena.
  *
  *  SYNOPSIS
- *      const void* arena_allocate(arena_t* arena, std::size_t size);
+ *      void* arena_allocate(arena_t* arena, std::size_t size);
  *
  *  DESCRIPTION
  *      The function allocates size bytes from the specified arena. It assumes
@@ -72,7 +72,7 @@ memory::arena_t arena_init(size_t capacity);
  *  NOTES
  *      Requires arena_t to be initialized with arena_init() or similar.
  */
-const void* arena_allocate(arena_t* arena, const std::size_t size);
+void* arena_allocate(arena_t* arena, const std::size_t size);
 
 /*
  *  NAME
