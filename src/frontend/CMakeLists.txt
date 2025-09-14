@@ -1,11 +1,14 @@
-#Copyright 2025 Pound Emulator Project.All rights reserved.
+add_library(frontend STATIC)
 
-#GUI sources
-set(GUI_SOURCES ${CMAKE_CURRENT_SOURCE_DIR} / gui.cpp ${CMAKE_CURRENT_SOURCE_DIR} /
-    color.cpp ${CMAKE_CURRENT_SOURCE_DIR} / panels.cpp)
+target_sources(frontend PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/gui.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/color.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/panels.cpp
+)
 
-#Add all GUI sources to the main target
-    target_sources(Pound PRIVATE ${GUI_SOURCES})
+target_link_libraries(frontend PRIVATE common imgui SDL3::SDL3)
 
-#Include directories for GUI
-        target_include_directories(Pound PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} /..)
+target_include_directories(frontend PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/..
+)

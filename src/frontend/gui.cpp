@@ -1,6 +1,6 @@
 #include "gui.h"
 #include "color.h"
-#include "common/Assert.h"
+#include <assert.h>
 #include "common/Logging/Log.h"
 #include "imgui_impl_opengl3_loader.h"
 
@@ -16,8 +16,8 @@ static void apply_theme();
 
 bool gui::window_init(window_t* window, const char* title, int64_t width, int64_t height)
 {
-    ASSERT(nullptr != window);
-    ASSERT(nullptr != title);
+    assert(nullptr != window);
+    assert(nullptr != title);
 
     bool ret = ::SDL_Init(SDL_INIT_VIDEO);
     if (false == ret)
@@ -119,8 +119,8 @@ void gui::window_destroy(gui::window_t* window)
 
 bool gui::init_imgui(gui::window_t* main_window)
 {
-    ASSERT(nullptr != main_window->data);
-    ASSERT(nullptr != main_window->gl_context);
+    assert(nullptr != main_window->data);
+    assert(nullptr != main_window->gl_context);
 
     // Initialize ImGui
     IMGUI_CHECKVERSION();

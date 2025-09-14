@@ -1,7 +1,7 @@
 #ifndef POUND_KVM_GUEST_H
 #define POUND_KVM_GUEST_H
 
-#include <assert.h>
+#include <cassert>
 #include <stdint.h>
 #include <string.h>
 

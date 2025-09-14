@@ -1,12 +1,12 @@
 // Copyright 2025 Xenon Emulator Project. All rights reserved.
 
-#include "common/Assert.h"
 #include "common/Config.h"
 
 #include "TextFormatter.h"
 
 #include "Filter.h"
 #include "LogEntry.h"
+#include <algorithm>
 
 namespace Base {
 namespace Log {
@@ -57,7 +57,7 @@ void PrintColoredMessage(const Entry &entry) {
     color = ESC "[0;92m";
     break;
   case Level::Count:
-    UNREACHABLE();
+    break;
   }
 
   PrintMessage(color, entry);

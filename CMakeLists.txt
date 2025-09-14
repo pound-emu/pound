@@ -1,103 +1,97 @@
-# Copyright 2025 Xenon Emulator Project. All rights reserved.
-
 cmake_minimum_required(VERSION 3.22)
 
+#------------------------
+# ---- Project Setup ----
+#------------------------
 
-set(CMAKE_C_STANDARD 17)
-set(CMAKE_CXX_STANDARD 23)
-set(CMAKE_C_STANDARD_REQUIRED TRUE)
-set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
-set(IMGUI_DIR ${CMAKE_CURRENT_SOURCE_DIR}/3rd_Party/imgui)
+project(Pound)
 
 if (NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Debug)
 endif()
 
-# Enable asserts in release mode.
-string( REPLACE "/DNDEBUG" "" CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}")
+# Enable asserts in release mode. Windows throws a metric fuck ton of compiler
+# errors when asserts are disabled.
+#if (UNIX)
+#   string(REPLACE "-DNDEBUG" "" CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}")
+#endif()
 
-# Optimizations
-set(CMAKE_INTERPROCEDURAL_OPTIMIZATION_RELEASE ON)
-if (WIN32)
-  add_compile_options($<$<CONFIG:Release>:/Oi>)
-  add_compile_options($<$<CONFIG:Release>:/Ot>)
-endif()
+set(CMAKE_C_STANDARD 17)
+set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_C_STANDARD_REQUIRED TRUE)
+set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 
-project(Pound)
+#-------------------------------
+# ---- Dependency Discovery ----
+#-------------------------------
 
-
+find_package(OpenGL REQUIRED)
 find_package(fmt 10.2.1 CONFIG)
 find_package(SDL3 3.2.10 CONFIG)
-add_subdirectory(3rd_Party)
 
+#-----------------------------
+# ---- Target Definitions ----
+#-----------------------------
+
+if(WIN32)
+    add_compile_options(-DNOMINMAX -DWIN32_LEAN_AND_MEAN)
+endif()
 
 add_executable(Pound
     src/main.cpp
 )
 
-
-add_subdirectory(src/kvm)
+add_subdirectory(3rd_Party)
 add_subdirectory(src/common)
 add_subdirectory(src/frontend)
 add_subdirectory(src/host)
+add_subdirectory(src/kvm)
 add_subdirectory(src/targets/switch1/hardware)
 
-# Detect Host System Endianness.
+#--------------------------------
+# ---- Target Configurations ----
+#--------------------------------
+
 include(TestBigEndian)
 TEST_BIG_ENDIAN(WORDS_BIGENDIAN)
-if(WORDS_BIGENDIAN)
-    message(STATUS "Host Endianness: Big Endian")
-else()
-    message(STATUS "Host Endianness: Little Endian")
-endif()
 
-# Configure Preprocessor Definitions based on Endianness.
-if(WORDS_BIGENDIAN)
-    target_compile_definitions(Pound PRIVATE HOST_IS_BIG_ENDIAN=1)
-    target_compile_definitions(Pound PRIVATE HOST_IS_LITTLE_ENDIAN=0)
-else()
-    target_compile_definitions(Pound PRIVATE HOST_IS_BIG_ENDIAN=0)
-    target_compile_definitions(Pound PRIVATE HOST_IS_LITTLE_ENDIAN=1)
-endif()
+list(APPEND POUND_PROJECT_TARGETS common frontend host kvm)
+foreach(TARGET ${POUND_PROJECT_TARGETS})
+    # Apply Endianness definitions to all our targets.
+    if(WORDS_BIGENDIAN)
+        target_compile_definitions(${TARGET} PRIVATE HOST_IS_BIG_ENDIAN=1 HOST_IS_LITTLE_ENDIAN=0)
+    else()
+        target_compile_definitions(${TARGET} PRIVATE HOST_IS_BIG_ENDIAN=0 HOST_IS_LITTLE_ENDIAN=1)
+    endif()
+    target_compile_options(${TARGET} PRIVATE
+        $<$<CXX_COMPILER_ID:GNU,Clang>:
+        -Wall
+        -Wpedantic
+        -Wshadow
+        -Wpointer-arith
+        -Wcast-qual
+        -Wcast-align
+        -Wconversion>
+    )
+endforeach()
 
-target_compile_options(Pound PRIVATE -Wall -Wpedantic
--Wshadow
--Wpointer-arith
--Wcast-qual
--Wcast-align
--Wconversion
-)
 
-# Link libraries
-target_link_libraries(Pound PRIVATE fmt::fmt SDL3::SDL3)
 
+# Optimizations
+set_property(TARGET Pound PROPERTY CMAKE_INTERPROCEDURAL_OPTIMIZATION_RELEASE TRUE)
 if (WIN32)
-  add_compile_definitions(NOMINMAX WIN32_LEAN_AND_MEAN)
-
-  # Disables Warnings
-  add_compile_definitions(_CRT_SECURE_NO_WARNINGS)
+    target_compile_options(Pound PRIVATE $<$<CONFIG:Release>:/Oi>)
+    target_compile_options(Pound PRIVATE  $<$<CONFIG:Release>:/Ot>)
 endif()
 
+target_link_libraries(Pound PRIVATE
+    common
+    frontend
+    host
+    kvm
 
-# ImGui
-set(IMGUI_SRC
-    ${IMGUI_DIR}/imgui.cpp
-    ${IMGUI_DIR}/imgui_demo.cpp
-    ${IMGUI_DIR}/imgui_draw.cpp
-    ${IMGUI_DIR}/imgui_tables.cpp
-    ${IMGUI_DIR}/imgui_widgets.cpp
-    ${IMGUI_DIR}/backends/imgui_impl_sdl3.cpp
-    ${IMGUI_DIR}/backends/imgui_impl_opengl3.cpp
+    OpenGL::GL
+    fmt::fmt
+    SDL3::SDL3
+    imgui
 )
-
-target_sources(Pound PRIVATE ${IMGUI_SRC})
-
-target_include_directories(Pound PRIVATE
-    ${IMGUI_DIR}
-    ${IMGUI_DIR}/backends
-)
-
-find_package(OpenGL REQUIRED)
-target_link_libraries(Pound PRIVATE OpenGL::GL)
-
-# add ./gui directory

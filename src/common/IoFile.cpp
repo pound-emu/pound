@@ -4,7 +4,6 @@
 
 #include "IoFile.h"
 
-#include "Assert.h"
 #include "Error.h"
 #include "Logging/Log.h"
 #include "PathUtil.h"
@@ -287,7 +286,6 @@ uptr IOFile::GetFileMapping()
     mapping = hfile;
 
     fileMapping = std::bit_cast<uptr>(mapping);
-    ASSERT_MSG(fileMapping, "{}", Base::GetLastErrorMsg());
     return fileMapping;
 #else
     fileMapping = fileno(file);

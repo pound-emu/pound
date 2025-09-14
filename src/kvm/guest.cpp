@@ -1,5 +1,5 @@
 #include "guest.h"
-#include <assert.h>
+#include <cassert>
 
 namespace pound::kvm::memory
 {

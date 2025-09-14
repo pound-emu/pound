@@ -1,8 +1,7 @@
 // Copyright 2025 Xenon Emulator Project. All rights reserved.
 
-#include "common/Assert.h"
-
 #include "Filter.h"
+#include <algorithm>
 
 namespace Base {
 namespace Log {
@@ -33,13 +32,13 @@ template <typename Iterator>
 bool ParseFilterRule(Filter &instance, Iterator begin, Iterator end) {
   const auto levelSeparator = std::find(begin, end, ':');
   if (levelSeparator == end) {
-    LOG_ERROR(Log, "Invalid log filter. Must specify a log level after `:`: {}", std::string_view(begin, end));
+    // LOG_ERROR(Log, "Invalid log filter. Must specify a log level after `:`: {}", std::string_view(begin, end));
     return false;
   }
 
   const Level level = GetLevelByName(levelSeparator + 1, end);
   if (level == Level::Count) {
-    LOG_ERROR(Log, "Unknown log level in filter: {}", std::string_view(begin, end));
+    //LOG_ERROR(Log, "Unknown log level in filter: {}", std::string_view(begin, end));
     return false;
   }
 
@@ -50,7 +49,7 @@ bool ParseFilterRule(Filter &instance, Iterator begin, Iterator end) {
 
   const Class logClass = GetClassByName(begin, levelSeparator);
   if (logClass == Class::Count) {
-    LOG_ERROR(Log, "Unknown log class in filter: {}", std::string(begin, end));
+    //LOG_ERROR(Log, "Unknown log class in filter: {}", std::string(begin, end));
     return false;
   }
 
@@ -88,7 +87,6 @@ const char* GetLogClassName(Class logClass) {
   default:
     break;
   }
-  UNREACHABLE();
 }
 
 const char* GetLevelName(Level logLevel) {
@@ -108,7 +106,6 @@ const char* GetLevelName(Level logLevel) {
     break;
   }
 #undef LVL
-  UNREACHABLE();
 }
 
 Filter::Filter(Level defaultLevel) {
