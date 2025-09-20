@@ -31,11 +31,11 @@ arena_t arena_init(size_t capacity)
 }
 // new more memsafe code (ownedbywuigi) (i give up on windows compatibility for now, will stick to the old unsafe code)
 
-const void* arena_allocate(memory::arena_t* arena, const std::size_t size)
+void* arena_allocate(memory::arena_t* arena, const std::size_t size)
 {
     assert(arena != nullptr);
     assert(arena->size + size <= arena->capacity);
-    const void* const data = static_cast<uint8_t*>(arena->data) + arena->size;
+    void* const data = static_cast<uint8_t*>(arena->data) + arena->size;
     arena->size += size;
     return data;
 }

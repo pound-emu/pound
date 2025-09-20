@@ -1,10 +1,15 @@
-#Copyright 2025 Pound Emulator Project.All rights reserved.
+add_library(kvm STATIC)
 
-set(KVM_SOURCES  ${CMAKE_CURRENT_SOURCE_DIR}/mmu.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/mmio.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/kvm.cpp
+target_sources(kvm PRIVATE
+    mmu.cpp
+    mmio.cpp
+    kvm.cpp
+    guest.cpp
 )
 
-target_sources(Pound PRIVATE ${KVM_SOURCES})
+target_link_libraries(kvm PRIVATE common host)
 
-        target_include_directories(Pound PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} /..)
+target_include_directories(kvm PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/..
+)

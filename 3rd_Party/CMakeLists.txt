@@ -1,5 +1,3 @@
-# Copyright 2025 Xenon Emulator Project. All rights reserved.
-
 set(BUILD_SHARED_LIBS OFF)
 set(BUILD_TESTING OFF)
 set_directory_properties(PROPERTIES EXCLUDE_FROM_ALL ON SYSTEM ON)
@@ -19,3 +17,20 @@ if (NOT TARGET SDL3::SDL3)
   set(SDL_PIPEWIRE OFF)
   add_subdirectory(SDL3)
 endif()
+
+# ImGui
+set(IMGUI_SRC
+    imgui/imgui.cpp
+    imgui/imgui_demo.cpp
+    imgui/imgui_draw.cpp
+    imgui/imgui_tables.cpp
+    imgui/imgui_widgets.cpp
+    imgui/backends/imgui_impl_sdl3.cpp
+    imgui/backends/imgui_impl_opengl3.cpp
+)
+add_library(imgui STATIC ${IMGUI_SRC})
+target_link_libraries(imgui PRIVATE SDL3::SDL3)
+target_include_directories(imgui PUBLIC
+    imgui
+    imgui/backends
+)
