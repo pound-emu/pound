@@ -73,6 +73,15 @@ foreach(TARGET ${POUND_PROJECT_TARGETS})
         -Wcast-align
         -Wconversion>
     )
+
+    # Set Compile time log level for all targets.
+    # 1: Trace
+    # 2: Debug
+    # 3: Info
+    # 4: Warning
+    # 5: Error
+    # 6: Fatal
+    target_compile_definitions(${TARGET} PRIVATE COMPILE_TIME_LOG_LEVEL=1)
 endforeach()
 
 
