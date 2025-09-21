@@ -18,7 +18,7 @@
 
 int main()
 {
-#if 0
+#if 1
     gui::window_t window = {.data = nullptr, .gl_context = nullptr};
     (void)gui::window_init(&window, "Pound Emulator", 640, 480);
 
@@ -103,11 +103,8 @@ int main()
         ::glClear(GL_COLOR_BUFFER_BIT);
 
         ::ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-        if (bool sdl_ret_code = ::SDL_GL_SwapWindow(gui.window.data); false == sdl_ret_code)
-        {
-            LOG_ERROR("Failed to update window with OpenGL rendering: {}", SDL_GetError());
-            is_running = false;
-        }
+        ::SDL_GL_SwapWindow(gui.window.data);
+
 
         // Small delay to prevent excessive CPU usage
         std::this_thread::sleep_for(std::chrono::milliseconds(5));

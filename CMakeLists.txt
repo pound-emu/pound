@@ -80,12 +80,18 @@ endforeach()
 
 
 
-# Optimizations
-set_property(TARGET Pound PROPERTY CMAKE_INTERPROCEDURAL_OPTIMIZATION_RELEASE TRUE)
-if (WIN32)
-    target_compile_options(Pound PRIVATE $<$<CONFIG:Release>:/Oi>)
-    target_compile_options(Pound PRIVATE  $<$<CONFIG:Release>:/Ot>)
-endif()
+# --------------------------------
+# ---- Optimizations / Flags -----
+# --------------------------------
+
+# (optional) LTO/IPO in Release, nur wenn unterstützt
+set_property(TARGET Pound PROPERTY INTERPROCEDURAL_OPTIMIZATION_RELEASE TRUE)
+
+# MSVC-spezifische Flags NUR bei MSVC setzen (nicht bei MinGW/GCC)
+target_compile_options(Pound PRIVATE
+    $<$<AND:$<CXX_COMPILER_ID:MSVC>,$<CONFIG:Release>>:/Oi /Ot>
+)
+
 
 target_link_libraries(Pound PRIVATE
     common
