@@ -1,5 +1,5 @@
 #include "arena.h"
-#include <cassert>
+#include "common/passert.h"
 #include <cstring>
 #ifndef WIN32
 #include <sys/mman.h>
@@ -33,22 +33,22 @@ arena_t arena_init(size_t capacity)
 
 void* arena_allocate(memory::arena_t* arena, const std::size_t size)
 {
-    assert(arena != nullptr);
-    assert(arena->size + size <= arena->capacity);
+    PVM_ASSERT(arena != nullptr);
+    PVM_ASSERT(arena->size + size <= arena->capacity);
     void* const data = static_cast<uint8_t*>(arena->data) + arena->size;
     arena->size += size;
     return data;
 }
 void arena_reset(memory::arena_t* arena)
 {
-    assert(nullptr != arena);
-    assert(nullptr != arena->data);
+    PVM_ASSERT(nullptr != arena);
+    PVM_ASSERT(nullptr != arena->data);
     arena->size = 0;
     (void)std::memset(arena->data, POISON_PATTERN, arena->capacity);
 }
 void arena_free(memory::arena_t* arena)
 {
-    assert(arena != nullptr);
+    PVM_ASSERT(arena != nullptr);
     arena->capacity = 0;
     arena->size = 0;
     // TODO(GloriousTaco:memory): Replace free with a memory safe alternative.

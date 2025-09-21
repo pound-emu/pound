@@ -1,5 +1,5 @@
 #include "mmio.h"
-#include <cassert>
+#include "common/passert.h"
 #include <algorithm>
 
 namespace pound::kvm::memory
@@ -17,11 +17,11 @@ bool mmio_compare_ranges(const mmio_range_t& a, const mmio_range_t& b)
 
 int8_t mmio_db_register(mmio_db_t* db, const mmio_range_t range, const mmio_handler_t handler)
 {
-    assert(nullptr != db);
-    assert((db->address_ranges.size() + 1) <= MMIO_REGIONS);
+    PVM_ASSERT(nullptr != db);
+    PVM_ASSERT((db->address_ranges.size() + 1) <= MMIO_REGIONS);
 
     auto it = std::lower_bound(db->address_ranges.begin(), db->address_ranges.end(), range, mmio_compare_ranges);
-    size_t i = it - db->address_ranges.begin();
+    auto i = it - db->address_ranges.begin();
 
     /*
      * Scenario: UART is a current region, TIMER is a new region being
@@ -34,7 +34,7 @@ int8_t mmio_db_register(mmio_db_t* db, const mmio_range_t range, const mmio_hand
      */
     if (i > 0)
     {
-        if (range.gpa_base < db->address_ranges[i - 1].gpa_end)
+        if (range.gpa_base < db->address_ranges[(size_t)i - 1].gpa_end)
         {
             return EADDRESS_OVERLAP;
         }
@@ -51,7 +51,7 @@ int8_t mmio_db_register(mmio_db_t* db, const mmio_range_t range, const mmio_hand
      */
     if (i < db->address_ranges.size())
     {
-        if (db->address_ranges[i].gpa_base < range.gpa_end)
+        if (db->address_ranges[(size_t)i].gpa_base < range.gpa_end)
         {
             return EADDRESS_OVERLAP;
         }
@@ -69,10 +69,10 @@ bool mmio_compare_addresses(const mmio_range_t& a, const mmio_range_t& b)
 
 int8_t mmio_db_dispatch_write(mmio_db_t* db, kvm_t* kvm, uint64_t gpa, uint8_t* data, size_t len)
 {
-    assert(nullptr != db);
-    assert(nullptr != kvm);
-    assert(nullptr != data);
-    assert(len > 0);
+    PVM_ASSERT(nullptr != db);
+    PVM_ASSERT(nullptr != kvm);
+    PVM_ASSERT(nullptr != data);
+    PVM_ASSERT(len > 0);
 
     mmio_range_t search_key = {.gpa_base = gpa, .gpa_end = 0};
     /* Find the first region that starts after the target gpa */
@@ -89,13 +89,13 @@ int8_t mmio_db_dispatch_write(mmio_db_t* db, kvm_t* kvm, uint64_t gpa, uint8_t* 
     /* base <= gpa < end */
     if ((candidate.gpa_base <= gpa) && (gpa < candidate.gpa_end))
     {
-        size_t i = (it - 1) - db->address_ranges.begin();
-        if (nullptr == db->handlers[i].write)
+        auto i = (it - 1) - db->address_ranges.begin();
+        if (nullptr == db->handlers[(size_t)i].write)
         {
             return EACCESS_DENIED;
         }
 
-        db->handlers[i].write(kvm, gpa, data, len);
+        db->handlers[(size_t)i].write(kvm, gpa, data, len);
         return MMIO_SUCCESS;
     }
 
@@ -104,11 +104,11 @@ int8_t mmio_db_dispatch_write(mmio_db_t* db, kvm_t* kvm, uint64_t gpa, uint8_t* 
 }
 
 int8_t mmio_db_dispatch_read(mmio_db_t* db, kvm_t* kvm, uint64_t gpa, uint8_t* data, size_t len)
-{
-    assert(nullptr != db);
-    assert(nullptr != kvm);
-    assert(nullptr != data);
-    assert(len > 0);
+{ 
+    PVM_ASSERT(nullptr != db);
+    PVM_ASSERT(nullptr != kvm);
+    PVM_ASSERT(nullptr != data);
+    PVM_ASSERT(len > 0);
 
     mmio_range_t search_key = {.gpa_base = gpa, .gpa_end = 0};
     /* Find the first region that starts after the target gpa */
@@ -125,13 +125,13 @@ int8_t mmio_db_dispatch_read(mmio_db_t* db, kvm_t* kvm, uint64_t gpa, uint8_t* d
     /* base <= gpa < end */
     if ((candidate.gpa_base <= gpa) && (gpa < candidate.gpa_end))
     {
-        size_t i = (it - 1) - db->address_ranges.begin();
-        if (nullptr == db->handlers[i].read)
+        auto i = (it - 1) - db->address_ranges.begin();
+        if (nullptr == db->handlers[(size_t)i].read)
         {
             return EACCESS_DENIED;
         }
 
-        db->handlers[i].read(kvm, gpa, data, len);
+        db->handlers[(size_t)i].read(kvm, gpa, data, len);
         return MMIO_SUCCESS;
     }
 

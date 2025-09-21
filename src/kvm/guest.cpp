@@ -1,12 +1,12 @@
 #include "guest.h"
-#include <cassert>
+#include "common/passert.h"
 
 namespace pound::kvm::memory
 {
 guest_memory_t* guest_memory_create(pound::host::memory::arena_t* arena)
 {
-    assert(nullptr != arena);
-    assert(nullptr != arena->data);
+    PVM_ASSERT(nullptr != arena);
+    PVM_ASSERT(nullptr != arena->data);
 
     guest_memory_t* memory = (guest_memory_t*)pound::host::memory::arena_allocate(arena, sizeof(guest_memory_t));
     size_t ram_size = arena->capacity - arena->size;

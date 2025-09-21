@@ -1,5 +1,7 @@
 #include "kvm/kvm.h"
-#include "common/Logging/Log.h"
+
+#define LOG_MODULE "switch1"
+#include "common/logging.h"
 
 namespace pound::kvm
 {
@@ -18,7 +20,7 @@ const kvm_ops_t s1_ops = {
 
 static int8_t s1_init(kvm_t* kvm)
 {
-    LOG_INFO(PROBE, "Initializing Switch 1 virtual machine");
+    LOG_INFO("Initializing Switch 1 virtual machine");
     /* BOOTSTRAPPING CODE GOES HERE */
     return 0;
 }

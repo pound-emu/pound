@@ -1,6 +1,7 @@
 #include "mmu.h"
-#include <limits.h>
 #include "kvm.h"
+#include "common/passert.h"
+#include <limits.h>
 
 namespace pound::kvm::memory
 {
@@ -133,7 +134,7 @@ int mmu_gva_to_gpa(pound::kvm::kvm_vcpu_t* vcpu, guest_memory_t* memory, uint64_
      * in bytes from the correct TGx field. 
      */
     uint64_t granule_size = 0;
-    assert((true == is_ttbr0) || (true == is_ttbr1));
+    PVM_ASSERT((true == is_ttbr0) || (true == is_ttbr1));
     if (true == is_ttbr0)
     {
         /*
@@ -165,7 +166,7 @@ int mmu_gva_to_gpa(pound::kvm::kvm_vcpu_t* vcpu, guest_memory_t* memory, uint64_
                  * This is an illegal configuration. The hardware will fault.
                  * For now, an assert will catch bad guest OS behaviour.
                  */
-                assert(!"Invalid TG0 value in TCR_EL1");
+                PVM_ASSERT_MSG(false, "Invalid TG0 value in TCR_EL1");
         }
     }
     else
@@ -199,7 +200,7 @@ int mmu_gva_to_gpa(pound::kvm::kvm_vcpu_t* vcpu, guest_memory_t* memory, uint64_
                 granule_size = GRANULE_64KB;
                 break;
             default:
-                assert(!"Invalid TG1 value in TCR_EL1");
+                PVM_ASSERT_MSG(false, "Invalid TG1 value in TCR_EL1");
                 break;
         }
     }
@@ -336,7 +337,7 @@ int mmu_gva_to_gpa(pound::kvm::kvm_vcpu_t* vcpu, guest_memory_t* memory, uint64_
                 level_index = (gva >> l3_shift) & page_table_index_mask;
                 break;
             default:
-                assert(!"Invalid page table configuration!");
+                PVM_ASSERT_MSG(false, "Invalid page table configuration!");
         }
 
         const uint64_t level_entry_address = table_address + (level_index * page_table_entry_size);
@@ -388,7 +389,7 @@ int mmu_gva_to_gpa(pound::kvm::kvm_vcpu_t* vcpu, guest_memory_t* memory, uint64_
          */
         else if (0b01 == (descriptor & 0b11))
         {
-            assert(!"Block descriptors are not supported");
+            PVM_ASSERT_MSG(false, "Block descriptors are not supported");
         }
     }
     return -1;
