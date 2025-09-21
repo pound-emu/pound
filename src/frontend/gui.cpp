@@ -1,8 +1,10 @@
 #include "gui.h"
 #include "color.h"
-#include <assert.h>
-#include "common/Logging/Log.h"
+#include "common/passert.h"
 #include "imgui_impl_opengl3_loader.h"
+
+#define LOG_MODULE "FRONTEND"
+#include "common/logging.h"
 
 #include <imgui.h>
 #include <imgui_impl_opengl3.h>
@@ -16,8 +18,8 @@ static void apply_theme();
 
 bool gui::window_init(window_t* window, const char* title, int64_t width, int64_t height)
 {
-    assert(nullptr != window);
-    assert(nullptr != title);
+    PVM_ASSERT(nullptr != window);
+    PVM_ASSERT(nullptr != title);
 
     bool ret = ::SDL_Init(SDL_INIT_VIDEO);
     if (false == ret)
@@ -119,8 +121,8 @@ void gui::window_destroy(gui::window_t* window)
 
 bool gui::init_imgui(gui::window_t* main_window)
 {
-    assert(nullptr != main_window->data);
-    assert(nullptr != main_window->gl_context);
+    PVM_ASSERT(nullptr != main_window->data);
+    PVM_ASSERT(nullptr != main_window->gl_context);
 
     // Initialize ImGui
     IMGUI_CHECKVERSION();
@@ -137,9 +139,9 @@ bool gui::init_imgui(gui::window_t* main_window)
         return false;
     }
 
-#ifdef __APPLE__ && (__aarch64__)
+#if defined(__APPLE__) && defined(__aarch64__)
     ret = ::ImGui_ImplOpenGL3_Init("#version 120");
-#elif __APPLE__ && (__x86_64__)
+#elif defined(__APPLE__) && defined(__x86_64__)
     ret = ::ImGui_ImplOpenGL3_Init("#version 150");
 #else
     ret = ::ImGui_ImplOpenGL3_Init("#version 330");

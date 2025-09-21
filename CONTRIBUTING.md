@@ -49,7 +49,7 @@ by current and future programmers working on this project.
 
 ## Style Conventions
 
-Refer to `main.cpp` and the GUI folder for examples of proper code styling. Here are some specific rules:
+Refer to `main.cpp` and the kvm folder for examples of proper code styling. Here are some specific rules:
 
 1. **Constant First in Equality Tests**:
    ```c
@@ -77,15 +77,3 @@ Refer to `main.cpp` and the GUI folder for examples of proper code styling. Here
     // Todo(GloriousTaco:memory): Create a custom allocator.
    ```
 
-## Contributing Suggestions
-
-For those who want to contribute now, we suggest rewriting:
-
-- Base::Log::Initialize()
-- Base::Log::Start()
-- Config::load()
-
-in main() using the principles outlined in this document.
-
-If you're familiar with memory allocators, please consider implementing std::allocator for our custom memory allocator
-in core/memory/arena.h. This would allow us to manage the memory of C++ standard types like std::vector.

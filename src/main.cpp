@@ -4,9 +4,9 @@
 #include <memory>
 #include <thread>
 
-#include "common/Config.h"
-#include "common/Logging/Backend.h"
-#include "common/Logging/Log.h"
+#define LOG_MODULE "main"
+#include "common/logging.h"
+#include "common/passert.h"
 #include "frontend/gui.h"
 #include "host/memory/arena.h"
 
@@ -18,19 +18,12 @@
 
 int main()
 {
-    Base::Log::Initialize();
-    Base::Log::Start();
-
-    const auto& config_dir = Base::FS::GetUserPath(Base::FS::PathType::BinaryDir);
-    Config::Load(config_dir / "config.toml");
-
-    // Create GUI manager
     gui::window_t window = {.data = nullptr, .gl_context = nullptr};
-    (void)gui::window_init(&window, "Pound Emulator", Config::windowWidth(), Config::windowHeight());
+    (void)gui::window_init(&window, "Pound Emulator", 640, 480);
 
     if (bool return_code = gui::init_imgui(&window); false == return_code)
     {
-        LOG_ERROR(Render, "Failed to initialize GUI");
+        LOG_ERROR( "Failed to initialize GUI");
         return EXIT_FAILURE;
     }
 
@@ -111,7 +104,7 @@ int main()
         ::ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
         if (bool sdl_ret_code = ::SDL_GL_SwapWindow(gui.window.data); false == sdl_ret_code)
         {
-            LOG_ERROR(Render, "Failed to update window with OpenGL rendering: {}", SDL_GetError());
+            LOG_ERROR("Failed to update window with OpenGL rendering: {}", SDL_GetError());
             is_running = false;
         }
 

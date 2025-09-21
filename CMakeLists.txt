@@ -10,12 +10,6 @@ if (NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Debug)
 endif()
 
-# Enable asserts in release mode. Windows throws a metric fuck ton of compiler
-# errors when asserts are disabled.
-#if (UNIX)
-#   string(REPLACE "-DNDEBUG" "" CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}")
-#endif()
-
 set(CMAKE_C_STANDARD 17)
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_C_STANDARD_REQUIRED TRUE)

@@ -2,14 +2,14 @@
 #include <imgui.h>
 #include <math.h>
 #include "kvm/kvm.h"
-#include <assert.h>"
+#include "common/passert.h"
 
 int8_t gui::panel::render_performance_panel(gui::panel::performance_panel_t* panel, performance_data_t* data,
                                             std::chrono::steady_clock::time_point* last_render)
 {
-    assert(nullptr != panel);
-    assert(nullptr != data);
-    assert(nullptr != last_render);
+    PVM_ASSERT(nullptr != panel);
+    PVM_ASSERT(nullptr != data);
+    PVM_ASSERT(nullptr != last_render);
 
     bool is_visible = true;
     (void)::ImGui::Begin(PANEL_NAME_PERFORMANCE, &is_visible);
@@ -25,8 +25,8 @@ int8_t gui::panel::render_performance_panel(gui::panel::performance_panel_t* pan
     if (duration.count() >= 100)
     {
         // Every 100ms
-        data->fps = data->frame_count * 1000.0f / duration.count();
-        data->frame_time = duration.count() / (float)data->frame_count;
+        data->fps = (float)data->frame_count * 1000.0f / (float)duration.count();
+        data->frame_time = (float)duration.count() / (float)data->frame_count;
 
         panel->fps_history.push_back(data->fps);
         panel->frame_time_history.push_back(data->frame_time);
@@ -82,7 +82,7 @@ int8_t gui::panel::render_performance_panel(gui::panel::performance_panel_t* pan
 
 int8_t gui::panel::render_cpu_panel(bool* show_cpu_result_popup)
 {
-    assert(nullptr != show_cpu_result_popup);
+    PVM_ASSERT(nullptr != show_cpu_result_popup);
 
     bool is_visible = true;
     (void)::ImGui::Begin(PANEL_NAME_CPU, &is_visible, ImGuiWindowFlags_NoCollapse);

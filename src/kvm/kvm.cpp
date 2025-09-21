@@ -1,8 +1,10 @@
 #include "kvm.h"
-#include <cassert>
-#include "common/Logging/Log.h"
 #include "guest.h"
+#include "common/passert.h"
 #include "host/memory/arena.h"
+
+#define LOG_MODULE "kvm"
+#include "common/logging.h"
 
 namespace pound::kvm
 {
@@ -11,7 +13,7 @@ uint8_t kvm_probe(kvm_t* kvm, enum target_type type)
 {
     if (type != KVM_TARGET_SWITCH1)
     {
-        assert(!"Only Switch 1 is supported");
+        PVM_ASSERT_MSG(false, "Only Switch 1 is supported");
     }
     kvm->ops = s1_ops;
     /* Go to targets/switch1/hardware/probe.cpp */
@@ -21,11 +23,11 @@ uint8_t kvm_probe(kvm_t* kvm, enum target_type type)
 
 void take_synchronous_exception(kvm_vcpu_t* vcpu, uint8_t exception_class, uint32_t iss, uint64_t faulting_address)
 {
-    assert(nullptr != vcpu);
+    PVM_ASSERT(nullptr != vcpu);
     /* An EC holds 6 bits.*/
-    assert(0 == (exception_class & 11000000));
+    PVM_ASSERT(0 == (exception_class & 11000000));
     /* An ISS holds 25 bits */
-    assert(0 == (iss & 0xFE000000));
+    PVM_ASSERT(0 == (iss & 0xFE000000));
 
     vcpu->elr_el1 = vcpu->pc;
     vcpu->spsr_el1 = vcpu->pstate;
@@ -69,11 +71,13 @@ void take_synchronous_exception(kvm_vcpu_t* vcpu, uint8_t exception_class, uint3
 
 void cpuTest()
 {
+#if 0
     pound::host::memory::arena_t guest_memory_arena = pound::host::memory::arena_init(GUEST_RAM_SIZE);
-    assert(nullptr != guest_memory_arena.data);
+    PVM_ASSERT(nullptr != guest_memory_arena.data);
 
     memory::guest_memory_t* guest_ram = memory::guest_memory_create(&guest_memory_arena);
 
     //(void)test_guest_ram_access(guest_ram);
-}
+#endif
+}  
 }  // namespace pound::kvm
