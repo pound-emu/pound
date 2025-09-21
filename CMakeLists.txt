@@ -94,7 +94,6 @@ target_link_libraries(Pound PRIVATE
     kvm
 
     OpenGL::GL
-    fmt::fmt
     SDL3::SDL3
     imgui
 )
