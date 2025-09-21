@@ -18,6 +18,7 @@
 
 int main()
 {
+#if 0
     gui::window_t window = {.data = nullptr, .gl_context = nullptr};
     (void)gui::window_init(&window, "Pound Emulator", 640, 480);
 
@@ -113,4 +114,5 @@ int main()
     }
 
     gui::destroy();
+#endif
 }
