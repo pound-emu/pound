@@ -7,6 +7,7 @@ target_sources(common PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/StringUtil.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Thread.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/logging.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/passert.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Logging/Backend.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Logging/Filter.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Logging/TextFormatter.cpp
