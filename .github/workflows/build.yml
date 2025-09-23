@@ -20,7 +20,7 @@ jobs:
       shorthash: ${{steps.vars.outputs.shorthash}}
       commit: ${{steps.vars.outputs.commit}}
     steps:
-      - uses: actions/checkout@main
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
       - name: Commit Count and Git Hash
@@ -36,7 +36,7 @@ jobs:
     runs-on: ubuntu-24.04
     needs: get-info
     steps:
-      - uses: actions/checkout@main
+      - uses: actions/checkout@v5
         with:
           submodules: recursive
           fetch-depth: 0
@@ -44,6 +44,7 @@ jobs:
       - name: Install Dependencies
         run: |
           sudo apt update
+          sudo apt-get remove --purge man-db
           sudo apt install -y ninja-build clang lld cmake ccache \
                          libx11-dev libxext-dev libxrandr-dev libxcursor-dev \
                          libxi-dev libxinerama-dev libwayland-dev libxkbcommon-dev \
@@ -71,7 +72,7 @@ jobs:
     runs-on: windows-2025
     needs: get-info
     steps:
-      - uses: actions/checkout@main
+      - uses: actions/checkout@v5
         with:
           submodules: recursive
           fetch-depth: 0
@@ -101,7 +102,7 @@ jobs:
     runs-on: macos-13
     needs: get-info
     steps:
-      - uses: actions/checkout@main
+      - uses: actions/checkout@v5
         with:
           submodules: recursive
           fetch-depth: 0
@@ -143,7 +144,7 @@ jobs:
     runs-on: macos-14
     needs: get-info
     steps:
-      - uses: actions/checkout@main
+      - uses: actions/checkout@v5
         with:
           submodules: recursive
           fetch-depth: 0
