@@ -83,8 +83,9 @@ endforeach()
 # Optimizations
 set_property(TARGET Pound PROPERTY CMAKE_INTERPROCEDURAL_OPTIMIZATION_RELEASE TRUE)
 if (WIN32)
-    target_compile_options(Pound PRIVATE $<$<CONFIG:Release>:/Oi>)
-    target_compile_options(Pound PRIVATE  $<$<CONFIG:Release>:/Ot>)
+    # Fix: remove MSVC-only flags (/Oi, /Ot) for MinGW/GCC builds
+    target_compile_options(Pound PRIVATE
+    $<$<AND:$<CXX_COMPILER_ID:MSVC>,$<CONFIG:Release>>:/Oi /Ot>)
 endif()
 
 target_link_libraries(Pound PRIVATE
