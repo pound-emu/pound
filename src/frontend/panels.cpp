@@ -3,7 +3,6 @@
 #include <math.h>
 #include "kvm/kvm.h"
 #include "common/passert.h"
-#include <algorithm>
 
 int8_t gui::panel::render_performance_panel(gui::panel::performance_panel_t* panel, performance_data_t* data,
                                             std::chrono::steady_clock::time_point* last_render)
@@ -25,11 +24,9 @@ int8_t gui::panel::render_performance_panel(gui::panel::performance_panel_t* pan
     ++data->frame_count;
     if (duration.count() >= 100)
     {
-        //every 100ms
-        const double ms = static_cast<double>(duration.count());
-        data->fps = static_cast<float>(static_cast<double>(data->frame_count) * 1000.0 / ms);
-        data->frame_time = static_cast<float>(ms / static_cast<double>(data->frame_count));
-
+        // Every 100ms
+        data->fps = (float)data->frame_count * 1000.0f / (float)duration.count();
+        data->frame_time = (float)duration.count() / (float)data->frame_count;
 
         panel->fps_history.push_back(data->fps);
         panel->frame_time_history.push_back(data->frame_time);
@@ -63,11 +60,8 @@ int8_t gui::panel::render_performance_panel(gui::panel::performance_panel_t* pan
         (void)std::copy(panel->frame_time_history.begin(), panel->frame_time_history.end(), frame_time_array);
 
         ::ImGui::Text("Frame Time History (ms):");
-        ::ImGui::PlotLines("##FrameTime",
-                   frame_time_array,
-                   static_cast<int>(panel->frame_time_history.size()),
-                   0, nullptr, 0.0f, 33.33f, ImVec2(0, 80));
-
+        ::ImGui::PlotLines("##FrameTime", frame_time_array, (int)panel->frame_time_history.size(), 0, nullptr, 0.0f,
+                           33.33f, ImVec2(0, 80));
     }
 
     ::ImGui::Separator();
