@@ -1,8 +1,8 @@
 #ifndef POUND_COMMON_ASSERT_H
 #define POUND_COMMON_ASSERT_H
 
-__attribute__((noreturn)) void pound_internal_assert_fail(const char* file, int line, const char* func,
-                                                          const char* expr_str, const char* user_msg, ...);
+[[noreturn]] void pound_internal_assert_fail(const char* file, int line, const char* func,
+                                             const char* expr_str, const char* user_msg, ...);
 
 #define PVM_ASSERT(expression)                                                                             \
     do                                                                                                     \

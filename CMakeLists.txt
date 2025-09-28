@@ -5,6 +5,9 @@ cmake_minimum_required(VERSION 3.22)
 #------------------------
 
 project(Pound)
+if(MSVC)
+  add_compile_options(/Zc:preprocessor)
+endif()
 
 if (NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Debug)
@@ -78,7 +81,12 @@ foreach(TARGET ${POUND_PROJECT_TARGETS})
     target_compile_definitions(${TARGET} PRIVATE COMPILE_TIME_LOG_LEVEL=1)
 endforeach()
 
-
+# MSVC: enable modern preprocessor to support __VA_OPT__
+if (MSVC)
+  foreach(TGT ${POUND_PROJECT_TARGETS} Pound)
+    target_compile_options(${TGT} PRIVATE /Zc:preprocessor)
+  endforeach()
+endif()
 
 # Optimizations
 set_property(TARGET Pound PROPERTY CMAKE_INTERPROCEDURAL_OPTIMIZATION_RELEASE TRUE)
@@ -99,3 +107,12 @@ target_link_libraries(Pound PRIVATE
     SDL3::SDL3
     imgui
 )
+
+# MSVC: enable modern preprocessor to support __VA_OPT__
+if (MSVC)
+  foreach(TGT common frontend host kvm Pound)
+    if (TARGET ${TGT})
+      target_compile_options(${TGT} PRIVATE /Zc:preprocessor)
+    endif()
+  endforeach()
+endif()

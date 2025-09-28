@@ -2,6 +2,18 @@
 
 #define LOG_MODULE "switch1"
 #include "common/logging.h"
+#include <cstring>
+
+// MSVC: constexpr-strcmp-Fallback + Mapping auf __builtin_strcmp
+#if defined(_MSC_VER) && !defined(__clang__)
+constexpr int pvm_constexpr_strcmp(const char* a, const char* b) {
+    return (*a == *b)
+        ? (*a == '\0' ? 0 : pvm_constexpr_strcmp(a + 1, b + 1))
+        : (static_cast<unsigned char>(*a) < static_cast<unsigned char>(*b) ? -1 : 1);
+}
+#define __builtin_strcmp(a, b) pvm_constexpr_strcmp((a), (b))
+#endif
+
 
 namespace pound::kvm
 {
