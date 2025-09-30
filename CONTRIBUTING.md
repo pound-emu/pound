@@ -1,3 +1,5 @@
+**IMPORTANT: THE MEMORY ALLOCATION AND OOP BAN WILL BE REVERSED ONCE WE START SWITCH EMULATION**
+
 # Data-Oriented Design Fundamentals
 
 This document outlines the core principles and guidelines for contributing to our project, which has been rewritten
