@@ -1,5 +1,5 @@
-#ifndef POUND_KVM_GUEST_H
-#define POUND_KVM_GUEST_H
+#ifndef POUND_pvm_GUEST_H
+#define POUND_pvm_GUEST_H
 
 #include <cassert>
 #include <stdint.h>
@@ -9,7 +9,7 @@
 
 #include "host/memory/arena.h"
 
-namespace pound::kvm::memory
+namespace pound::pvm::memory
 {
 
 /*
@@ -35,7 +35,7 @@ namespace pound::kvm::memory
  * backing memory arena is valid. Typically, this means it is created once
 - * during virtual machine initialization and lives for the entire duration of
  * the emulation session. Its lifetime is tied to the lifetime of the parent
- * KVM instance.
+ * pvm instance.
  *
  * --- Invariants ---
  * Both fields of this struct are declared `const`. This establishes the 
@@ -455,5 +455,5 @@ inline guest_mem_access_result_t guest_mem_writeq(guest_memory_t* memory, uint64
     memcpy(hva, &val, sizeof(uint64_t));
     return GUEST_MEM_ACCESS_OK;
 }
-}  // namespace pound::kvm::memory
-#endif  // POUND_KVM_GUEST_H
+}  // namespace pound::pvm::memory
+#endif  // POUND_pvm_GUEST_H

@@ -1,7 +1,7 @@
 #include "guest.h"
 #include "common/passert.h"
 
-namespace pound::kvm::memory
+namespace pound::pvm::memory
 {
 guest_memory_t* guest_memory_create(pound::host::memory::arena_t* arena)
 {
@@ -32,4 +32,4 @@ guest_memory_t* guest_memory_create(pound::host::memory::arena_t* arena)
 #pragma GCC diagnostic pop
     return memory;
 }
-}  // namespace pound::kvm::memory
+}  // namespace pound::pvm::memory

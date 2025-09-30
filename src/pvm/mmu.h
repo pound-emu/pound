@@ -1,9 +1,9 @@
 #pragma once
 
 #include "guest.h"
-#include "kvm.h"
+#include "pvm.h"
 
-namespace pound::kvm::memory
+namespace pound::pvm::memory
 {
 /*
  * mmu_gva_to_gpa() - Translate a Guest Virtual Address to a Guest Physical Address.
@@ -36,5 +36,5 @@ namespace pound::kvm::memory
  * Return: 0 on successful translation. A negative error code on a translation
  * fault (e.g., for a page fault, permission error, or alignment fault).
  */
-int mmu_gva_to_gpa(pound::kvm::kvm_vcpu_t* vcpu, guest_memory_t* memory, uint64_t gva, uint64_t* out_gpa);
-}  // namespace pound::kvm::memory
+int mmu_gva_to_gpa(pound::pvm::pvm_vcpu_t* vcpu, guest_memory_t* memory, uint64_t gva, uint64_t* out_gpa);
+}  // namespace pound::pvm::memory

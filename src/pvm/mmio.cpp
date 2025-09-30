@@ -2,7 +2,7 @@
 #include "common/passert.h"
 #include <algorithm>
 
-namespace pound::kvm::memory
+namespace pound::pvm::memory
 {
 /*
  * This function implements a strict weak ordering comparison on two
@@ -67,10 +67,10 @@ bool mmio_compare_addresses(const mmio_range_t& a, const mmio_range_t& b)
     return a.gpa_base < b.gpa_base;
 }
 
-int8_t mmio_db_dispatch_write(mmio_db_t* db, kvm_t* kvm, uint64_t gpa, uint8_t* data, size_t len)
+int8_t mmio_db_dispatch_write(mmio_db_t* db, pvm_t* pvm, uint64_t gpa, uint8_t* data, size_t len)
 {
     PVM_ASSERT(nullptr != db);
-    PVM_ASSERT(nullptr != kvm);
+    PVM_ASSERT(nullptr != pvm);
     PVM_ASSERT(nullptr != data);
     PVM_ASSERT(len > 0);
 
@@ -95,7 +95,7 @@ int8_t mmio_db_dispatch_write(mmio_db_t* db, kvm_t* kvm, uint64_t gpa, uint8_t* 
             return EACCESS_DENIED;
         }
 
-        db->handlers[(size_t)i].write(kvm, gpa, data, len);
+        db->handlers[(size_t)i].write(pvm, gpa, data, len);
         return MMIO_SUCCESS;
     }
 
@@ -103,10 +103,10 @@ int8_t mmio_db_dispatch_write(mmio_db_t* db, kvm_t* kvm, uint64_t gpa, uint8_t* 
     return ENOT_HANDLED;
 }
 
-int8_t mmio_db_dispatch_read(mmio_db_t* db, kvm_t* kvm, uint64_t gpa, uint8_t* data, size_t len)
+int8_t mmio_db_dispatch_read(mmio_db_t* db, pvm_t* pvm, uint64_t gpa, uint8_t* data, size_t len)
 { 
     PVM_ASSERT(nullptr != db);
-    PVM_ASSERT(nullptr != kvm);
+    PVM_ASSERT(nullptr != pvm);
     PVM_ASSERT(nullptr != data);
     PVM_ASSERT(len > 0);
 
@@ -131,11 +131,11 @@ int8_t mmio_db_dispatch_read(mmio_db_t* db, kvm_t* kvm, uint64_t gpa, uint8_t* d
             return EACCESS_DENIED;
         }
 
-        db->handlers[(size_t)i].read(kvm, gpa, data, len);
+        db->handlers[(size_t)i].read(pvm, gpa, data, len);
         return MMIO_SUCCESS;
     }
 
     /* The gpa is not in any mmio region. */
     return ENOT_HANDLED;
 }
-}  // namespace pound::kvm::memory
+}  // namespace pound::pvm::memory

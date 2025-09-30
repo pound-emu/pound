@@ -99,7 +99,7 @@ add_subdirectory(3rd_Party)
 add_subdirectory(src/common)
 add_subdirectory(src/frontend)
 add_subdirectory(src/host)
-add_subdirectory(src/kvm)
+add_subdirectory(src/pvm)
 add_subdirectory(src/targets/switch1/hardware)
 
 #--------------------------------
@@ -113,7 +113,7 @@ endif()
 include(TestBigEndian)
 TEST_BIG_ENDIAN(WORDS_BIGENDIAN)
 
-list(APPEND POUND_PROJECT_TARGETS common frontend host kvm)
+list(APPEND POUND_PROJECT_TARGETS common frontend host pvm)
 foreach(TARGET ${POUND_PROJECT_TARGETS})
     # Apply Endianness definitions to all our targets.
     if(WORDS_BIGENDIAN)
@@ -153,7 +153,7 @@ target_link_libraries(Pound PRIVATE
     common
     frontend
     host
-    kvm
+    pvm
 
     OpenGL::GL
     SDL3::SDL3
