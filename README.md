@@ -13,7 +13,7 @@
 
 ## Overview
 
-**IMPORTANT: THIS PROJECT WILL NOT BE READY FOR A DECADE MINIMUM!**
+**IMPORTANT: THIS PROJECT WILL NOT BE READY FOR A DECADE MINIMUM!**     
 
 Join the [**Pound Discord Server**](https://discord.gg/aMmTmKsVC7)!
 
