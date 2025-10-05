@@ -99,6 +99,7 @@ add_subdirectory(3rd_Party)
 add_subdirectory(src/common)
 add_subdirectory(src/frontend)
 add_subdirectory(src/host)
+add_subdirectory(src/jit)
 add_subdirectory(src/pvm)
 add_subdirectory(src/targets/switch1/hardware)
 
@@ -153,6 +154,7 @@ target_link_libraries(Pound PRIVATE
     common
     frontend
     host
+    jit
     pvm
 
     OpenGL::GL
