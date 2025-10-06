@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.22)
+cmake_minimum_required(VERSION 3.25)
 
 #------------------------
 # ---- Project Setup ----
@@ -79,7 +79,7 @@ foreach(line ${submodule_lines})
         if(submodule_path STREQUAL "3rd_Party/imgui")
             verify_pinned_commit("imgui" "${submodule_path}" "${commit_hash}" "bf75bfec48fc00f532af8926130b70c0e26eb099")
         elseif(submodule_path STREQUAL "3rd_Party/SDL3")
-            verify_pinned_commit("SDL3" "${submodule_path}" "${commit_hash}" "a96677bdf6b4acb84af4ec294e5f60a4e8cbbe03")
+            verify_pinned_commit("SDL3" "${submodule_path}" "${commit_hash}" "a8589a84226a6202831a3d49ff4edda4acab9acd")
         endif()
 
         message(STATUS "Verified submodule: ${submodule_path} (${commit_hash})")
@@ -107,10 +107,6 @@ add_subdirectory(src/targets/switch1/hardware)
 # ---- Target Configurations ----
 #--------------------------------
 
-if(WIN32)
-    add_compile_options(-DNOMINMAX -DWIN32_LEAN_AND_MEAN)
-endif()
-
 include(TestBigEndian)
 TEST_BIG_ENDIAN(WORDS_BIGENDIAN)
 
@@ -133,6 +129,11 @@ foreach(TARGET ${POUND_PROJECT_TARGETS})
         -Wconversion>
     )
 
+    if(WIN32)
+        target_compile_options(${TARGET} PRIVATE -DNOMINMAX -DWIN32_LEAN_AND_MEAN)
+        target_compile_definitions(${TARGET} PRIVATE _CRT_SECURE_NO_WARNINGS) # Disable some Windows SDK deprecation warnings
+    endif()
+
     # Set Compile time log level for all targets.
     # 1: Trace
     # 2: Debug
@@ -145,10 +146,6 @@ endforeach()
 
 # Optimizations
 set_property(TARGET Pound PROPERTY CMAKE_INTERPROCEDURAL_OPTIMIZATION_RELEASE TRUE)
-if (WIN32)
-    target_compile_options(Pound PRIVATE $<$<CONFIG:Release>:/Oi>)
-    target_compile_options(Pound PRIVATE  $<$<CONFIG:Release>:/Ot>)
-endif()
 
 target_link_libraries(Pound PRIVATE
     common
