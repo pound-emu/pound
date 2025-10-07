@@ -1,7 +1,10 @@
 #include "arena.h"
 #include "common/passert.h"
 #include <cstring>
-#ifndef WIN32
+
+#ifdef WIN32
+#include <Windows.h>
+#else
 #include <sys/mman.h>
 #endif
 
@@ -10,12 +13,15 @@ namespace pound::host::memory
 arena_t arena_init(size_t capacity)
 {
 
-    // TODO(GloriousTaco:memory): Replace malloc with a windows memory mapping API.
 #ifdef WIN32
-    auto data = static_cast<uint8_t*>(malloc(sizeof(size_t) * capacity));
+    void* const data = ::VirtualAlloc(nullptr, capacity, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
+    if (NULL == data)
+    {
+        return {0, 0, nullptr};  // Return invalid arena on failure
+    }
 #else
-    void* data = ::mmap(nullptr, capacity, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-    if (data == MAP_FAILED)
+    void* const data = ::mmap(nullptr, capacity, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+    if (MAP_FAILED == data)
     {
         return {0, 0, nullptr};  // Return invalid arena on failure
     }
@@ -51,7 +57,12 @@ void arena_free(memory::arena_t* arena)
     PVM_ASSERT(arena != nullptr);
     arena->capacity = 0;
     arena->size = 0;
+
     // TODO(GloriousTaco:memory): Replace free with a memory safe alternative.
+#ifdef WIN32
+    VirtualFree(arena->data, 0, MEM_RELEASE);
+#else
     free(arena->data);
+#endif
 }
 }  // namespace pound::host::memory
