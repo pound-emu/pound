@@ -59,13 +59,13 @@ struct arena_allocator
 };
 
 template <typename T, typename U>
-inline bool operator==(const arena_allocator<T>& a, const arena_allocator<U>& b)
+inline constexpr bool operator==(const arena_allocator<T>& a, const arena_allocator<U>& b)
 {
     return a.arena == b.arena;
 }
 
 template <typename T, typename U>
-inline bool operator!=(const arena_allocator<T>& a, const arena_allocator<U>& b)
+inline constexpr bool operator!=(const arena_allocator<T>& a, const arena_allocator<U>& b)
 {
     return a.arena != b.arena;
 }
