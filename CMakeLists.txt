@@ -79,7 +79,7 @@ foreach(line ${submodule_lines})
         if(submodule_path STREQUAL "3rd_Party/imgui")
             verify_pinned_commit("imgui" "${submodule_path}" "${commit_hash}" "bf75bfec48fc00f532af8926130b70c0e26eb099")
         elseif(submodule_path STREQUAL "3rd_Party/SDL3")
-            verify_pinned_commit("SDL3" "${submodule_path}" "${commit_hash}" "a8589a84226a6202831a3d49ff4edda4acab9acd")
+            verify_pinned_commit("SDL3" "${submodule_path}" "${commit_hash}" "a96677bdf6b4acb84af4ec294e5f60a4e8cbbe03")
         endif()
 
         message(STATUS "Verified submodule: ${submodule_path} (${commit_hash})")
