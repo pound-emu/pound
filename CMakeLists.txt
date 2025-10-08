@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.22)
+cmake_minimum_required(VERSION 3.25)
 
 #------------------------
 # ---- Project Setup ----
@@ -107,10 +107,6 @@ add_subdirectory(src/targets/switch1/hardware)
 # ---- Target Configurations ----
 #--------------------------------
 
-if(WIN32)
-    add_compile_options(-DNOMINMAX -DWIN32_LEAN_AND_MEAN)
-endif()
-
 include(TestBigEndian)
 TEST_BIG_ENDIAN(WORDS_BIGENDIAN)
 
@@ -133,6 +129,11 @@ foreach(TARGET ${POUND_PROJECT_TARGETS})
         -Wconversion>
     )
 
+    if(WIN32)
+        target_compile_options(${TARGET} PRIVATE -DNOMINMAX -DWIN32_LEAN_AND_MEAN)
+        target_compile_definitions(${TARGET} PRIVATE _CRT_SECURE_NO_WARNINGS) # Disable some Windows SDK deprecation warnings
+    endif()
+
     # Set Compile time log level for all targets.
     # 1: Trace
     # 2: Debug
@@ -145,10 +146,6 @@ endforeach()
 
 # Optimizations
 set_property(TARGET Pound PROPERTY CMAKE_INTERPROCEDURAL_OPTIMIZATION_RELEASE TRUE)
-if (WIN32)
-    target_compile_options(Pound PRIVATE $<$<CONFIG:Release>:/Oi>)
-    target_compile_options(Pound PRIVATE  $<$<CONFIG:Release>:/Ot>)
-endif()
 
 target_link_libraries(Pound PRIVATE
     common
