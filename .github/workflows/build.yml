@@ -99,7 +99,7 @@ jobs:
 
   macOS-x86_64:
     name: macOS x86_64
-    runs-on: macos-13
+    runs-on: macos-15-intel
     needs: get-info
     steps:
       - uses: actions/checkout@v5
