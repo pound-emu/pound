@@ -41,7 +41,7 @@ struct arm32_decoder
 
 void arm32_init(arm32_decoder_t* decoder);
 
-void arm32_add_instruction(arm32_decoder_t* decoder, const char* nane, arm32_opcode_t mask, arm32_opcode_t expected,
+void arm32_add_instruction(arm32_decoder_t* decoder, const char* name, arm32_opcode_t mask, arm32_opcode_t expected,
                            arm32_handler_fn handler);
 void arm32_ADD_imm_handler(arm32_decoder_t* decoder, arm32_instruction_t instruction);
 
