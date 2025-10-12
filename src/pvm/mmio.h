@@ -3,9 +3,9 @@
 #include <cstdint>
 #include <vector>
 #include "host/memory/arena_stl.h"
-#include "kvm.h"
+#include "pvm.h"
 
-namespace pound::kvm::memory
+namespace pound::pvm::memory
 {
 /*
  * MMIO_REGIONS - The maximum number of distinct MMIO regions supported.
@@ -27,7 +27,7 @@ namespace pound::kvm::memory
 
 /*
  * typedef mmio - Function pointer type for an MMIO access handler.
- * @kvm:    A pointer to the KVM instance.
+ * @pvm:    A pointer to the pvm instance.
  * @gpa:    The guest physical address of the access.
  * @data:   A pointer to the data buffer. For reads, this buffer 
  *          should be filled by the handler. For writes, this buffer
@@ -41,7 +41,7 @@ namespace pound::kvm::memory
  *
  * Returns: MMIO_SUCCESS on success, negative errno code on failure.
  */
-typedef int8_t (*mmio)(kvm_t* kvm, uint64_t gpa, uint8_t* data, size_t len);
+typedef int8_t (*mmio)(pvm_t* pvm, uint64_t gpa, uint8_t* data, size_t len);
 
 /*
  * mmio_handler_t - A pair of handlers for an MMIO region.
@@ -120,7 +120,7 @@ int8_t mmio_db_register(mmio_db_t* db, const mmio_range_t range, const mmio_hand
 /*
  * mmio_db_dispatch_write - Dispatches a guest physical write to a registered MMIO handler.
  * @db:    A pointer to the MMIO database to be queried.
- * @kvm:   A pointer to the KVM instance.
+ * @pvm:   A pointer to the pvm instance.
  * @gpa:   The guest physical address of the memory write.
  * @data:  A pointer to the buffer containing the data written by the guest.
  * @len:   The size of the write access in bytes.
@@ -170,12 +170,12 @@ int8_t mmio_db_register(mmio_db_t* db, const mmio_range_t range, const mmio_hand
  * ENOT_HANDLED if the @gpa does not map to any MMIO region.
  * EACCESS_DENIED if the MMIO region has no write function pointer.
  */
-int8_t mmio_db_dispatch_write(mmio_db_t* db, kvm_t* kvm, uint64_t gpa, uint8_t* data, size_t len);
+int8_t mmio_db_dispatch_write(mmio_db_t* db, pvm_t* pvm, uint64_t gpa, uint8_t* data, size_t len);
 
 /*
  * mmio_db_dispatch_read - Dispatches a guest physical read to a registered MMIO handler.
  * @db:    A pointer to the MMIO database to be queried.
- * @kvm:   A pointer to the KVM instance.
+ * @pvm:   A pointer to the pvm instance.
  * @gpa:   The guest physical address of the memory write.
  * @data:  A pointer to the buffer containing the data written by the guest.
  * @len:   The size of the write access in bytes.
@@ -187,5 +187,5 @@ int8_t mmio_db_dispatch_write(mmio_db_t* db, kvm_t* kvm, uint64_t gpa, uint8_t* 
  * ENOT_HANDLED if the @gpa does not map to any MMIO region.
  * EACCESS_DENIED if the MMIO region has no write function pointer.
  */
-int8_t mmio_db_dispatch_read(mmio_db_t* db, kvm_t* kvm, uint64_t gpa, uint8_t* data, size_t len);
-}  // namespace pound::kvm::memory
+int8_t mmio_db_dispatch_read(mmio_db_t* db, pvm_t* pvm, uint64_t gpa, uint8_t* data, size_t len);
+}  // namespace pound::pvm::memory

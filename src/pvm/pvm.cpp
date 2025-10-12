@@ -1,27 +1,27 @@
-#include "kvm.h"
+#include "pvm.h"
 #include "guest.h"
 #include "common/passert.h"
 #include "host/memory/arena.h"
 
-#define LOG_MODULE "kvm"
+#define LOG_MODULE "pvm"
 #include "common/logging.h"
 
-namespace pound::kvm
+namespace pound::pvm
 {
 
-uint8_t kvm_probe(kvm_t* kvm, enum target_type type)
+uint8_t pvm_probe(pvm_t* pvm, enum target_type type)
 {
-    if (type != KVM_TARGET_SWITCH1)
+    if (type != pvm_TARGET_SWITCH1)
     {
         PVM_ASSERT_MSG(false, "Only Switch 1 is supported");
     }
-    kvm->ops = s1_ops;
+    pvm->ops = s1_ops;
     /* Go to targets/switch1/hardware/probe.cpp */
-    (void)kvm->ops.init(kvm);
+    (void)pvm->ops.init(pvm);
     return 0;
 }
 
-void take_synchronous_exception(kvm_vcpu_t* vcpu, uint8_t exception_class, uint32_t iss, uint64_t faulting_address)
+void take_synchronous_exception(pvm_vcpu_t* vcpu, uint8_t exception_class, uint32_t iss, uint64_t faulting_address)
 {
     PVM_ASSERT(nullptr != vcpu);
     /* An EC holds 6 bits.*/
@@ -80,4 +80,4 @@ void cpuTest()
     //(void)test_guest_ram_access(guest_ram);
 #endif
 }  
-}  // namespace pound::kvm
+}  // namespace pound::pvm

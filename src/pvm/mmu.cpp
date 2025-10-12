@@ -1,9 +1,9 @@
 #include "mmu.h"
-#include "kvm.h"
+#include "pvm.h"
 #include "common/passert.h"
 #include <limits.h>
 
-namespace pound::kvm::memory
+namespace pound::pvm::memory
 {
 #define GRANULE_4KB (1ULL << 12)
 #define GRANULE_16KB (1ULL << 14)
@@ -43,7 +43,7 @@ static inline uint8_t msvc_ctzll(unsigned long long val)
 /* Define the size of a page table entry (descriptor) */
 #define PAGE_TABLE_ENTRY_SHIFT 3 /* log2(8 bytes) */
 
-int mmu_gva_to_gpa(pound::kvm::kvm_vcpu_t* vcpu, guest_memory_t* memory, uint64_t gva, uint64_t* out_gpa)
+int mmu_gva_to_gpa(pound::pvm::pvm_vcpu_t* vcpu, guest_memory_t* memory, uint64_t gva, uint64_t* out_gpa)
 {
     const uint8_t SCTLR_EL1_M_BIT = (1 << 0);
     if (0 == (vcpu->sctlr_el1 & SCTLR_EL1_M_BIT))
@@ -394,4 +394,4 @@ int mmu_gva_to_gpa(pound::kvm::kvm_vcpu_t* vcpu, guest_memory_t* memory, uint64_
     }
     return -1;
 }
-}  // namespace pound::kvm::memory
+}  // namespace pound::pvm::memory

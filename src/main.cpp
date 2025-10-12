@@ -24,7 +24,7 @@ int main()
 
     if (bool return_code = gui::init_imgui(&window); false == return_code)
     {
-        LOG_ERROR( "Failed to initialize GUI");
+        LOG_ERROR("Failed to initialize GUI");
         return EXIT_FAILURE;
     }
 
