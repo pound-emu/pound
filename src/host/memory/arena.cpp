@@ -35,7 +35,6 @@ arena_t arena_init(size_t capacity)
     };
     return arena;
 }
-// new more memsafe code (ownedbywuigi) (i give up on windows compatibility for now, will stick to the old unsafe code)
 
 void* arena_allocate(memory::arena_t* arena, const std::size_t size)
 {
@@ -55,14 +54,24 @@ void arena_reset(memory::arena_t* arena)
 void arena_free(memory::arena_t* arena)
 {
     PVM_ASSERT(arena != nullptr);
+
+#ifdef WIN32
+    const int free = VirtualFree(arena->data, 0, MEM_RELEASE);
+
+    PVM_ASSERT(free != 0);
+
+    if (free == 0)
+        PVM_ASSERT_MSG(false, "Failed to free arena memory");
+#else
+    const int free = munmap(arena->data, arena->capacity);
+
+    PVM_ASSERT(free == 0);
+
+    if (free == -1)
+        PVM_ASSERT_MSG(false, "Failed to free arena memory");
+#endif
+
     arena->capacity = 0;
     arena->size = 0;
-
-    // TODO(GloriousTaco:memory): Replace free with a memory safe alternative.
-#ifdef WIN32
-    VirtualFree(arena->data, 0, MEM_RELEASE);
-#else
-    free(arena->data);
-#endif
 }
 }  // namespace pound::host::memory
