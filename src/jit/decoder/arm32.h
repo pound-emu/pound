@@ -3,30 +3,31 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include "host/memory/arena.h"
 
 namespace pound::jit::decoder
 {
 typedef uint32_t arm32_opcode_t;
 typedef uint32_t arm32_instruction_t;
 
-typedef struct arm32_instruction_info arm32_instruction_info_t;
 typedef struct arm32_decoder arm32_decoder_t;
-
-extern arm32_decoder_t g_arm32_decoder;
-
 typedef void (*arm32_handler_fn)(arm32_decoder_t* decoder, arm32_instruction_t instruction);
 
-struct a32_instruction_info
+typedef struct
 {
     const char* name;
     arm32_opcode_t mask;
     arm32_opcode_t expected;
     arm32_handler_fn handler;
-    uint8_t priority; /* Higher = more specific */
-};
+
+    /* Use to order instructions in the lookup table. The more specific
+     * instructions are checked first */
+    uint8_t priority;
+} arm32_instruction_info_t;
 
 struct arm32_decoder
 {
+    pound::host::memory::arena_t allocator;
     arm32_instruction_info_t* instructions;
     size_t instruction_count;
     size_t instruction_capacity;
@@ -39,9 +40,11 @@ struct arm32_decoder
     } lookup_table[4096]; /* 2^12 entries. */
 };
 
-void arm32_init(arm32_decoder_t* decoder);
+extern arm32_decoder_t g_arm32_decoder;
 
-void arm32_add_instruction(arm32_decoder_t* decoder, const char* nane, arm32_opcode_t mask, arm32_opcode_t expected,
+void arm32_init(pound::host::memory::arena_t allocator, arm32_decoder_t* decoder);
+
+void arm32_add_instruction(arm32_decoder_t* decoder, const char* name, arm32_opcode_t mask, arm32_opcode_t expected,
                            arm32_handler_fn handler);
 void arm32_ADD_imm_handler(arm32_decoder_t* decoder, arm32_instruction_t instruction);
 

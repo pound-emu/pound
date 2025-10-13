@@ -9,6 +9,7 @@
 #include "common/passert.h"
 #include "frontend/gui.h"
 #include "host/memory/arena.h"
+#include "jit/decoder/arm32.h"
 
 #include <SDL3/SDL_opengl.h>
 #include "frontend/color.h"
@@ -18,6 +19,8 @@
 
 int main()
 {
+    pound::host::memory::arena_t arena = pound::host::memory::arena_init(256);
+    pound::jit::decoder::arm32_init(arena, &pound::jit::decoder::g_arm32_decoder);
 #if 0
     gui::window_t window = {.data = nullptr, .gl_context = nullptr};
     (void)gui::window_init(&window, "Pound Emulator", 640, 480);
