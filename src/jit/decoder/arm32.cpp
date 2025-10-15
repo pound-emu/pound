@@ -60,13 +60,9 @@ void arm32_add_instruction(arm32_decoder_t* decoder, const char* name, const cha
     PVM_ASSERT(nullptr != bitstring);
     PVM_ASSERT(decoder->instruction_count < decoder->instruction_capacity);
 
-    LOG_TRACE("Adding '%s' instruction to lookup table.", name);
     arm32_opcode_t mask = 0;
     arm32_opcode_t expected = 0;
     arm32_parse_bitstring(bitstring, &mask, &expected);
-
-    LOG_TRACE("Mask: %x", mask);
-    LOG_TRACE("Expected: %x", expected);
 
     arm32_instruction_info_t* info = &decoder->instructions[decoder->instruction_count];
     info->name = name;
