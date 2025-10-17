@@ -5,6 +5,7 @@
 #ifdef WIN32
 #include <Windows.h>
 #else
+#include <unistd.h>
 #include <sys/mman.h>
 #endif
 
@@ -53,22 +54,26 @@ void arena_reset(memory::arena_t* arena)
 }
 void arena_free(memory::arena_t* arena)
 {
-    PVM_ASSERT(arena != nullptr);
+    PVM_ASSERT(nullptr != arena);
+    PVM_ASSERT(nullptr != arena->data);
 
 #ifdef WIN32
-    const int free = VirtualFree(arena->data, 0, MEM_RELEASE);
-
-    PVM_ASSERT(free != 0);
-
-    if (free == 0)
+    size_t size = 0;
+    const int return_val = VirtualFree(arena->data, size, MEM_RELEASE);
+    if (0 == return_val)
+    {
         PVM_ASSERT_MSG(false, "Failed to free arena memory");
+    }
 #else
-    const int free = munmap(arena->data, arena->capacity);
-
-    PVM_ASSERT(free == 0);
-
-    if (free == -1)
+    long page_size = sysconf(_SC_PAGESIZE);
+    PVM_ASSERT(page_size > 0);
+    PVM_ASSERT(arena->capacity > 0);
+    PVM_ASSERT(0 == ((uintptr_t)arena->data % (size_t)page_size));
+    int return_val = munmap(arena->data, arena->capacity);
+    if (-1 == return_val)
+    {
         PVM_ASSERT_MSG(false, "Failed to free arena memory");
+    }
 #endif
 
     arena->capacity = 0;
