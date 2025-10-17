@@ -5,6 +5,7 @@
 #ifdef WIN32
 #include <Windows.h>
 #else
+#include <unistd.h>
 #include <sys/mman.h>
 #endif
 
@@ -35,7 +36,6 @@ arena_t arena_init(size_t capacity)
     };
     return arena;
 }
-// new more memsafe code (ownedbywuigi) (i give up on windows compatibility for now, will stick to the old unsafe code)
 
 void* arena_allocate(memory::arena_t* arena, const std::size_t size)
 {
@@ -54,15 +54,29 @@ void arena_reset(memory::arena_t* arena)
 }
 void arena_free(memory::arena_t* arena)
 {
-    PVM_ASSERT(arena != nullptr);
+    PVM_ASSERT(nullptr != arena);
+    PVM_ASSERT(nullptr != arena->data);
+
+#ifdef WIN32
+    size_t size = 0;
+    const int return_val = VirtualFree(arena->data, size, MEM_RELEASE);
+    if (0 == return_val)
+    {
+        PVM_ASSERT_MSG(false, "Failed to free arena memory");
+    }
+#else
+    long page_size = sysconf(_SC_PAGESIZE);
+    PVM_ASSERT(page_size > 0);
+    PVM_ASSERT(arena->capacity > 0);
+    PVM_ASSERT(0 == ((uintptr_t)arena->data % (size_t)page_size));
+    int return_val = munmap(arena->data, arena->capacity);
+    if (-1 == return_val)
+    {
+        PVM_ASSERT_MSG(false, "Failed to free arena memory");
+    }
+#endif
+
     arena->capacity = 0;
     arena->size = 0;
-
-    // TODO(GloriousTaco:memory): Replace free with a memory safe alternative.
-#ifdef WIN32
-    VirtualFree(arena->data, 0, MEM_RELEASE);
-#else
-    free(arena->data);
-#endif
 }
 }  // namespace pound::host::memory
