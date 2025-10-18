@@ -60,13 +60,9 @@ void arm32_add_instruction(arm32_decoder_t* decoder, const char* name, const cha
     PVM_ASSERT(nullptr != bitstring);
     PVM_ASSERT(decoder->instruction_count < decoder->instruction_capacity);
 
-    LOG_TRACE("Adding '%s' instruction to lookup table.", name);
     arm32_opcode_t mask = 0;
     arm32_opcode_t expected = 0;
     arm32_parse_bitstring(bitstring, &mask, &expected);
-
-    LOG_TRACE("Mask: %x", mask);
-    LOG_TRACE("Expected: %x", expected);
 
     arm32_instruction_info_t* info = &decoder->instructions[decoder->instruction_count];
     info->name = name;
@@ -85,6 +81,13 @@ void arm32_add_instruction(arm32_decoder_t* decoder, const char* name, const cha
     }
 
     ++decoder->instruction_count;
+    LOG_TRACE("========================================");
+    LOG_TRACE("Instruction Registered: %s", info->name);
+    LOG_TRACE("Mask:      0x%08X", info->mask);
+    LOG_TRACE("Expected:  0x%08X", info->expected);
+    LOG_TRACE("Priority:  %d", info->priority);
+    LOG_TRACE("========================================");
+
 
     /* TODO(GloriousTacoo:jit): Add instruction to lookup table. */
 }
@@ -131,4 +134,5 @@ void arm32_parse_bitstring(const char* bitstring, uint32_t* mask, uint32_t* expe
         }
     }
 }
+
 }  // namespace pound::jit::decoder

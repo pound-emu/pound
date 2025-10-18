@@ -48,5 +48,6 @@ void arm32_add_instruction(arm32_decoder_t* decoder, const char* name, arm32_opc
                            arm32_handler_fn handler);
 void arm32_ADD_imm_handler(arm32_decoder_t* decoder, arm32_instruction_t instruction);
 
+
 }  // namespace pound::jit::decoder
 #endif  // POUND_JIT_DECODER_ARM32_H
