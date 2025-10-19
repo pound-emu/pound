@@ -7,17 +7,16 @@
 
 namespace pound::jit::decoder
 {
-/* Increase value as more instructions get implemented */
-#define INSTRUCTION_ARRAY_CAPACITY 4
-arm32_decoder_t g_arm32_decoder = {};
+#define INSTRUCTION_ARRAY_CAPACITY 261
+
+#define HASH_TABLE_INVALID_INDEX 0xFFFF
 
 /*
  * ============================================================================
  *                              Foward Declarations
  * ============================================================================
  */
-void arm32_add_instruction(arm32_decoder_t* decoder, const char* name, const char* bitstring, arm32_handler_fn handler);
-void arm32_ADD_imm_handler(arm32_decoder_t* decoder, arm32_instruction_t instruction);
+void arm32_add_instruction(arm32_decoder_t* decoder, const char* name, const char* bitstring);
 
 void arm32_parse_bitstring(const char* bitstring, uint32_t* mask, uint32_t* expected);
 void arm32_grow_instructions_array(arm32_decoder_t* decoder, size_t new_capacity);
@@ -38,7 +37,7 @@ void arm32_init(pound::host::memory::arena_t allocator, arm32_decoder_t* decoder
     /* Setup Instructions array.*/
     size_t instructions_array_size = INSTRUCTION_ARRAY_CAPACITY * sizeof(arm32_instruction_info_t);
     PVM_ASSERT(instructions_array_size <= decoder->allocator.capacity);
-    LOG_TRACE("Growing instructions array to %d bytes", instructions_array_size);
+    LOG_TRACE("Allocated %d bytes to instructions array", instructions_array_size);
 
     void* new_ptr = pound::host::memory::arena_allocate(&decoder->allocator, instructions_array_size);
     PVM_ASSERT(nullptr != new_ptr);
@@ -47,12 +46,32 @@ void arm32_init(pound::host::memory::arena_t allocator, arm32_decoder_t* decoder
     decoder->instruction_capacity = INSTRUCTION_ARRAY_CAPACITY;
 
     /* Add all Arm32 instructions */
-#define INST(fn, name, bitstring) arm32_add_instruction(decoder, name, bitstring, &arm32_##fn##_handler);
+#define INST(fn, name, bitstring) arm32_add_instruction(decoder, name, bitstring);
 #include "./arm32.inc"
 #undef INST
 }
 
-void arm32_add_instruction(arm32_decoder_t* decoder, const char* name, const char* bitstring, arm32_handler_fn handler)
+arm32_instruction_info_t* arm32_decode(arm32_decoder_t* decoder, uint32_t instruction)
+{
+    for (size_t i = 0; i < decoder->instruction_count; ++i)
+    {
+        arm32_instruction_info_t* info = &decoder->instructions[i];
+        if ((instruction & info->mask) == info->expected)
+        {
+            LOG_TRACE("Instruction found for 0x%08X: %s", instruction, info->name);
+            return info;
+        }
+    }
+    PVM_ASSERT_MSG(false, "No instruction found for 0x%08X", instruction);
+}
+
+/*
+ * ============================================================================
+ *                          Private Functions
+ * ============================================================================
+ */
+
+void arm32_add_instruction(arm32_decoder_t* decoder, const char* name, const char* bitstring)
 {
     PVM_ASSERT(nullptr != decoder);
     PVM_ASSERT(nullptr != decoder->allocator.data);
@@ -60,44 +79,22 @@ void arm32_add_instruction(arm32_decoder_t* decoder, const char* name, const cha
     PVM_ASSERT(nullptr != bitstring);
     PVM_ASSERT(decoder->instruction_count < decoder->instruction_capacity);
 
-    arm32_opcode_t mask = 0;
-    arm32_opcode_t expected = 0;
+    uint32_t mask = 0;
+    uint32_t expected = 0;
     arm32_parse_bitstring(bitstring, &mask, &expected);
 
     arm32_instruction_info_t* info = &decoder->instructions[decoder->instruction_count];
+    PVM_ASSERT(nullptr != info);
     info->name = name;
     info->mask = mask;
     info->expected = expected;
-    info->handler = handler;
-
-    /* Calculate priority based on number of fixed bits. */
-    info->priority = 0;
-    for (int i = 0; i < 32; ++i)
-    {
-        if ((mask >> i) & 1)
-        {
-            ++info->priority;
-        }
-    }
 
     ++decoder->instruction_count;
-    LOG_TRACE("========================================");
+
     LOG_TRACE("Instruction Registered: %s", info->name);
     LOG_TRACE("Mask:      0x%08X", info->mask);
     LOG_TRACE("Expected:  0x%08X", info->expected);
-    LOG_TRACE("Priority:  %d", info->priority);
-    LOG_TRACE("========================================");
-
-
-    /* TODO(GloriousTacoo:jit): Add instruction to lookup table. */
 }
-void arm32_ADD_imm_handler(arm32_decoder_t* decoder, arm32_instruction_t instruction) {}
-
-/*
- * ============================================================================
- *                          Private Functions
- * ============================================================================
- */
 
 void arm32_parse_bitstring(const char* bitstring, uint32_t* mask, uint32_t* expected)
 {
@@ -109,7 +106,7 @@ void arm32_parse_bitstring(const char* bitstring, uint32_t* mask, uint32_t* expe
     *mask = 0;
     *expected = 0;
     uint8_t instruction_size_bits = 32;
-    for (int i = 0; (i < instruction_size_bits) && (bitstring[i] != '\0'); ++i)
+    for (unsigned int i = 0; (i < instruction_size_bits) && (bitstring[i] != '\0'); ++i)
     {
         uint32_t bit_position = 31 - i;
         switch (bitstring[i])
@@ -120,19 +117,9 @@ void arm32_parse_bitstring(const char* bitstring, uint32_t* mask, uint32_t* expe
             case '1':
                 *mask |= (1U << bit_position);
                 *expected |= (1U << bit_position);
-                break;
-            case 'c':
-            case 'n':
-            case 'd':
-            case 'r':
-            case 'v':
-            case 's':
-            case 'S':
-                break;
             default:
-                PVM_ASSERT_MSG(false, "Invalid bitstring character: %c", bitstring[i]);
+                break;
         }
     }
 }
-
 }  // namespace pound::jit::decoder

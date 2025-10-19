@@ -19,8 +19,14 @@
 
 int main()
 {
-    pound::host::memory::arena_t arena = pound::host::memory::arena_init(256);
-    pound::jit::decoder::arm32_init(arena, &pound::jit::decoder::g_arm32_decoder);
+    pound::host::memory::arena_t arena = pound::host::memory::arena_init(8192);
+    pound::jit::decoder::arm32_decoder_t decoder = {};
+    pound::jit::decoder::arm32_init(arena, &decoder);
+    /* Add r0, r0, #1 */
+    pound::jit::decoder::arm32_decode(&decoder, 0xE2800001); 
+    /* Sub r0, r0, #1 */
+    pound::jit::decoder::arm32_decode(&decoder, 0xE2400001);
+
 #if 0
     gui::window_t window = {.data = nullptr, .gl_context = nullptr};
     (void)gui::window_init(&window, "Pound Emulator", 640, 480);
