@@ -97,7 +97,6 @@ add_executable(Pound
 
 add_subdirectory(3rd_Party)
 add_subdirectory(src/common)
-add_subdirectory(src/frontend)
 add_subdirectory(src/host)
 add_subdirectory(src/jit)
 add_subdirectory(src/pvm)
@@ -110,7 +109,7 @@ add_subdirectory(src/targets/switch1/hardware)
 include(TestBigEndian)
 TEST_BIG_ENDIAN(WORDS_BIGENDIAN)
 
-list(APPEND POUND_PROJECT_TARGETS common frontend host pvm)
+list(APPEND POUND_PROJECT_TARGETS common host pvm)
 foreach(TARGET ${POUND_PROJECT_TARGETS})
     # Apply Endianness definitions to all our targets.
     if(WORDS_BIGENDIAN)
@@ -149,7 +148,6 @@ set_property(TARGET Pound PROPERTY CMAKE_INTERPROCEDURAL_OPTIMIZATION_RELEASE TR
 
 target_link_libraries(Pound PRIVATE
     common
-    frontend
     host
     jit
     pvm

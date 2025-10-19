@@ -64,7 +64,7 @@ INST(ADD_imm, "ADD (imm)", "cccc0010100Snnnnddddrrrrvvvvvvvv")  // v1
 //INST(SBC_imm,       "SBC (imm)",           "cccc0010110Snnnnddddrrrrvvvvvvvv") // v1
 //INST(SBC_reg,       "SBC (reg)",           "cccc0000110Snnnnddddvvvvvrr0mmmm") // v1
 //INST(SBC_rsr,       "SBC (rsr)",           "cccc0000110Snnnnddddssss0rr1mmmm") // v1
-//INST(SUB_imm,       "SUB (imm)",           "cccc0010010Snnnnddddrrrrvvvvvvvv") // v1
+INST(SUB_imm,       "SUB (imm)",           "cccc0010010Snnnnddddrrrrvvvvvvvv") // v1
 //INST(SUB_reg,       "SUB (reg)",           "cccc0000010Snnnnddddvvvvvrr0mmmm") // v1
 //INST(SUB_rsr,       "SUB (rsr)",           "cccc0000010Snnnnddddssss0rr1mmmm") // v1
 //INST(TEQ_imm,       "TEQ (imm)",           "cccc00110011nnnn0000rrrrvvvvvvvv") // v1
