@@ -15,6 +15,14 @@ typedef void (*arm32_handler_fn)(arm32_decoder_t* decoder, arm32_instruction_t i
 
 typedef struct
 {
+    uint16_t* hash_table;
+    uint16_t hash_shift;
+    uint16_t hash_mask;
+    uint16_t table_size;
+} arm32_perfect_hash_t;
+
+typedef struct
+{
     const char* name;
     arm32_opcode_t mask;
     arm32_opcode_t expected;
@@ -27,6 +35,7 @@ typedef struct
 
 struct arm32_decoder
 {
+    arm32_perfect_hash_t perfect_hash;
     pound::host::memory::arena_t allocator;
     arm32_instruction_info_t* instructions;
     size_t instruction_count;

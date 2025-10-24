@@ -10,14 +10,7 @@ namespace pound::jit::decoder
 /* Increase value as more instructions get implemented */
 #define INSTRUCTION_ARRAY_CAPACITY 4
 
-typedef struct
-{
-    uint16_t* hash_table;
-    uint8_t* collision_map;
-    uint16_t hash_shift;
-    uint16_t hash_mask;
-    uint16_t table_size;
-} arm32_perfect_hash_t;
+#define HASH_TABLE_INVALID_INDEX 0xFFFF
 
 /*
  * ============================================================================
@@ -30,6 +23,7 @@ void arm32_SUB_imm_handler(arm32_decoder_t* decoder, arm32_instruction_t instruc
 
 void arm32_parse_bitstring(const char* bitstring, uint32_t* mask, uint32_t* expected);
 void arm32_grow_instructions_array(arm32_decoder_t* decoder, size_t new_capacity);
+uint32_t arm32_generate_hash_seed(uint32_t mask, uint32_t expected);
 
 /*
  * ============================================================================
@@ -47,7 +41,7 @@ void arm32_init(pound::host::memory::arena_t allocator, arm32_decoder_t* decoder
     /* Setup Instructions array.*/
     size_t instructions_array_size = INSTRUCTION_ARRAY_CAPACITY * sizeof(arm32_instruction_info_t);
     PVM_ASSERT(instructions_array_size <= decoder->allocator.capacity);
-    LOG_TRACE("Growing instructions array to %d bytes", instructions_array_size);
+    LOG_TRACE("Allocated %d bytes to instructions array", instructions_array_size);
 
     void* new_ptr = pound::host::memory::arena_allocate(&decoder->allocator, instructions_array_size);
     PVM_ASSERT(nullptr != new_ptr);
@@ -73,7 +67,7 @@ void arm32_init(pound::host::memory::arena_t allocator, arm32_decoder_t* decoder
     size_t slots_used_size = table_size * sizeof(bool);
     bool* slots_used = (bool*)pound::host::memory::arena_allocate(&decoder->allocator, slots_used_size);
     PVM_ASSERT(nullptr != slots_used);
-    LOG_TRACE("Growing hash slots used array to %d bytes", slots_used_size);
+    LOG_TRACE("Allocated %d bytes to hash slots used array", slots_used_size);
 
     uint16_t shift = 0;
     bool perfect_hash_generated = false;
@@ -85,33 +79,8 @@ void arm32_init(pound::host::memory::arena_t allocator, arm32_decoder_t* decoder
         uint16_t hash;
         for (size_t i = 0; i < decoder->instruction_count; ++i)
         {
-            /* 
-             * XOR combines the mask (which bits matter) and expected value (what those btis should be)
-             * into a single 32-bit value that uniquely represents this instruction pattern.
-             * Example: ADD instruction might have mask=0x0FF00000, expected=0x00200000
-             *          value = 0x0FF00000 ^ 0x00200000 = 0x0FD00000;
-             */
-            uint32_t value = decoder->instructions[i].mask ^ decoder->instructions[i].expected;
-
-            /*
-             * First bit mixing round - break up patterns in the value.
-             * We need to eliminate patterns (like trailing zeroes) that cause collisions.
-             * We do this by mixing the high bits (16-31) with the low bits (0-15).
-             *
-             * We then multiply a magic number to further scrambles the bits to ensure good distribution.
-             */
-            value = ((value >> 16) ^ value) * 0x45d9f3b;
-
-            /*
-             * Second bit mixing round to ensire thorough mixing
-             */
-            value = ((value >> 16) ^ value) * 0x45d9f3b;
-
-            /*
-             * Final mixing. The result is our hash seed - a 32-bit number that uniquely represents this instruction.
-             */
-            value = (value >> 16) ^ value;
-            uint32_t hash_seed = value;
+            uint32_t hash_seed =
+                arm32_generate_hash_seed(decoder->instructions[i].mask, decoder->instructions[i].expected);
 
             /*
              * Now we need to convert the 32-bit hash seed into an index within our hash table.
@@ -121,12 +90,14 @@ void arm32_init(pound::host::memory::arena_t allocator, arm32_decoder_t* decoder
             hash = ((hash_seed >> shift) & mask);
             if (true == slots_used[hash])
             {
-                LOG_TRACE("Instruction %s: Collision detected at slot %u for shift %u", decoder->instructions[i].name, hash, shift);
+                LOG_TRACE("Instruction %s: Collision detected at slot %u for shift %u", decoder->instructions[i].name,
+                          hash, shift);
                 collision_free = false;
                 break;
             }
             slots_used[hash] = true;
-            LOG_TRACE("Instruction %s: Collision-free hash %u found for shift %u", decoder->instructions[i].name,  hash, shift);
+            LOG_TRACE("Instruction %s: Collision-free hash %u found for shift %u", decoder->instructions[i].name, hash,
+                      shift);
         }
         if (true == collision_free)
         {
@@ -138,7 +109,33 @@ void arm32_init(pound::host::memory::arena_t allocator, arm32_decoder_t* decoder
     PVM_ASSERT_MSG(true == perfect_hash_generated, "Failed to generate perfect hash - no collision-free hash found");
     LOG_TRACE("Perfect hash parameters: shift=%u, mask=0x%04x, table_size=%u", shift, mask, table_size);
 
-    /* TODO(GloriousTacoo:jit): Generate hash table. */
+    size_t hash_table_size = table_size * sizeof(uint16_t);
+    uint16_t* hash_table = (uint16_t*)pound::host::memory::arena_allocate(&decoder->allocator, hash_table_size);
+    PVM_ASSERT(nullptr != hash_table);
+    LOG_TRACE("Allocated %zu bytes to hash table", hash_table_size);
+
+    /* Initialize hash table with invalid indices */
+    for (size_t i = 0; i < table_size; ++i)
+    {
+        hash_table[i] = HASH_TABLE_INVALID_INDEX;
+    }
+
+    for (size_t i = 0; i < decoder->instruction_count; ++i)
+    {
+        uint32_t hash_seed = arm32_generate_hash_seed(decoder->instructions[i].mask, decoder->instructions[i].expected);
+        uint32_t hash = (hash_seed >> shift) & mask;
+        PVM_ASSERT_MSG(HASH_TABLE_INVALID_INDEX == hash_table[hash], "Hash collision detected");
+
+        PVM_ASSERT(i < 0xFFFF);
+        hash_table[hash] = (uint16_t)i;
+
+        LOG_TRACE("Instruction '%s' hashed to slot %u", decoder->instructions[i].name, hash);
+    }
+
+    decoder->perfect_hash.hash_shift = shift;
+    decoder->perfect_hash.hash_mask = mask;
+    decoder->perfect_hash.table_size = table_size;
+    decoder->perfect_hash.hash_table = hash_table;
 }
 
 /*
@@ -166,16 +163,9 @@ void arm32_add_instruction(arm32_decoder_t* decoder, const char* name, const cha
     info->handler = handler;
 
     /* Calculate priority based on number of fixed bits. */
-    info->priority = 0;
-    for (int i = 0; i < 32; ++i)
-    {
-        if ((mask >> i) & 1)
-        {
-            ++info->priority;
-        }
-    }
-
+    info->priority = (uint8_t)__builtin_popcount(mask);
     ++decoder->instruction_count;
+
     LOG_TRACE("Instruction Registered: %s", info->name);
     LOG_TRACE("Mask:      0x%08X", info->mask);
     LOG_TRACE("Expected:  0x%08X", info->expected);
@@ -219,5 +209,35 @@ void arm32_parse_bitstring(const char* bitstring, uint32_t* mask, uint32_t* expe
                 PVM_ASSERT_MSG(false, "Invalid bitstring character: %c", bitstring[i]);
         }
     }
+}
+uint32_t arm32_generate_hash_seed(uint32_t mask, uint32_t expected)
+{
+    /* 
+             * XOR combines the mask (which bits matter) and expected value (what those btis should be)
+             * into a single 32-bit value that uniquely represents this instruction pattern.
+             * Example: ADD instruction might have mask=0x0FF00000, expected=0x00200000
+             *          value = 0x0FF00000 ^ 0x00200000 = 0x0FD00000;
+             */
+    uint32_t value = mask ^ expected;
+
+    /*
+             * First bit mixing round - break up patterns in the value.
+             * We need to eliminate patterns (like trailing zeroes) that cause collisions.
+             * We do this by mixing the high bits (16-31) with the low bits (0-15).
+             *
+             * We then multiply a magic number to further scrambles the bits to ensure good distribution.
+             */
+    value = ((value >> 16) ^ value) * 0x45d9f3b;
+
+    /*
+             * Second bit mixing round to ensire thorough mixing
+             */
+    value = ((value >> 16) ^ value) * 0x45d9f3b;
+
+    /*
+             * Final mixing. The result is our hash seed - a 32-bit number that uniquely represents this instruction.
+             */
+    value = (value >> 16) ^ value;
+    return value;
 }
 }  // namespace pound::jit::decoder
