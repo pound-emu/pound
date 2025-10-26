@@ -23,8 +23,6 @@ struct arm32_decoder
     size_t                       instruction_capacity;
 };
 
-extern arm32_decoder_t g_arm32_decoder;
-
 void                      arm32_init(pound::host::memory::arena_t allocator,
                                      arm32_decoder_t             *p_decoder);
 arm32_instruction_info_t *arm32_decode(arm32_decoder_t *p_decoder,
