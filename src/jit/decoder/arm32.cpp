@@ -1,6 +1,6 @@
 #include "arm32.h"
-#include <string.h>
 #include "common/passert.h"
+#include <string.h>
 
 #define LOG_MODULE "jit"
 #include "common/logging.h"
@@ -16,10 +16,8 @@ namespace pound::jit::decoder
  *                              Foward Declarations
  * ============================================================================
  */
-void arm32_add_instruction(arm32_decoder_t* decoder, const char* name, const char* bitstring);
-
-void arm32_parse_bitstring(const char* bitstring, uint32_t* mask, uint32_t* expected);
-void arm32_grow_instructions_array(arm32_decoder_t* decoder, size_t new_capacity);
+static void arm32_add_instruction(arm32_decoder_t* decoder, const char* name, const char* bitstring);
+static void arm32_parse_bitstring(const char* bitstring, uint32_t* mask, uint32_t* expected);
 
 /*
  * ============================================================================
@@ -71,7 +69,7 @@ arm32_instruction_info_t* arm32_decode(arm32_decoder_t* decoder, uint32_t instru
  * ============================================================================
  */
 
-void arm32_add_instruction(arm32_decoder_t* decoder, const char* name, const char* bitstring)
+static void arm32_add_instruction(arm32_decoder_t* decoder, const char* name, const char* bitstring)
 {
     PVM_ASSERT(nullptr != decoder);
     PVM_ASSERT(nullptr != decoder->allocator.data);
@@ -96,7 +94,7 @@ void arm32_add_instruction(arm32_decoder_t* decoder, const char* name, const cha
     LOG_TRACE("Expected:  0x%08X", info->expected);
 }
 
-void arm32_parse_bitstring(const char* bitstring, uint32_t* mask, uint32_t* expected)
+static void arm32_parse_bitstring(const char* bitstring, uint32_t* mask, uint32_t* expected)
 {
     PVM_ASSERT(nullptr != bitstring);
     PVM_ASSERT(nullptr != mask);
