@@ -1,6 +1,6 @@
 #include "common/passert.h"
 
-namespace pound::jit::decoder {
+namespace pound::jit::ir {
 typedef enum
 {
     IR_TYPE_VOID        = 0,
@@ -21,7 +21,7 @@ typedef enum
 } ir_type_t;
 
 bool
-ir_are_types_compatible (const ir_type_t t1, const ir_type_t t2)
+are_types_compatible (const ir_type_t t1, const ir_type_t t2)
 {
     const bool is_compatible
         = (t1 == t2) || (IR_TYPE_OPAQUE == t1) || (IR_TYPE_OPAQUE == t2);
