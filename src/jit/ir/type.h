@@ -1,10 +1,11 @@
 /**
  *  @file type.h
  *
- *  @brief Defines the type system for the Pound JIT Intermediate Representation.
- *  
+ *  @brief Defines the type system for the Pound JIT Intermediate
+ * Representation.
+ *
  *  This header declares the `type_t ` enumeration, which forms the basis of
- *  type identification and checking within the JIT's IR. 
+ *  type identification and checking within the JIT's IR.
  */
 
 namespace pound::jit::ir {
@@ -17,15 +18,15 @@ namespace pound::jit::ir {
  */
 typedef enum
 {
-    IR_TYPE_VOID        = 0,
-    IR_TYPE_U1          = 1 << 0,
-    IR_TYPE_U8          = 1 << 1,
-    IR_TYPE_U16         = 1 << 2,
-    IR_TYPE_U32         = 1 << 3,
-    IR_TYPE_U64         = 1 << 4,
-    IR_TYPE_U128        = 1 << 5,
+    IR_TYPE_VOID         = 0,
+    IR_TYPE_U1           = 1 << 0,
+    IR_TYPE_U8           = 1 << 1,
+    IR_TYPE_U16          = 1 << 2,
+    IR_TYPE_U32          = 1 << 3,
+    IR_TYPE_U64          = 1 << 4,
+    IR_TYPE_U128         = 1 << 5,
+    IR_TYPE_A32_REGISTER = 1 << 6, // ARM32 GPR R0-R14
 #if 0
-    IR_TYPE_A32_REG     = 1 << 6, // ARM32 GPR R0-R14
     IR_TYPE_A32_EXT_REG = 1 << 7, // ARM32 Extended Registers (e.g., for
                                   // VFP/NEON, or just R15 if treated specially)
     IR_TYPE_A32_CPSR = 1 << 8,    // ARM32 CPSR/SPSR
@@ -56,4 +57,4 @@ typedef enum
  *         compatibility rules. false otherwise.
  */
 bool are_types_compatible(const type_t t1, const type_t t2);
-} //namespace pound::jit::ir
+} // namespace pound::jit::ir

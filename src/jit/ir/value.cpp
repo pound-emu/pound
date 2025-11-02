@@ -1,20 +1,27 @@
 #include "type.h"
+#include "jit/a32_types.h"
 #include "common/passert.h"
 #include <stdint.h>
 
-namespace pound::jit::ir 
-{
+namespace pound::jit::ir {
 typedef struct
 {
     type_t type;
     union
     {
-        uint64_t immediate_u64;
-        uint32_t immediate_u32;
-        uint8_t  immediate_u8;
-        bool     immediate_u1;
+        uint64_t                   immediate_u64;
+        uint32_t                   immediate_u32;
+        pound::jit::a32_register_t immediate_a32_register;
+        uint8_t                    immediate_u8;
+        bool                       immediate_u1;
     } inner;
 } value_t;
+
+/*
+ * ============================================================================
+ *                              Init Functions
+ * ============================================================================
+ */
 
 void
 value_init (value_t *value)
@@ -54,4 +61,18 @@ value_init_from_u1 (value_t *value, bool u1)
     value->type               = IR_TYPE_U1;
     value->inner.immediate_u1 = u1;
 }
+
+void
+value_init_from_a32_register (value_t *value, a32_register_t reg)
+{
+    PVM_ASSERT(nullptr != value);
+    value->type = IR_TYPE_A32_REGISTER;
+    value->inner.immediate_a32_register = reg;
+}
+
+/*
+ * ============================================================================
+ *                              Getter Functions
+ * ============================================================================
+ */
 }
