@@ -75,4 +75,39 @@ value_init_from_a32_register (value_t *value, a32_register_t reg)
  *                              Getter Functions
  * ============================================================================
  */
+
+uint64_t
+value_get_u64 (value_t *value)
+{
+    PVM_ASSERT(IR_TYPE_U64 == value->type);
+    return value->inner.immediate_u64;
+}
+
+uint32_t
+value_get_u32 (value_t *value)
+{
+    PVM_ASSERT(IR_TYPE_U32 == value->type);
+    return value->inner.immediate_u32;
+}
+
+uint8_t
+value_get_u8 (value_t *value)
+{
+    PVM_ASSERT(IR_TYPE_U8 == value->type);
+    return value->inner.immediate_u8;
+}
+
+bool
+value_get_u1 (value_t *value)
+{
+    PVM_ASSERT(IR_TYPE_U1 == value->type);
+    return value->inner.immediate_u1;
+}
+
+pound::jit::a32_register_t
+value_get_a32_register (value_t *value)
+{
+    PVM_ASSERT(IR_TYPE_A32_REGISTER == value->type);
+    return value->inner.immediate_a32_register;
+}
 }
