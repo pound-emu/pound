@@ -158,3 +158,19 @@ target_link_libraries(Pound PRIVATE
     SDL3::SDL3
     imgui
 )
+
+set(TEST_SRC
+    ${CMAKE_CURRENT_SOURCE_DIR}/tests/jit/ir/test_value.cpp
+)
+
+add_executable(tests ${TEST_SRC})
+target_link_libraries(tests PRIVATE
+    jit
+    gtest
+    gtest_main
+)
+
+target_include_directories(jit PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/..
+)

@@ -29,3 +29,7 @@ target_include_directories(imgui PUBLIC
     imgui
     imgui/backends
 )
+
+# GoogleTest
+add_subdirectory(googletest)
+enable_testing()
