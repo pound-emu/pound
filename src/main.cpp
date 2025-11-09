@@ -1,21 +1,12 @@
 // Copyright 2025 Pound Emulator Project. All rights reserved.
 
-#include <chrono>
-#include <memory>
-#include <thread>
-
 #define LOG_MODULE "main"
 #include "common/logging.h"
 #include "common/passert.h"
-#include "frontend/gui.h"
 #include "host/memory/arena.h"
 #include "jit/decoder/arm32.h"
-
-#include <SDL3/SDL_opengl.h>
-#include "frontend/color.h"
-#include "frontend/panels.h"
-#include "imgui_impl_opengl3.h"
-#include "imgui_impl_sdl3.h"
+#include "jit/ir/opcode.h"
+#include "jit/a32_types.h"
 
 int main()
 {
@@ -26,6 +17,7 @@ int main()
     pound::jit::decoder::arm32_decode(&decoder, 0xE2800001); 
     /* Sub r0, r0, #1 */
     pound::jit::decoder::arm32_decode(&decoder, 0xE2400001);
+    pound::jit::ir::opcode_init();
 
 #if 0
     gui::window_t window = {.data = nullptr, .gl_context = nullptr};

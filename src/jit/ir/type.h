@@ -26,15 +26,17 @@ typedef enum
     IR_TYPE_U64          = 1 << 4,
     IR_TYPE_U128         = 1 << 5,
     IR_TYPE_A32_REGISTER = 1 << 6, // ARM32 GPR R0-R14
+    IR_TYPE_A32_EXTENDED_REGISTER = 1 << 7, // ARM32 Extended Registers (e.g., for
+    IR_TYPE_CONDITION     = 1 << 9,    // Condition codes
+    IR_TYPE_MEMORY_ACCESS = 1 << 10,   // Memory access type
 #if 0
-    IR_TYPE_A32_EXT_REG = 1 << 7, // ARM32 Extended Registers (e.g., for
                                   // VFP/NEON, or just R15 if treated specially)
     IR_TYPE_A32_CPSR = 1 << 8,    // ARM32 CPSR/SPSR
-    IR_TYPE_COND     = 1 << 9,    // Condition codes
     IR_TYPE_ACC_TYPE = 1 << 10,   // Memory access type
 #endif
     IR_TYPE_OPAQUE
     = 1 << 11, // Represents a value defined by another IR instruction
+    IR_TYPE_NZCV = 1 << 12,
 } type_t;
 
 /*!
