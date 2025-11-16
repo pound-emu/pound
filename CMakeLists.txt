@@ -6,7 +6,7 @@ cmake_minimum_required(VERSION 3.25)
 
 project(Pound)
 
-if (NOT CMAKE_BUILD_TYPE)
+if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Debug)
 endif()
 
@@ -15,6 +15,8 @@ set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_C_STANDARD_REQUIRED TRUE)
 set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+option(ENABLE_GTEST "Enable GoogleTest Compilation" OFF)
 
 #-------------------------------
 # ---- Dependency Discovery ----
@@ -159,18 +161,20 @@ target_link_libraries(Pound PRIVATE
     imgui
 )
 
-set(TEST_SRC
-    ${CMAKE_CURRENT_SOURCE_DIR}/tests/jit/ir/test_value.cpp
-)
+if(ENABLE_GTEST)
+    set(TEST_SRC
+        ${CMAKE_CURRENT_SOURCE_DIR}/tests/jit/ir/test_value.cpp
+    )
 
-add_executable(tests ${TEST_SRC})
-target_link_libraries(tests PRIVATE
-    jit
-    gtest
-    gtest_main
-)
+    add_executable(tests ${TEST_SRC})
+    target_link_libraries(tests PRIVATE
+        jit
+        gtest
+        gtest_main
+    )
 
-target_include_directories(jit PUBLIC
-    ${CMAKE_CURRENT_SOURCE_DIR}
-    ${CMAKE_CURRENT_SOURCE_DIR}/..
-)
+    target_include_directories(jit PUBLIC
+        ${CMAKE_CURRENT_SOURCE_DIR}
+        ${CMAKE_CURRENT_SOURCE_DIR}/..
+    )
+endif()

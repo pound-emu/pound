@@ -51,7 +51,7 @@ jobs:
                          wayland-protocols libgl-dev git
 
       - name: Configure CMake
-        run: cmake -G Ninja -B ${{env.BUILD_DIR}} -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++
+        run: cmake -G Ninja -B ${{env.BUILD_DIR}} -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DENABLE_GTEST=OFF
 
       - name: Build
         run: cmake --build ${{env.BUILD_DIR}} --config ${{env.BUILD_TYPE}} --parallel $(nproc)
@@ -79,7 +79,7 @@ jobs:
 
       - name: Configure CMake
         run:
-          cmake -G Ninja -B "${{env.BUILD_DIR}}" -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} `
+          cmake -G Ninja -B "${{env.BUILD_DIR}}" -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DENABLE_GTEST=OFF `
           -DCMAKE_C_COMPILER=clang-cl -DCMAKE_CXX_COMPILER=clang-cl `
           -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
 
@@ -124,6 +124,7 @@ jobs:
           -DCMAKE_C_COMPILER=$(brew --prefix llvm)/bin/clang
           -DCMAKE_CXX_COMPILER=$(brew --prefix llvm)/bin/clang++
           -DCMAKE_OSX_DEPLOYMENT_TARGET=10.15
+          -DENABLE_GTEST=OFF
 
       - name: Build (x86_64)
         run: cmake --build "${{env.BUILD_DIR}}" --config ${{env.BUILD_TYPE}} --parallel $(sysctl -n hw.logicalcpu)
@@ -166,6 +167,7 @@ jobs:
           -DCMAKE_CXX_COMPILER=$(brew --prefix llvm)/bin/clang++
           -DCMAKE_OSX_ARCHITECTURES=arm64
           -DCMAKE_OSX_DEPLOYMENT_TARGET=10.15
+          -DENABLE_GTEST=OFF
 
       - name: Build (ARM64)
         run: cmake --build "${{env.BUILD_DIR}}" --config ${{env.BUILD_TYPE}} --parallel $(sysctl -n hw.logicalcpu)
