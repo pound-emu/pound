@@ -19,6 +19,8 @@ int main()
     pound::jit::decoder::arm32_decode(&decoder, 0xE2400001);
     pound::jit::ir::opcode_init();
 
+    pound::host::memory::arena_free(&arena);
+
 #if 0
     gui::window_t window = {.data = nullptr, .gl_context = nullptr};
     (void)gui::window_init(&window, "Pound Emulator", 640, 480);
