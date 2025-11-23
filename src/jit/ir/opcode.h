@@ -7,6 +7,8 @@
  * by including "opcode.inc", which is processed using X-macros.
  */
 
+#ifndef POUMD_JIT_IR_OPCODE_H
+#define POUMD_JIT_IR_OPCODE_H
 #include "type.h"
 
 namespace pound::jit::ir {
@@ -56,3 +58,4 @@ extern decoded_opcode_t g_opcodes[NUM_OPCODE];
 
 void opcode_init(void);
 }
+#endif // POUMD_JIT_IR_OPCODE_H

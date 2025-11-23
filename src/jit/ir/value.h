@@ -10,6 +10,8 @@
  * approach to store different types of data safely.
  */
 
+#ifndef POUND_JIT_IR_VALUE_H
+#define POUND_JIT_IR_VALUE_H
 #include <stdint.h>
 #include "type.h"
 #include "jit/a32_types.h"
@@ -58,7 +60,7 @@ void value_init (value_t *p_value);
  * @post The `p_value`'s `type` will be set to `IR_TYPE_U64` and its
  *       `inner.immediate_u64` member will contain `u64`.
  */
-void value_init_from_u64 (value_t *p_value, uint64_t u64);
+void value_init_from_u64 (value_t *p_value, const uint64_t u64);
 
 /*!
  * @brief Initializes a `value_t` instance to hold an unsigned 32-bit immediate value.
@@ -68,7 +70,7 @@ void value_init_from_u64 (value_t *p_value, uint64_t u64);
  * @post The `p_value`'s `type` will be set to `IR_TYPE_U32` and its
  *       `inner.immediate_u32` member will contain `u32`.
  */
-void value_init_from_u32 (value_t *p_value, uint32_t u32);
+void value_init_from_u32 (value_t *p_value, const uint32_t u32);
 
 /*!
  * @brief Initializes a `value_t` instance to hold an unsigned 8-bit immediate value.
@@ -78,7 +80,7 @@ void value_init_from_u32 (value_t *p_value, uint32_t u32);
  * @post The `p_value`'s `type` will be set to `IR_TYPE_U8` and its
  *       `inner.immediate_u8` member will contain `u8`.
  */
-void value_init_from_u8 (value_t *p_value, uint8_t u8);
+void value_init_from_u8 (value_t *p_value, const uint8_t u8);
 
 /*!
  * @brief Initializes a `value_t` instance to hold a 1-bit boolean immediate value.
@@ -88,7 +90,7 @@ void value_init_from_u8 (value_t *p_value, uint8_t u8);
  * @post The `p_value`'s `type` will be set to `IR_TYPE_U1` and its
  *       `inner.immediate_u1` member will contain `u1`.
  */
-void value_init_from_u1 (value_t *p_value, bool u1);
+void value_init_from_u1 (value_t *p_value, const bool u1);
 
 /*!
  * @brief Initializes a `value_t` instance to hold an A32 register identifier.
@@ -101,7 +103,7 @@ void value_init_from_u1 (value_t *p_value, bool u1);
  * @post The `p_value`'s `type` will be set to `IR_TYPE_A32_REGISTER` and its
  *       `inner.immediate_a32_register` member will contain `reg`.
  */
-void value_init_from_a32_register (value_t *p_value, a32_register_t reg);
+void value_init_from_a32_register (value_t *p_value, const a32_register_t reg);
 
 /*!
  * @brief Retrieves an unsigned 64-bit immediate value from a `value_t`.
@@ -112,7 +114,7 @@ void value_init_from_a32_register (value_t *p_value, a32_register_t reg);
  * @warning Calling this function on a `value_t` not of type `IR_TYPE_U64`
  *          results in undefined behavior.
  */
-uint64_t value_get_u64 (value_t *p_value);
+const uint64_t value_get_u64 (const value_t *p_value);
 
 
 /*!
@@ -124,7 +126,7 @@ uint64_t value_get_u64 (value_t *p_value);
  * @warning Calling this function on a `value_t` not of type `IR_TYPE_U32`
  *          results in undefined behavior.
  */
-uint32_t value_get_u32 (value_t *p_value);
+const uint32_t value_get_u32 (const value_t *p_value);
 
 /*!
  * @brief Retrieves an unsigned 8-bit immediate value from a `value_t`.
@@ -135,7 +137,7 @@ uint32_t value_get_u32 (value_t *p_value);
  * @warning Calling this function on a `value_t` not of type `IR_TYPE_U8`
  *          results in undefined behavior.
  */
-uint8_t value_get_u8 (value_t *p_value);
+const uint8_t value_get_u8 (const value_t *p_value);
 
 /**
  * @brief Retrieves an unsigned 1-bit immediate value from a `value_t`.
@@ -146,7 +148,7 @@ uint8_t value_get_u8 (value_t *p_value);
  * @warning Calling this function on a `value_t` not of type `IR_TYPE_U1`
  *          results in undefined behavior.
  */
-bool value_get_u1 (value_t *p_value);
+const bool value_get_u1 (const value_t *p_value);
 
 /**
  * @brief Retrieves an A32 register identifier from a `value_t`.
@@ -157,5 +159,6 @@ bool value_get_u1 (value_t *p_value);
  * @warning Calling this function on a `value_t` not of type `IR_TYPE_A32_REGISTER`
  *          results in undefined behavior.
  */
-pound::jit::a32_register_t value_get_a32_register (value_t *p_value);
+const pound::jit::a32_register_t value_get_a32_register (const value_t *p_value);
 } // namespace pound:::jit::ir
+#endif // POUND_JIT_IR_TYPE_H

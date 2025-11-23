@@ -111,7 +111,7 @@ add_subdirectory(src/targets/switch1/hardware)
 include(TestBigEndian)
 TEST_BIG_ENDIAN(WORDS_BIGENDIAN)
 
-list(APPEND POUND_PROJECT_TARGETS common host pvm)
+list(APPEND POUND_PROJECT_TARGETS common host pvm jit)
 foreach(TARGET ${POUND_PROJECT_TARGETS})
     # Apply Endianness definitions to all our targets.
     if(WORDS_BIGENDIAN)

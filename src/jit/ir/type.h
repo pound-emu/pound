@@ -7,7 +7,8 @@
  *  This header declares the `type_t ` enumeration, which forms the basis of
  *  type identification and checking within the JIT's IR.
  */
-
+#ifndef POUND_JIT_IR_TYPE_H
+#define POUND_JIT_IR_TYPE_H
 namespace pound::jit::ir {
 
 /*!
@@ -60,3 +61,4 @@ typedef enum
  */
 bool are_types_compatible(const type_t t1, const type_t t2);
 } // namespace pound::jit::ir
+#endif // POUND_JIT_IR_TYPE_H

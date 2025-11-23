@@ -5,6 +5,7 @@ target_sources(jit PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/ir/type.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/ir/value.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/ir/opcode.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/ir/instruction.cpp
 )
 
 target_link_libraries(jit PRIVATE common host)
