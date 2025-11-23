@@ -19,17 +19,18 @@ namespace pound::jit::ir {
  */
 typedef enum
 {
-    IR_TYPE_VOID         = 0,
-    IR_TYPE_U1           = 1 << 0,
-    IR_TYPE_U8           = 1 << 1,
-    IR_TYPE_U16          = 1 << 2,
-    IR_TYPE_U32          = 1 << 3,
-    IR_TYPE_U64          = 1 << 4,
-    IR_TYPE_U128         = 1 << 5,
-    IR_TYPE_A32_REGISTER = 1 << 6, // ARM32 GPR R0-R14
-    IR_TYPE_A32_EXTENDED_REGISTER = 1 << 7, // ARM32 Extended Registers (e.g., for
-    IR_TYPE_CONDITION     = 1 << 9,    // Condition codes
-    IR_TYPE_MEMORY_ACCESS = 1 << 10,   // Memory access type
+    IR_TYPE_VOID                  = 0,
+    IR_TYPE_U1                    = 1 << 0,
+    IR_TYPE_U8                    = 1 << 1,
+    IR_TYPE_U16                   = 1 << 2,
+    IR_TYPE_U32                   = 1 << 3,
+    IR_TYPE_U64                   = 1 << 4,
+    IR_TYPE_U128                  = 1 << 5,
+    IR_TYPE_A32_REGISTER          = 1 << 6, // ARM32 GPR R0-R14
+    IR_TYPE_A32_EXTENDED_REGISTER = 1
+                                    << 7, // ARM32 Extended Registers (e.g., for
+    IR_TYPE_CONDITION     = 1 << 9,       // Condition codes
+    IR_TYPE_MEMORY_ACCESS = 1 << 10,      // Memory access type
 #if 0
                                   // VFP/NEON, or just R15 if treated specially)
     IR_TYPE_A32_CPSR = 1 << 8,    // ARM32 CPSR/SPSR

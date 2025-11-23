@@ -21,12 +21,12 @@ typedef struct instruction_t
     opcode_t opcode;
 
     // An array of arguments for this instruction.
-    value_t  args[MAX_IR_ARGS];
+    value_t args[MAX_IR_ARGS];
 
     // Pointer to the next instruction in the intrusive list.
     struct instruction_t *next;
 
-    // Pointer to the previous instruction the intrusive list. 
+    // Pointer to the previous instruction the intrusive list.
     struct instruction_t *previous;
 } instruction_t;
 
@@ -34,8 +34,8 @@ typedef struct instruction_t
  * @brief Represents a double-linked list of IR instructions.
  *
  * This structure holds the head and tail pointers of an intrusive list
- * composed of `instruction_t` nodes. It is used to store sequences 
- */ 
+ * composed of `instruction_t` nodes. It is used to store sequences
+ */
 typedef struct
 {
     // Pointer to the first instruction in the list.
@@ -55,7 +55,7 @@ typedef struct
  * @pre     `instruction` must not be NULL
  * @pre     `arg_index` must be less than `MAX_IR_ARGS`.
  */
-const value_t* instruction_get_arg (const instruction_t *instruction, const size_t arg_index);
+value_t *instruction_get_arg(instruction_t *instruction, size_t arg_index);
 
 /*!
  * Retrieves a U64 argument from an instruction.
@@ -68,7 +68,7 @@ const value_t* instruction_get_arg (const instruction_t *instruction, const size
  * @pre     `arg_index` must be less than `MAX_IR_ARGS`.
  * @pre     The argument at `arg_index` must be of type `IR_TYPE_U64`.
  */
-const uint64_t instruction_get_arg_u64(const instruction_t *instruction, const size_t arg_index);
+uint64_t instruction_get_arg_u64(instruction_t *instruction, size_t arg_index);
 
 /*!
  * @brief Retrieves a U32 argument from an instruction.
@@ -81,7 +81,7 @@ const uint64_t instruction_get_arg_u64(const instruction_t *instruction, const s
  * @pre     `arg_index` must be less than `MAX_IR_ARGS`.
  * @pre     The argument at `arg_index` must be of type `IR_TYPE_U32`.
  */
-const uint32_t instruction_get_arg_u32(const instruction_t *instruction, const size_t arg_index);
+uint32_t instruction_get_arg_u32(instruction_t *instruction, size_t arg_index);
 
 /*!
  * Retrives a U8 argument from an instruction.
@@ -94,7 +94,7 @@ const uint32_t instruction_get_arg_u32(const instruction_t *instruction, const s
  * @pre     `arg_index` must be less than `MAX_IR_ARGS`.
  * @pre     The argument at `arg_index` must be of type `IR_TYPE_U8`.
  */
-const uint8_t instruction_get_arg_u8(const instruction_t *instruction, const size_t arg_index);
+uint8_t instruction_get_arg_u8(instruction_t *instruction, size_t arg_index);
 
 /*!
  * @brief Retrieves a U1 (boolean) argument from an instruction.
@@ -107,7 +107,7 @@ const uint8_t instruction_get_arg_u8(const instruction_t *instruction, const siz
  * @pre     `arg_index` must be less than `MAX_IR_ARGS`.
  * @pre     The argument at `arg_index` must be of type `IR_TYPE_U1`.
  */
-const bool instruction_get_arg_u1(const instruction_t *instruction, const size_t arg_index);
+bool instruction_get_arg_u1(instruction_t *instruction, size_t arg_index);
 
 /*!
  * @brief Retrieves an A32 register identifier argument from an instruction.
@@ -120,7 +120,8 @@ const bool instruction_get_arg_u1(const instruction_t *instruction, const size_t
  * @pre     `arg_index` must be less than `MAX_IR_ARGS`.
  * @pre     The argument at `arg_index` must be of type `IR_TYPE_A32_REGISTER`.
  */
-const pound::jit::a32_register_t instruction_get_arg_a32_register(const instruction_t *instruction, const size_t arg_index);
+pound::jit::a32_register_t instruction_get_arg_a32_register(
+    instruction_t *instruction, size_t arg_index);
 
 /*!
  * @brief Gets the return type of an instruction based on its opcode.
@@ -129,10 +130,10 @@ const pound::jit::a32_register_t instruction_get_arg_a32_register(const instruct
  *
  * @return  The `type_t` that this instruction's opcode returns.
  * @pre     `instruction` must not be NULL.
- * @pre     `instruction->opcode` must be a valid opcode index (less than `NUM_OPCODE`).
+ * @pre     `instruction->opcode` must be a valid opcode index (less than
+ * `NUM_OPCODE`).
  */
-const type_t instruction_get_return_type (const instruction_t *instruction);
-
+type_t instruction_get_return_type(instruction_t *instruction);
 
 /*!
  * @brief Gets the name of an instruction's opcode as a C-string.
@@ -141,10 +142,11 @@ const type_t instruction_get_return_type (const instruction_t *instruction);
  *
  * @return  A constant C-string containing the opcode's name.
  * @pre     `instruction` must not be NULL.
- * @pre     `instruction->opcode` must be a valid opcode index (less than `NUM_OPCODE`).
+ * @pre     `instruction->opcode` must be a valid opcode index (less than
+ * `NUM_OPCODE`).
  * @pre     The global `g_opcodes` array must be initialized and accessible.
  */
-const char* instruction_get_opcode_name(const instruction_t *instruction);
+const char *instruction_get_opcode_name(instruction_t *instruction);
 
 /*!
  * @brief Appends an instruction to the tail of an instruction list.
@@ -158,7 +160,8 @@ const char* instruction_get_opcode_name(const instruction_t *instruction);
  * @pre     `list` must not be NULL.
  * @pre     `instruction` must not be NULL.
  */
-void instruction_list_append (instruction_list_t *list, instruction_t *instruction);
+void instruction_list_append(instruction_list_t *list,
+                             instruction_t      *instruction);
 
 /*!
  * @brief Removes an instruction from an instruction list.
@@ -170,6 +173,7 @@ void instruction_list_append (instruction_list_t *list, instruction_t *instructi
  * @pre `instruction` must not be NULL.
  * @pre `instruction` must be a member of `list`.
  */
-void instruction_list_remove (instruction_list_t *list, instruction_t *instruction);
+void instruction_list_remove(instruction_list_t *list,
+                             instruction_t      *instruction);
 }
 #endif // POUND_JIT_IR_INSTRUCTION_H

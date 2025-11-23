@@ -101,8 +101,8 @@ add_subdirectory(3rd_Party)
 add_subdirectory(src/common)
 add_subdirectory(src/host)
 add_subdirectory(src/jit)
-add_subdirectory(src/pvm)
-add_subdirectory(src/targets/switch1/hardware)
+#add_subdirectory(src/pvm)
+#add_subdirectory(src/targets/switch1/hardware)
 
 #--------------------------------
 # ---- Target Configurations ----
@@ -111,7 +111,7 @@ add_subdirectory(src/targets/switch1/hardware)
 include(TestBigEndian)
 TEST_BIG_ENDIAN(WORDS_BIGENDIAN)
 
-list(APPEND POUND_PROJECT_TARGETS common host pvm jit)
+list(APPEND POUND_PROJECT_TARGETS common host jit)
 foreach(TARGET ${POUND_PROJECT_TARGETS})
     # Apply Endianness definitions to all our targets.
     if(WORDS_BIGENDIAN)
@@ -123,6 +123,7 @@ foreach(TARGET ${POUND_PROJECT_TARGETS})
         $<$<CXX_COMPILER_ID:GNU,Clang>:
         -Wall
         -Wpedantic
+        -Wextra
         -Wshadow
         -Wpointer-arith
         -Wcast-qual
@@ -152,11 +153,11 @@ target_link_libraries(Pound PRIVATE
     common
     host
     jit
-    pvm
+    #pvm
 
-    OpenGL::GL
-    SDL3::SDL3
-    imgui
+    #OpenGL::GL
+    #SDL3::SDL3
+    #imgui
 )
 
 set(TEST_SRC
