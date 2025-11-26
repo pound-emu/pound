@@ -137,13 +137,13 @@ foreach(TARGET ${POUND_PROJECT_TARGETS})
     endif()
 
     # Set Compile time log level for all targets.
-    # 1: Trace
-    # 2: Debug
-    # 3: Info
-    # 4: Warning
-    # 5: Error
-    # 6: Fatal
-    target_compile_definitions(${TARGET} PRIVATE COMPILE_TIME_LOG_LEVEL=1)
+    # 0: Trace
+    # 1: Debug
+    # 2: Info
+    # 3: Warning
+    # 4: Error
+    # 5: Fatal
+    target_compile_definitions(${TARGET} PRIVATE COMPILE_TIME_LOG_LEVEL=0)
 endforeach()
 
 # Optimizations
