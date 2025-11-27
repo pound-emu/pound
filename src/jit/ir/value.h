@@ -46,56 +46,56 @@ typedef struct
 /*!
  * @brief Initializes a `value_t` instance to a default/void state.
  *
- * @param p_value Pointer to the `value_t` instance to initialize.
- * @post The `p_value`'s `type` will be set to `IR_TYPE_VOID`.
+ * @param value Pointer to the `value_t` instance to initialize.
+ * @post The `value`'s `type` will be set to `IR_TYPE_VOID`.
  *       The contents of its `inner` union are considered undefined
  *       for a void value.
  */
-void value_init(value_t *p_value);
+void value_init(value_t *value);
 
 /*!
  * @brief Initializes a `value_t` instance to hold an unsigned 64-bit immediate
  * value.
  *
- * @param p_value Pointer to the `value_t` instance to initialize.
+ * @param value Pointer to the `value_t` instance to initialize.
  * @param u64 The 64-bit unsigned immediate value to store.
- * @post The `p_value`'s `type` will be set to `IR_TYPE_U64` and its
+ * @post The `value`'s `type` will be set to `IR_TYPE_U64` and its
  *       `inner.immediate_u64` member will contain `u64`.
  */
-void value_init_from_u64(value_t *p_value, uint64_t u64);
+void value_init_from_u64(value_t *value, uint64_t u64);
 
 /*!
  * @brief Initializes a `value_t` instance to hold an unsigned 32-bit immediate
  * value.
  *
- * @param p_value Pointer to the `value_t` instance to initialize.
+ * @param value Pointer to the `value_t` instance to initialize.
  * @param u32 The 32-bit unsigned immediate value to store.
- * @post The `p_value`'s `type` will be set to `IR_TYPE_U32` and its
+ * @post The `value`'s `type` will be set to `IR_TYPE_U32` and its
  *       `inner.immediate_u32` member will contain `u32`.
  */
-void value_init_from_u32(value_t *p_value, uint32_t u32);
+void value_init_from_u32(value_t *value, uint32_t u32);
 
 /*!
  * @brief Initializes a `value_t` instance to hold an unsigned 8-bit immediate
  * value.
  *
- * @param p_value Pointer to the `value_t` instance to initialize.
+ * @param value Pointer to the `value_t` instance to initialize.
  * @param u8 The 8-bit unsigned immediate value to store.
- * @post The `p_value`'s `type` will be set to `IR_TYPE_U8` and its
+ * @post The `value`'s `type` will be set to `IR_TYPE_U8` and its
  *       `inner.immediate_u8` member will contain `u8`.
  */
-void value_init_from_u8(value_t *p_value, uint8_t u8);
+void value_init_from_u8(value_t *value, uint8_t u8);
 
 /*!
  * @brief Initializes a `value_t` instance to hold a 1-bit boolean immediate
  * value.
  *
- * @param p_value Pointer to the `value_t` instance to initialize.
+ * @param value Pointer to the `value_t` instance to initialize.
  * @param u1 The boolean (1-bit) immediate value to store.
- * @post The `p_value`'s `type` will be set to `IR_TYPE_U1` and its
+ * @post The `value`'s `type` will be set to `IR_TYPE_U1` and its
  *       `inner.immediate_u1` member will contain `u1`.
  */
-void value_init_from_u1(value_t *p_value, bool u1);
+void value_init_from_u1(value_t *value, bool u1);
 
 /*!
  * @brief Initializes a `value_t` instance to hold an A32 register identifier.
@@ -103,67 +103,67 @@ void value_init_from_u1(value_t *p_value, bool u1);
  * This function stores the *identity* of an A32 register (e.g., R0, SP, PC)
  * within the `value_t`. It does not store the *content* of that register.
  *
- * @param p_value Pointer to the `value_t` instance to initialize.
+ * @param value Pointer to the `value_t` instance to initialize.
  * @param reg The A32 register identifier (of type `a32_register_t`) to store.
- * @post The `p_value`'s `type` will be set to `IR_TYPE_A32_REGISTER` and its
+ * @post The `value`'s `type` will be set to `IR_TYPE_A32_REGISTER` and its
  *       `inner.immediate_a32_register` member will contain `reg`.
  */
-void value_init_from_a32_register(value_t *p_value, a32_register_t reg);
+void value_init_from_a32_register(value_t *value, a32_register_t reg);
 
 /*!
  * @brief Retrieves an unsigned 64-bit immediate value from a `value_t`.
  *
- * @pre The `p_value` must be of type `IR_TYPE_U64`.
- * @param p_value Pointer to the `value_t` instance.
- * @retval uint64_t The 64-bit unsigned immediate value stored in `p_value`.
+ * @pre The `value` must be of type `IR_TYPE_U64`.
+ * @param value Pointer to the `value_t` instance.
+ * @retval uint64_t The 64-bit unsigned immediate value stored in `value`.
  * @warning Calling this function on a `value_t` not of type `IR_TYPE_U64`
  *          results in undefined behavior.
  */
-uint64_t value_get_u64(const value_t *p_value);
+uint64_t value_get_u64(const value_t *value);
 
 /*!
  * @brief Retrieves an unsigned 32-bit immediate value from a `value_t`.
  *
- * @pre The `p_value` must be of type `IR_TYPE_U32`.
- * @param p_value Pointer to the `value_t` instance.
- * @retval uint32_t The 32-bit unsigned immediate value stored in `p_value`.
+ * @pre The `value` must be of type `IR_TYPE_U32`.
+ * @param value Pointer to the `value_t` instance.
+ * @retval uint32_t The 32-bit unsigned immediate value stored in `value`.
  * @warning Calling this function on a `value_t` not of type `IR_TYPE_U32`
  *          results in undefined behavior.
  */
-uint32_t value_get_u32(const value_t *p_value);
+uint32_t value_get_u32(const value_t *value);
 
 /*!
  * @brief Retrieves an unsigned 8-bit immediate value from a `value_t`.
  *
- * @pre The `p_value` must be of type `IR_TYPE_U8`.
- * @param p_value Pointer to the `value_t` instance.
- * @retval uint8_t The 8-bit unsigned immediate value stored in `p_value`.
+ * @pre The `value` must be of type `IR_TYPE_U8`.
+ * @param value Pointer to the `value_t` instance.
+ * @retval uint8_t The 8-bit unsigned immediate value stored in `value`.
  * @warning Calling this function on a `value_t` not of type `IR_TYPE_U8`
  *          results in undefined behavior.
  */
-uint8_t value_get_u8(const value_t *p_value);
+uint8_t value_get_u8(const value_t *value);
 
-/**
+/*!
  * @brief Retrieves an unsigned 1-bit immediate value from a `value_t`.
  *
- * @pre The `p_value` must be of type `IR_TYPE_U1`.
- * @param p_value Pointer to the `value_t` instance.
- * @retval bool The 1-bit unsigned immediate value stored in `p_value`.
+ * @pre The `value` must be of type `IR_TYPE_U1`.
+ * @param value Pointer to the `value_t` instance.
+ * @retval bool The 1-bit unsigned immediate value stored in `value`.
  * @warning Calling this function on a `value_t` not of type `IR_TYPE_U1`
  *          results in undefined behavior.
  */
-bool value_get_u1(const value_t *p_value);
+bool value_get_u1(const value_t *value);
 
-/**
+/*!
  * @brief Retrieves an A32 register identifier from a `value_t`.
  *
- * @pre The `p_value` must be of type `IR_TYPE_A32_REGISTER`.
- * @param p_value Pointer to the `value_t` instance.
+ * @pre The `value` must be of type `IR_TYPE_A32_REGISTER`.
+ * @param value Pointer to the `value_t` instance.
  * @retval pound::jit::a32_register_t The A32 register identifier stored in
- * `p_value`.
+ * `value`.
  * @warning Calling this function on a `value_t` not of type
  * `IR_TYPE_A32_REGISTER` results in undefined behavior.
  */
-pound::jit::a32_register_t value_get_a32_register(const value_t *p_value);
+pound::jit::a32_register_t value_get_a32_register(const value_t *value);
 } // namespace pound:::jit::ir
 #endif // POUND_JIT_IR_TYPE_H
