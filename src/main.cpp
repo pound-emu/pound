@@ -3,23 +3,16 @@
 #define LOG_MODULE "main"
 #include "common/logging.h"
 #include "common/passert.h"
-#include "host/memory/arena.h"
 #include "jit/decoder/arm32.h"
-#include "jit/ir/opcode.h"
-#include "jit/a32_types.h"
 
 int main()
 {
-    pound::host::memory::arena_t arena = pound::host::memory::arena_init(8192);
-    pound::jit::decoder::arm32_decoder_t decoder = {};
-    pound::jit::decoder::arm32_init(arena, &decoder);
+    pound::jit::decoder::arm32_init();
     /* Add r0, r0, #1 */
-    pound::jit::decoder::arm32_decode(&decoder, 0xE2800001); 
+    pound::jit::decoder::arm32_decode(0xE2800001); 
     /* Sub r0, r0, #1 */
-    pound::jit::decoder::arm32_decode(&decoder, 0xE2400001);
-    pound::jit::ir::opcode_init();
-
-    pound::host::memory::arena_free(&arena);
+    pound::jit::decoder::arm32_decode(0xE2400001);
+    //pound::jit::ir::opcode_init();
 
 #if 0
     gui::window_t window = {.data = nullptr, .gl_context = nullptr};
