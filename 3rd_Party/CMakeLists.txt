@@ -6,29 +6,29 @@ set_directory_properties(PROPERTIES EXCLUDE_FROM_ALL ON SYSTEM ON)
 set(CMAKE_POLICY_DEFAULT_CMP0069 NEW)
 
 # SDL3
-if (NOT TARGET SDL3::SDL3)
-  set(SDL_DISKAUDIO OFF)
-  set(SDL_TEST_LIBRARY OFF)
-  set(SDL_PIPEWIRE OFF)
-  add_subdirectory(SDL3)
-endif()
+#if (NOT TARGET SDL3::SDL3)
+#  set(SDL_DISKAUDIO OFF)
+#   set(SDL_TEST_LIBRARY OFF)
+#  set(SDL_PIPEWIRE OFF)
+#  add_subdirectory(SDL3)
+#endif()
 
 # ImGui
-set(IMGUI_SRC
-    imgui/imgui.cpp
-    imgui/imgui_demo.cpp
-    imgui/imgui_draw.cpp
-    imgui/imgui_tables.cpp
-    imgui/imgui_widgets.cpp
-    imgui/backends/imgui_impl_sdl3.cpp
-    imgui/backends/imgui_impl_opengl3.cpp
-)
-add_library(imgui STATIC ${IMGUI_SRC})
-target_link_libraries(imgui PRIVATE SDL3::SDL3)
-target_include_directories(imgui PUBLIC
-    imgui
-    imgui/backends
-)
+#set(IMGUI_SRC
+#    imgui/imgui.cpp
+#    imgui/imgui_demo.cpp
+#    imgui/imgui_draw.cpp
+#   imgui/imgui_tables.cpp
+#    imgui/imgui_widgets.cpp
+#    imgui/backends/imgui_impl_sdl3.cpp
+#    imgui/backends/imgui_impl_opengl3.cpp
+#)
+#add_library(imgui STATIC ${IMGUI_SRC})
+#target_link_libraries(imgui PRIVATE SDL3::SDL3)
+#target_include_directories(imgui PUBLIC
+#    imgui
+#   imgui/backends
+#)
 
 # GoogleTest
 add_subdirectory(googletest)

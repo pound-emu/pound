@@ -20,9 +20,9 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 # ---- Dependency Discovery ----
 #-------------------------------
 
-find_package(OpenGL REQUIRED)
-find_package(fmt 10.2.1 CONFIG)
-find_package(SDL3 3.2.10 CONFIG)
+#find_package(OpenGL REQUIRED)
+#find_package(fmt 10.2.1 CONFIG)
+#find_package(SDL3 3.2.10 CONFIG)
 
 message(STATUS "Verifying Git submodules integrity...")
 
@@ -97,6 +97,11 @@ add_executable(Pound
     src/main.cpp
 )
 
+set(TEST_SRC
+    ${CMAKE_CURRENT_SOURCE_DIR}/tests/jit/ir/test_value.cpp
+)
+add_executable(tests ${TEST_SRC})
+
 add_subdirectory(3rd_Party)
 add_subdirectory(src/common)
 add_subdirectory(src/host)
@@ -129,6 +134,7 @@ foreach(TARGET ${POUND_PROJECT_TARGETS})
         -Wcast-qual
         -Wcast-align
         -Wconversion>
+        -Wno-gnu-zero-variadic-macro-arguments
     )
 
     if(WIN32)
@@ -160,18 +166,9 @@ target_link_libraries(Pound PRIVATE
     #imgui
 )
 
-set(TEST_SRC
-    ${CMAKE_CURRENT_SOURCE_DIR}/tests/jit/ir/test_value.cpp
-)
 
-add_executable(tests ${TEST_SRC})
 target_link_libraries(tests PRIVATE
     jit
     gtest
     gtest_main
-)
-
-target_include_directories(jit PUBLIC
-    ${CMAKE_CURRENT_SOURCE_DIR}
-    ${CMAKE_CURRENT_SOURCE_DIR}/..
 )
