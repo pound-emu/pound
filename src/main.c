@@ -1,7 +1,7 @@
 #define LOG_MODULE "main"
 #include "common/logging.h"
 #include "common/passert.h"
-#include "jit/decoder/arm32.h"
+#include "jit/frontend/decoder/arm32.h"
 
 int main()
 {
