@@ -24,14 +24,6 @@ pvm_jit_decoder_arm32_decode (const uint32_t instruction)
 
         if ((instruction & info->mask) == info->expected)
         {
-            if (0 == strcmp(info->name, "UDF"))
-            {
-                LOG_WARNING("Instruction 0x%08X is undefined", instruction);
-            }
-            else
-            {
-                LOG_TRACE("Instruction found for 0x%08X: %s", instruction, info->name);
-            }
             return info;
         }
     }
