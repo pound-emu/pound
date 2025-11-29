@@ -12,6 +12,7 @@ int main()
     pound::jit::decoder::arm32_decode(0xE2800001); 
     /* Sub r0, r0, #1 */
     pound::jit::decoder::arm32_decode(0xE2400001);
+    pound::jit::decoder::arm32_decode(0xE12FFF1E);
     //pound::jit::ir::opcode_init();
 
 #if 0

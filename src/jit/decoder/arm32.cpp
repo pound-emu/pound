@@ -8,7 +8,7 @@
 namespace pound::jit::decoder {
 
 /*! @brief Maximum number of instructions allowed in a single hash bucket. */
-#define LOOKUP_TABLE_MAX_BUCKET_SIZE 8
+#define LOOKUP_TABLE_MAX_BUCKET_SIZE 18
 
 /*! @brief Size of the lookup table (12-bit index). */
 #define LOOKUP_TABLE_INDEX_MASK 0xFFF
@@ -134,7 +134,24 @@ arm32_init (void)
 
     (void)memset(g_decoder.lookup_table, 0, sizeof(g_decoder.lookup_table));
 
-    // Populate the hash table.
+    /*
+     * We generate a 12-bit "Hash Index" from specific bits of the 32-bit instruction.
+     * This loop iterates 4096 times (0x000 to 0xFFF) to fill every possible bucket.
+     *
+     *  32-Bit Instruction Word:
+     *  [31..28] [27........20] [19.........8] [7......4] [3..0]
+     *  +------+ +------------+ +------------+ +--------+ +----+
+     *  | Cond | |   MAJOR    | |  Ignored   | | MINOR  | | Rn |
+     *  +------+ +------------+ +------------+ +--------+ +----+
+     *                 |                           |
+     *                 v                           v
+     *           +------------+                +--------+
+     *           |11.........4|                |3......0|
+     *           +------------+                +--------+
+     *            Loop Index 'i' (12 bits total)
+     *
+     *  We map 'i' back into a "Synthetic Instruction" to check which opcodes fit.
+     */
     for (uint32_t i = 0; i <= LOOKUP_TABLE_INDEX_MASK; ++i)
     {
         decode_bucket_t *bucket = &g_decoder.lookup_table[i];
@@ -144,21 +161,16 @@ arm32_init (void)
         const uint32_t synthetic_instruction
             = ((i & 0xFF0) << 16) | ((i & 0xF) << 4);
 
+        const uint32_t index_bits_mask = 0x0FF000F0;
         for (size_t ii = 0; ii < INSTRUCTION_ARRAY_CAPACITY; ++ii)
         {
             const arm32_instruction_info_t *info = &g_instructions[ii];
 
             /* Mask corresponding to the hash bits: 0x0FF000F0 */
-            const uint32_t index_bits_mask = 0x0FF000F0;
-            const uint32_t relevant_mask   = index_bits_mask | info->mask;
-
+            const uint32_t relevant_mask   = index_bits_mask & info->mask;
             if ((synthetic_instruction & relevant_mask)
                 == (info->expected & relevant_mask))
             {
-                LOG_TRACE("Mapping instruction '%s' to LUT Index 0x%03X",
-                          info->name,
-                          i);
-
                 if (bucket->count >= LOOKUP_TABLE_MAX_BUCKET_SIZE)
                 {
                     PVM_ASSERT_MSG(
@@ -206,11 +218,19 @@ arm32_decode (const uint32_t instruction)
 
         if ((instruction & info->mask) == info->expected)
         {
-
+            if (0 == strcmp(info->name, "UDF"))
+            {
+                LOG_WARNING("Instruction 0x%08X is undefined", instruction);
+            }
+            else
+            {
+                LOG_TRACE("Instruction found for 0x%08X: %s", instruction, info->name);
+            }
             return info;
         }
     }
 
+    LOG_WARNING("Cannot decode instruction 0x%08X", instruction);
     return nullptr;
 }
 
