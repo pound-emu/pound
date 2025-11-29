@@ -1,0 +1,16 @@
+#ifndef POUND_JIT_DECODER_ARM32_GENERATED_H
+#define POUND_JIT_DECODER_ARM32_GENERATED_H
+
+#include "arm32.h"
+#include <stddef.h>
+
+#define LOOKUP_TABLE_MAX_BUCKET_SIZE 18U
+
+typedef struct {
+    const pvm_jit_decoder_arm32_instruction_info_t *instructions[LOOKUP_TABLE_MAX_BUCKET_SIZE];
+    size_t count;
+} decode_bucket_t;
+
+extern const decode_bucket_t g_decoder_lookup_table[4096];
+
+#endif

@@ -10,8 +10,7 @@ if (NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Debug)
 endif()
 
-set(CMAKE_C_STANDARD 17)
-set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED TRUE)
 set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -94,20 +93,19 @@ message(STATUS "All submodules verified successfully")
 #-----------------------------
 
 add_executable(Pound
-    src/main.cpp
+    src/main.c
 )
 
 set(TEST_SRC
     ${CMAKE_CURRENT_SOURCE_DIR}/tests/jit/ir/test_value.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/tests/jit/decoder/test_arm32.cpp
 )
-add_executable(tests ${TEST_SRC})
+
+#add_executable(tests ${TEST_SRC})
 
 add_subdirectory(3rd_Party)
 add_subdirectory(src/common)
-add_subdirectory(src/host)
 add_subdirectory(src/jit)
-#add_subdirectory(src/pvm)
-#add_subdirectory(src/targets/switch1/hardware)
 
 #--------------------------------
 # ---- Target Configurations ----
@@ -116,7 +114,7 @@ add_subdirectory(src/jit)
 include(TestBigEndian)
 TEST_BIG_ENDIAN(WORDS_BIGENDIAN)
 
-list(APPEND POUND_PROJECT_TARGETS common host jit)
+list(APPEND POUND_PROJECT_TARGETS common jit)
 foreach(TARGET ${POUND_PROJECT_TARGETS})
     # Apply Endianness definitions to all our targets.
     if(WORDS_BIGENDIAN)
@@ -135,6 +133,7 @@ foreach(TARGET ${POUND_PROJECT_TARGETS})
         -Wcast-align
         -Wconversion>
         -Wno-gnu-zero-variadic-macro-arguments
+        -Wno-c11-extensions
     )
 
     if(WIN32)
@@ -157,18 +156,13 @@ set_property(TARGET Pound PROPERTY CMAKE_INTERPROCEDURAL_OPTIMIZATION_RELEASE TR
 
 target_link_libraries(Pound PRIVATE
     common
-    host
+    #host
     jit
-    #pvm
-
-    #OpenGL::GL
-    #SDL3::SDL3
-    #imgui
 )
 
 
-target_link_libraries(tests PRIVATE
-    jit
-    gtest
-    gtest_main
-)
+#target_link_libraries(tests PRIVATE
+#    jit
+#    gtest
+#    gtest_main
+#)

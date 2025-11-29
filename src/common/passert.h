@@ -1,7 +1,9 @@
 #ifndef POUND_COMMON_ASSERT_H
 #define POUND_COMMON_ASSERT_H
 
-[[noreturn]] void pound_internal_assert_fail(const char* file, int line, const char* func,
+#include <stddef.h>
+
+void pound_internal_assert_fail(const char* file, int line, const char* func,
                                                           const char* expr_str, const char* user_msg, ...);
 
 #define PVM_ASSERT(expression)                                                                             \
@@ -9,7 +11,7 @@
     {                                                                                                      \
         if (!(expression))                                                                                 \
         {                                                                                                  \
-            pound_internal_assert_fail(__FILE__, __LINE__, __func__, #expression, nullptr, nullptr); \
+            pound_internal_assert_fail(__FILE__, __LINE__, __func__, #expression, NULL, NULL); \
         }                                                                                                  \
     } while (0)
 

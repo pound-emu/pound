@@ -60,7 +60,7 @@ void log_message(log_level_t level, const char* module_name, const char* file, i
 #define _STRINGIFY(x) _STRINGIFY_HELPER(x)
 
 #define CHECK_LOG_MODULE_DEFINED()                                                                            \
-    static_assert(__builtin_strcmp(_STRINGIFY(LOG_MODULE), _STRINGIFY(__LOG_MODULE_NOT_DEFINED__)) != 0,      \
+    _Static_assert(__builtin_strcmp(_STRINGIFY(LOG_MODULE), _STRINGIFY(__LOG_MODULE_NOT_DEFINED__)) != 0,      \
                   "LOGGING ERROR: LOG_MODULE must be #defined before #including logging.h. Example: #define " \
                   "LOG_MODULE \"MY_MODULE\"")
 

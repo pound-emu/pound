@@ -45,16 +45,16 @@ log_level_t runtime_log_level = LOG_LEVEL_NONE;
  * Pre-allocate a buffer for the timestamp string.
  * Make it static so it's not constantly re-allocated on the stack.
  */
-static char timestamp_buffer[TIMESTMP_BUFFER_LEN] = {};
+static char timestamp_buffer[TIMESTMP_BUFFER_LEN] = {0};
 
 const char* get_current_timestamp_str(void);
 
 void log_message(log_level_t level, const char* module_name, const char* file, int line, const char* message, ...)
 {
-    assert(nullptr != message);
+    assert(NULL != message);
 
     const char* timestamp_str = get_current_timestamp_str();
-    const char* level_str = nullptr;
+    const char* level_str = NULL;
 
     if (level < runtime_log_level)
     {
@@ -92,7 +92,7 @@ void log_message(log_level_t level, const char* module_name, const char* file, i
         }
     }
 
-    char buffer[LOG_LINE_BUFFER_SIZE] = {};
+    char buffer[LOG_LINE_BUFFER_SIZE] = {0};
 
     /* Keep track of our position in the buffer */
     size_t offset = 0;
@@ -134,7 +134,7 @@ const char* get_current_timestamp_str(void)
         return FAILED_TIMESTAMP;
     }
 
-    struct tm time_since_epoch = {};
+    struct tm time_since_epoch = {0};
 #ifdef WIN32
     /* https://learn.microsoft.com/en-us/cpp/c-runtime-library/reference/gmtime-s-gmtime32-s-gmtime64-s?view=msvc-170 */
     (void) gmtime_r(&now, &time_since_epoch);
@@ -149,7 +149,7 @@ const char* get_current_timestamp_str(void)
 #endif
 
 #else
-    if (nullptr == gmtime_r(&now, &time_since_epoch))
+    if (NULL == gmtime_r(&now, &time_since_epoch))
     {
         return FAILED_TIMESTAMP;
     }

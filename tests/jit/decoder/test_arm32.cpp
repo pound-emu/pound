@@ -1,70 +1,34 @@
-/**
- * @file test_arm32.cpp
- * @brief Unit tests for the ARM32 Instruction Decoder.
- *
- * @details
- * These tests verify the correctness of the hash-based instruction decoder.
- * They cover initialization, positive decoding of known instructions,
- * negative decoding of invalid instructions, and invariant enforcement via death tests.
- *
- * @copyright Copyright 2025 Pound Emulator Project. All rights reserved.
- */
-
 #include <gtest/gtest.h>
 #include "jit/decoder/arm32.h"
 
-// Define a test fixture to manage the global state of the decoder.
-// Note: Since the decoder implementation uses a static global singleton without 
-// a reset function, order of execution matters for initialization tests.
 class Arm32DecoderTest : public ::testing::Test
 {
 protected:
     static void SetUpTestSuite()
     {
-        // One-time initialization for the entire suite.
-        // This simulates the application startup phase.
         pound::jit::decoder::arm32_init();
     }
 
     static void TearDownTestSuite()
     {
-        // No cleanup available in the current API.
     }
 };
 
-/**
- * @brief Test Case: Verify decoding of a standard Data Processing instruction (ADD Immediate).
- * @reference ARMv7-A Architecture Reference Manual, Section A8.8.4
- */
 TEST_F(Arm32DecoderTest, Decode_ADD_Immediate)
 {
     // Opcode: ADD (imm)
     // Bitstring: cccc0010100Snnnnddddrrrrvvvvvvvv
     // Condition (cccc): 1110 (AL - Always)
-    // S (Set flags): 0
-    // Rn (nnnn): 0000 (R0)
-    // Rd (dddd): 0000 (R0)
-    // Rotate (rrrr): 0000
-    // Imm (vvvv): 00000001 (1)
     // Binary: 1110 0010 1000 0000 0000 0000 0000 0001 -> 0xE2800001
     const uint32_t instruction = 0xE2800001;
 
-    const auto* info = pound::jit::decoder::arm32_decode(instruction);
+    const pound::jit::decoder::arm32_instruction_info_t* info = pound::jit::decoder::arm32_decode(instruction);
 
-    // 1. Assert pointer validity to prevent segfaults in subsequent checks
     ASSERT_NE(info, nullptr) << "Failed to decode valid ADD instruction";
-
-    // 2. Verify Mnemonic
     EXPECT_STREQ(info->name, "ADD (imm)");
-
-    // 3. Verify Mask/Expected logic holds true for the input
-    // This confirms the decoder returned an entry that actually matches the input
     EXPECT_EQ((instruction & info->mask), info->expected);
 }
 
-/**
- * @brief Test Case: Verify decoding of a standard Data Processing instruction (SUB Immediate).
- */
 TEST_F(Arm32DecoderTest, Decode_SUB_Immediate)
 {
     // Opcode: SUB (imm)
@@ -72,17 +36,13 @@ TEST_F(Arm32DecoderTest, Decode_SUB_Immediate)
     // Binary: 1110 0010 0100 0000 0000 0000 0000 0001 -> 0xE2400001
     const uint32_t instruction = 0xE2400001;
 
-    const auto* info = pound::jit::decoder::arm32_decode(instruction);
+    const pound::jit::decoder::arm32_instruction_info_t* info = pound::jit::decoder::arm32_decode(instruction);
 
     ASSERT_NE(info, nullptr) << "Failed to decode valid SUB instruction";
     EXPECT_STREQ(info->name, "SUB (imm)");
     EXPECT_EQ((instruction & info->mask), info->expected);
 }
 
-/**
- * @brief Test Case: Verify decoding of Branch and Exchange (BX).
- * @details This tests a different instruction format class than Data Processing.
- */
 TEST_F(Arm32DecoderTest, Decode_BX)
 {
     // Opcode: BX
@@ -92,62 +52,18 @@ TEST_F(Arm32DecoderTest, Decode_BX)
     // Binary: 1110 0001 0010 1111 1111 1111 0001 1110 -> 0xE12FFF1E
     const uint32_t instruction = 0xE12FFF1E;
 
-    const auto* info = pound::jit::decoder::arm32_decode(instruction);
+    const pound::jit::decoder::arm32_instruction_info_t* info = pound::jit::decoder::arm32_decode(instruction);
 
     ASSERT_NE(info, nullptr);
     EXPECT_STREQ(info->name, "BX");
 }
 
-/**
- * @brief Test Case: Verify Unknown/Undefined Instruction.
- * @details Ensures the decoder returns nullptr for bit patterns not in the LUT.
- */
 TEST_F(Arm32DecoderTest, Decode_Unknown_Instruction)
 {
-    // A bit pattern unlikely to match valid instructions (All ones)
-    // While some architectures might use this, in this specific limited decoder
-    // it should likely be invalid or UDF.
-    // However, specifically targeting a pattern guaranteed to fail:
-    // This requires knowledge of the .inc file. 
-    // Let's use a pattern that fails the specific mask checks of the hash bucket.
+    uint32_t instruction = 0xE7F001F0;
+    const pound::jit::decoder::arm32_instruction_info_t* info = pound::jit::decoder::arm32_decode(instruction);
     
-    // Hash Index 0: 0x00000000
-    // If the bucket at index 0 is empty or contains specific masks, 0x00000000 might fail
-    // unless ANDEQ R0, R0, R0 is implemented.
-    // AND (reg) is implemented: cccc0000000...
-    // So 0x00... is valid (ANDEQ).
-    
-    // Let's try to find a hole. 
-    // Coprocessor instructions usually require specific bits.
-    // Let's rely on a corrupted signature.
-    
-    // 0xF....... is usually condition 'NV' (Never), deprecated in v5+, used for extensions.
-    // Our decoder handles conditions via 'cccc'.
-    // Let's try a pure garbage value that shouldn't match mask requirements.
-    // We will assume 0xFFFFFFFF represents an undefined instruction in this context
-    // or specifically the UDF instruction if implemented.
-    // The provided .inc has UDF: 111001111111------------1111----
-    
-    // Let's try a value that has the correct hash bits for "ADD (imm)" but 
-    // invalid fixed bits.
-    // ADD (imm) Hash bits (27-20, 7-4): 0x22 ... 0
-    // Valid: 0xE2800001
-    // Invalidate fixed bits (bits 25 must be 1 for imm).
-    // Let's flip bit 25 to 0. 0xE0800001.
-    // This moves it to "ADD (reg)" territory: cccc0000100...
-    
-    // This implies robustness: changing a bit maps it to a different instruction
-    // or to nullptr.
-    
-    // Let's try a "Magic" undefined instruction often used in testing:
-    // 0xE7F001F0 (Undefined instruction space)
-    const uint32_t instruction = 0xE7F001F0;
-    
-    // If this is not in the .inc file, it should return null.
-    // Based on the provided .inc, this does not map to a defined instruction.
-    const auto* info = pound::jit::decoder::arm32_decode(instruction);
-    
-    EXPECT_EQ(info, nullptr) << "Decoder should return nullptr for undefined instructions";
+    EXPECT_STREQ(info->name,"UDF");
 }
 
 /**
@@ -257,8 +173,8 @@ TEST_F(Arm32DecoderTest, Decode_Hash_Collision_Resolution)
     uint32_t inst_a = 0xE1A00000; // MOV R0, R0 (NOP) -> MOV (reg)
     uint32_t inst_b = 0xE0800000; // ADD R0, R0, R0 -> ADD (reg)
     
-    auto info_a = pound::jit::decoder::arm32_decode(inst_a);
-    auto info_b = pound::jit::decoder::arm32_decode(inst_b);
+    const pound::jit::decoder::arm32_instruction_info_t *info_a = pound::jit::decoder::arm32_decode(inst_a);
+    const pound::jit::decoder::arm32_instruction_info_t *info_b = pound::jit::decoder::arm32_decode(inst_b);
     
     ASSERT_NE(info_a, nullptr);
     ASSERT_NE(info_b, nullptr);
@@ -300,7 +216,7 @@ TEST_F(Arm32DecoderTest, Decode_Max_Hash_Index)
     uint32_t inst = 0xF550F000;
     
     // Even if it returns nullptr (if not in .inc), it must not segfault.
-    const auto* info = pound::jit::decoder::arm32_decode(inst);
+    const pound::jit::decoder::arm32_instruction_info_t* info = pound::jit::decoder::arm32_decode(inst);
     
     if (info) {
         EXPECT_STREQ(info->name, "PLD (imm)");

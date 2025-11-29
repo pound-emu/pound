@@ -1,6 +1,7 @@
 #include "passert.h"
 #include "stdarg.h"
 #include "stdio.h"
+#include "stddef.h"
 #include "stdlib.h"
 #include "string.h"
 
@@ -23,8 +24,8 @@ void pound_internal_assert_fail(const char* file, int line, const char* func, co
         Terminating program via abort(). Core dump expected. \n \
         ";
 
-    char message_str[ASSERT_MESSAGE_BUFFER_SIZE] = {};
-    if (nullptr == user_msg)
+    char message_str[ASSERT_MESSAGE_BUFFER_SIZE] = {0};
+    if (NULL == user_msg)
     {
         (void)strcpy(message_str, "n/a");
     }
@@ -36,7 +37,7 @@ void pound_internal_assert_fail(const char* file, int line, const char* func, co
         va_end(args);
     }
 
-    char buffer[ASSERT_MESSAGE_BUFFER_SIZE] = {};
+    char buffer[ASSERT_MESSAGE_BUFFER_SIZE] = {0};
     (void)snprintf(buffer, ASSERT_MESSAGE_BUFFER_SIZE, assert_format, file, line, func, expr_str, message_str);
 
     (void)fprintf(stderr, "%s", buffer);
