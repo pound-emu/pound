@@ -28,7 +28,6 @@ pvm_jit_decoder_arm32_decode (const uint32_t instruction)
         }
     }
 
-    LOG_WARNING("Cannot decode instruction 0x%08X", instruction);
     return NULL;
 }
 

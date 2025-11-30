@@ -1,4 +1,3 @@
-find_package(Python3 REQUIRED)
 
 # Define the generated files
 set(GEN_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/frontend/decoder/arm32_table_generated.c)
@@ -10,7 +9,7 @@ add_custom_command(
     OUTPUT ${GEN_SOURCE} ${GEN_HEADER}
     COMMAND Python3::Interpreter ${SCRIPT} ${INC_FILE} ${GEN_SOURCE} ${GEN_HEADER}
     DEPENDS ${SCRIPT} ${INC_FILE}
-    COMMENT "Generating ARM32 Decoder Tables (Safety Compliance)"
+    COMMENT "Generating ARM32 Decoder Tables"
 )
 
 add_library(jit STATIC)
@@ -28,6 +27,6 @@ target_link_libraries(jit PRIVATE common)
 
 target_include_directories(jit PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}
-    ${CMAKE_CURRENT_SOURCE_DIR}/frontend/dynarmic
+    ${CMAKE_CURRENT_SOURCE_DIR}/
     ${CMAKE_CURRENT_SOURCE_DIR}/..
 )

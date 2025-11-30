@@ -9,5 +9,5 @@ int main()
     pvm_jit_decoder_arm32_decode(0xE2800001); 
     /* Sub r0, r0, #1 */
     pvm_jit_decoder_arm32_decode(0xE2400001);
-    pvm_jit_decoder_arm32_decode(0xE12FFF1E);
+    pvm_jit_decoder_arm32_decode(0x67A757B4);
 }

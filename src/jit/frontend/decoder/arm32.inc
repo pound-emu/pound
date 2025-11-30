@@ -11,17 +11,28 @@ INST(BL,            "BL",                  "cccc1011vvvvvvvvvvvvvvvvvvvvvvvv") /
 INST(BX,            "BX",                  "cccc000100101111111111110001mmmm") // v4T
 INST(BXJ,           "BXJ",                 "cccc000100101111111111110010mmmm") // v5J
 
+// System / Status Register Access (Specifics)
+/* 
+ * FIX: Moved these to the top. 
+ * RFE and SRS start with 1111, which conflicts with LDM/STM (cccc=1111).
+ * Checking these first prevents LDM/STM from shadowing them.
+ */
+INST(RFE,           "RFE",                 "1111100--0-1----0000101000000000") // v6
+INST(SRS,           "SRS",                 "1111100--1-0110100000101000-----") // v6
+INST(CPS,           "CPS",                 "111100010000---00000000---0-----") // v6
+INST(SETEND,        "SETEND",              "1111000100000001000000e000000000") // v6
+
 // CRC32 instructions
 INST(CRC32,         "CRC32",               "cccc00010zz0nnnndddd00000100mmmm") // v8
 INST(CRC32C,        "CRC32C",              "cccc00010zz0nnnndddd00100100mmmm") // v8
 
 // Coprocessor instructions
 INST(CDP,           "CDP",                 "cccc1110ooooNNNNDDDDppppooo0MMMM") // v2  (CDP2:  v5)
-INST(LDC,           "LDC",                 "cccc110pudw1nnnnDDDDppppvvvvvvvv") // v2  (LDC2:  v5)
 INST(MCR,           "MCR",                 "cccc1110ooo0NNNNttttppppooo1MMMM") // v2  (MCR2:  v5)
 INST(MCRR,          "MCRR",                "cccc11000100uuuuttttppppooooMMMM") // v5E (MCRR2: v6)
 INST(MRC,           "MRC",                 "cccc1110ooo1NNNNttttppppooo1MMMM") // v2  (MRC2:  v5)
 INST(MRRC,          "MRRC",                "cccc11000101uuuuttttppppooooMMMM") // v5E (MRRC2: v6)
+INST(LDC,           "LDC",                 "cccc110pudw1nnnnDDDDppppvvvvvvvv") // v2  (LDC2:  v5)
 INST(STC,           "STC",                 "cccc110pudw0nnnnDDDDppppvvvvvvvv") // v2  (STC2:  v5)
 
 // Data Processing instructions
@@ -101,8 +112,7 @@ INST(SEVL,          "SEVL",                "----0011001000001111000000000101") /
 INST(WFE,           "WFE",                 "----0011001000001111000000000010") // v6K
 INST(WFI,           "WFI",                 "----0011001000001111000000000011") // v6K
 INST(YIELD,         "YIELD",               "----0011001000001111000000000001") // v6K
-INST(NOP,           "Reserved Hint",       "----0011001000001111------------")
-INST(NOP,           "Reserved Hint",       "----001100100000111100000000----")
+INST(NOP,           "NOP",                 "----0011001000001111000000000000") // v6K
 
 // Synchronization Primitive instructions
 INST(CLREX,         "CLREX",               "11110101011111111111000000011111") // v6K
@@ -181,7 +191,7 @@ INST(LDM,           "LDM",                 "cccc100010w1nnnnxxxxxxxxxxxxxxxx") /
 INST(LDMDA,         "LDMDA",               "cccc100000w1nnnnxxxxxxxxxxxxxxxx") // v1
 INST(LDMDB,         "LDMDB",               "cccc100100w1nnnnxxxxxxxxxxxxxxxx") // v1
 INST(LDMIB,         "LDMIB",               "cccc100110w1nnnnxxxxxxxxxxxxxxxx") // v1
-INST(LDM_usr,       "LDM (usr reg)",       "----100--101--------------------") // v1
+INST(LDM_usr,       "LDM (usr reg)",       "----100--101----0---------------") // v1
 INST(LDM_eret,      "LDM (exce ret)",      "----100--1-1----1---------------") // v1
 INST(STM,           "STM",                 "cccc100010w0nnnnxxxxxxxxxxxxxxxx") // v1
 INST(STMDA,         "STMDA",               "cccc100000w0nnnnxxxxxxxxxxxxxxxx") // v1
@@ -195,7 +205,6 @@ INST(BFI,           "BFI",                 "cccc0111110vvvvvddddvvvvv001nnnn") /
 INST(CLZ,           "CLZ",                 "cccc000101101111dddd11110001mmmm") // v5
 INST(MOVT,          "MOVT",                "cccc00110100vvvvddddvvvvvvvvvvvv") // v6T2
 INST(MOVW,          "MOVW",                "cccc00110000vvvvddddvvvvvvvvvvvv") // v6T2
-INST(NOP,           "NOP",                 "----0011001000001111000000000000") // v6K
 INST(SBFX,          "SBFX",                "cccc0111101wwwwwddddvvvvv101nnnn") // v6T2
 INST(SEL,           "SEL",                 "cccc01101000nnnndddd11111011mmmm") // v6
 INST(UBFX,          "UBFX",                "cccc0111111wwwwwddddvvvvv101nnnn") // v6T2
@@ -251,12 +260,12 @@ INST(SMMLA,         "SMMLA",               "cccc01110101ddddaaaammmm00R1nnnn") /
 INST(SMMLS,         "SMMLS",               "cccc01110101ddddaaaammmm11R1nnnn") // v6
 
 // Multiply (Dual) instructions
+INST(SMUAD,         "SMUAD",               "cccc01110000dddd1111mmmm00M1nnnn") // v6
 INST(SMLAD,         "SMLAD",               "cccc01110000ddddaaaammmm00M1nnnn") // v6
 INST(SMLALD,        "SMLALD",              "cccc01110100ddddaaaammmm00M1nnnn") // v6
+INST(SMUSD,         "SMUSD",               "cccc01110000dddd1111mmmm01M1nnnn") // v6
 INST(SMLSD,         "SMLSD",               "cccc01110000ddddaaaammmm01M1nnnn") // v6
 INST(SMLSLD,        "SMLSLD",              "cccc01110100ddddaaaammmm01M1nnnn") // v6
-INST(SMUAD,         "SMUAD",               "cccc01110000dddd1111mmmm00M1nnnn") // v6
-INST(SMUSD,         "SMUSD",               "cccc01110000dddd1111mmmm01M1nnnn") // v6
 
 // Parallel Add/Subtract (Modulo) instructions
 INST(SADD8,         "SADD8",               "cccc01100001nnnndddd11111001mmmm") // v6
@@ -306,11 +315,8 @@ INST(QSUB,          "QSUB",                "cccc00010010nnnndddd00000101mmmm") /
 INST(QDADD,         "QDADD",               "cccc00010100nnnndddd00000101mmmm") // v5xP
 INST(QDSUB,         "QDSUB",               "cccc00010110nnnndddd00000101mmmm") // v5xP
 
-// Status Register Access instructions
-INST(CPS,           "CPS",                 "111100010000---00000000---0-----") // v6
-INST(SETEND,        "SETEND",              "1111000100000001000000e000000000") // v6
+// Status Register Access instructions (Generals)
+// Specifics like CPS/RFE moved to top to prevent shadowing
 INST(MRS,           "MRS",                 "cccc000100001111dddd000000000000") // v3
 INST(MSR_imm,       "MSR (imm)",           "cccc00110010mmmm1111rrrrvvvvvvvv") // v3
 INST(MSR_reg,       "MSR (reg)",           "cccc00010010mmmm111100000000nnnn") // v3
-INST(RFE,           "RFE",                 "1111100--0-1----0000101000000000") // v6
-INST(SRS,           "SRS",                 "1111100--1-0110100000101000-----") // v6

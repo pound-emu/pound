@@ -4,7 +4,7 @@
 #include "arm32.h"
 #include <stddef.h>
 
-#define LOOKUP_TABLE_MAX_BUCKET_SIZE 18U
+#define LOOKUP_TABLE_MAX_BUCKET_SIZE 64U
 
 typedef struct {
     const pvm_jit_decoder_arm32_instruction_info_t *instructions[LOOKUP_TABLE_MAX_BUCKET_SIZE];

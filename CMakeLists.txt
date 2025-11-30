@@ -13,6 +13,8 @@ endif()
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED TRUE)
 set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 #-------------------------------
@@ -91,17 +93,29 @@ message(STATUS "All submodules verified successfully")
 #-----------------------------
 # ---- Target Definitions ----
 #-----------------------------
-
 add_executable(Pound
     src/main.c
 )
 
-set(TEST_SRC
-    ${CMAKE_CURRENT_SOURCE_DIR}/tests/jit/ir/test_value.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/tests/jit/decoder/test_arm32.cpp
+find_package(Python3 REQUIRED)
+
+# Define the test generation command
+set(GEN_TEST_SRC ${CMAKE_CURRENT_SOURCE_DIR}/tests/jit/decoder/test_arm32_generated.cpp)
+
+add_custom_command(
+    OUTPUT ${GEN_TEST_SRC}
+    COMMAND Python3::Interpreter ${CMAKE_SOURCE_DIR}/scripts/generate_decoder_tests.py
+            ${CMAKE_SOURCE_DIR}/src/jit/frontend/decoder/arm32.inc
+            ${GEN_TEST_SRC}
+    DEPENDS ${CMAKE_SOURCE_DIR}/scripts/generate_decoder_tests.py
+            ${CMAKE_SOURCE_DIR}/src/jit/frontend/decoder/arm32.inc
+            COMMENT "Generating ARM32 Decoder Tests"
 )
 
-#add_executable(tests ${TEST_SRC})
+# Add to test executable
+add_executable(tests
+    ${GEN_TEST_SRC}
+)
 
 add_subdirectory(3rd_Party)
 add_subdirectory(src/common)
@@ -161,8 +175,8 @@ target_link_libraries(Pound PRIVATE
 )
 
 
-#target_link_libraries(tests PRIVATE
-#    jit
-#    gtest
-#    gtest_main
-#)
+target_link_libraries(tests PRIVATE
+    jit
+    gtest
+    gtest_main
+)

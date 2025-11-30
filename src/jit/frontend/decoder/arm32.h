@@ -13,6 +13,11 @@
 
 #include <stdint.h>
 
+/* Extern C for unit tests. */
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*! @brief Represents static metadata associated with a specific ARM32
  * instruction. */
 typedef struct
@@ -59,4 +64,7 @@ typedef struct
 const pvm_jit_decoder_arm32_instruction_info_t *pvm_jit_decoder_arm32_decode(
     const uint32_t instruction);
 
+#ifdef __cplusplus
+}
+#endif
 #endif // POUND_JIT_DECODER_ARM32_H
