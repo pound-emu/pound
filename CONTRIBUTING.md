@@ -1,7 +1,5 @@
 # Core Principles
 
-**IMPORTANT: Pound's C++ codebase is written in a C-style, intentionally avoiding C++ features except for namespaces. The goal is to hopefully make the codebase easy to follow, understand, and debug for new developers wanting to contribute.**
-
 ### 1. Performance First
 
 Performance is the top priority in all aspects of development. Always ask yourself: "Is the CPU wasting cycles running
@@ -9,7 +7,7 @@ this code? If so, how do I fix it?".
 
 ### 2. Memory Management
 
-- **Heap Allocation Functions Ban**: Using memory allocation functions like malloc(), free(), new, and delete is prohibited. Use our custom memory allocator in `src/host/memory/arena.h`. Allocating memory should only be done in `main.cpp` during initialization, otherwise your code will be rejected.
+- **Heap Allocation Functions Ban**: Using memory allocation functions like malloc(), free(), new, and delete is prohibited. Use our custom memory allocator in `src/host/memory/arena.h`. Allocating memory should only be done in `main.c` during initialization, otherwise your code will be rejected.
 
 ### 3. Safety First
 

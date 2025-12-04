@@ -4,12 +4,13 @@
  *  @brief Defines the type system for the Pound JIT Intermediate
  * Representation.
  *
- *  This header declares the `type_t ` enumeration, which forms the basis of
+ *  This header declares the `type_t` enumeration, which forms the basis of
  *  type identification and checking within the JIT's IR.
  */
 #ifndef POUND_JIT_IR_TYPE_H
 #define POUND_JIT_IR_TYPE_H
-namespace pound::jit::ir {
+
+#include <stdbool.h>
 
 /*!
  * @brief Enumerations of all possible types for a value in the JIT's IR.
@@ -39,7 +40,7 @@ typedef enum
     IR_TYPE_OPAQUE
     = 1 << 11, // Represents a value defined by another IR instruction
     IR_TYPE_NZCV = 1 << 12,
-} type_t;
+} pvm_jit_ir_type_t;
 
 /*!
  * @brief Checks if two IR types are compatible.
@@ -60,6 +61,6 @@ typedef enum
  * @retval true if t1 and t2 are compatible according to the defined static
  *         compatibility rules. false otherwise.
  */
-bool are_types_compatible(const type_t t1, const type_t t2);
-} // namespace pound::jit::ir
+bool pvm_jit_ir_are_types_compatible(const pvm_jit_ir_type_t t1,
+                                     const pvm_jit_ir_type_t t2);
 #endif // POUND_JIT_IR_TYPE_H

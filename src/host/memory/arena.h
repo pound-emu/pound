@@ -1,24 +1,20 @@
-#ifndef POUND_ARENA_H
-#define POUND_ARENA_H
+#ifndef POUND_HOST_MEMORY_ARENA_H
+#define POUND_HOST_MEMORY_ARENA_H
 
-#include <cstddef>
-#include <cstdint>
-#include <cstdlib>
+#include <stddef.h>
 
-namespace pound::host::memory
-{
 #define POISON_PATTERN 0xAA
 
 /*
  *  NAME
- *      arena_t - memory management structure for efficient allocation and de-allocation.
+ *      pvm_host_memory_arena_t - memory management structure for efficient allocation and de-allocation.
  *
  *  SYNOPSIS
  *      typedef struct {
- *          std::size_t capacity;   Total number of bytes allocated.
- *          std::size_t size;       The current number of bytes consumed.
+ *          size_t capacity;   Total number of bytes allocated.
+ *          size_t size;       The current number of bytes consumed.
  *          void* data;          A pointer to the base address of the allocated memory buffer.
- *      } arena_t;
+ *      } pvm_host_memory_arena_t;
  *
  *  DESCRIPTION
  *      The arena struct handles allocating and managing contiguous memory blocks.
@@ -30,17 +26,17 @@ namespace pound::host::memory
  */
 typedef struct
 {
-    std::size_t capacity;
-    std::size_t size;
+    size_t capacity;
+    size_t size;
     void* data;
-} arena_t;
+} pvm_host_memory_arena_t;
 
 /*
  *  NAME
- *      arena_init - Initialize a memory arena with specified capacity.
+ *      pvm_host_memory_arena_init - Initialize a memory arena with specified capacity.
  *
  *  SYNOPSIS
- *      arena_t arena_init(size_t capacity);
+ *      pvm_host_memory_arena_t pvm_host_memory_arena_init(size_t capacity);
  *
  *  DESCRIPTION
  *     The function creates and returns a new memory arena instance with the
@@ -50,15 +46,15 @@ typedef struct
  *      capacity - Size of the memory arena to allocate in bytes
  *
  *  RETURN VALUE
- *     Returns a valid arena_t object on success. arena_t->data will be null on failure.
+ *     Returns a valid pvm_host_memory_arena_t object on success. pvm_host_memory_arena_t->data will be null on failure.
  */
-memory::arena_t arena_init(size_t capacity);
+pvm_host_memory_arena_t pvm_host_memory_arena_init(size_t capacity);
 /*
  *  NAME
- *      arena_allocate - Allocate memory from a pre-initialized arena.
+ *      pvm_host_memory_arena_allocate - Allocate memory from a pre-initialized arena.
  *
  *  SYNOPSIS
- *      void* arena_allocate(arena_t* arena, std::size_t size);
+ *      void* pvm_host_memory_arena_allocate(pvm_host_memory_arena_t* arena, size_t size);
  *
  *  DESCRIPTION
  *      The function allocates size bytes from the specified arena. It assumes
@@ -70,19 +66,19 @@ memory::arena_t arena_init(size_t capacity);
  *      pointer is valid until the arena is reset or destroyed.
  *
  *  NOTES
- *      Requires arena_t to be initialized with arena_init() or similar.
+ *      Requires pvm_host_memory_arena_t to be initialized with pvm_host_memory_arena_init() or similar.
  */
-void* arena_allocate(arena_t* arena, const std::size_t size);
+void* pvm_host_memory_arena_allocate(pvm_host_memory_arena_t* arena, const size_t size);
 
 /*
  *  NAME
- *      arena_reset - Reset a memory arena's allocation size to zero.
+ *      pvm_host_memory_arena_reset - Reset a memory arena's allocation size to zero.
  *
  *  SYNOPSIS
- *      void arena_reset(arena_t* arena);
+ *      void pvm_host_memory_arena_reset(pvm_host_memory_arena_t* arena);
  *
  *  DESCRIPTION
- *      The function resets the allocation size of a pre-initialized arena_t to zero.
+ *      The function resets the allocation size of a pre-initialized pvm_host_memory_arena_t to zero.
  *      This effectively "frees" all memory allocated from the arena without
  *      deallocating the underlying buffer, allowing reuse of the capacity for
  *      future allocations.
@@ -92,21 +88,19 @@ void* arena_allocate(arena_t* arena, const std::size_t size);
  *      Does not free the underlying memory buffer.
  *      Useful for reusing arenas without reallocation.
  */
-void arena_reset(arena_t* arena);
+void pvm_host_memory_arena_reset(pvm_host_memory_arena_t* arena);
 
 /**
  *  NAME
- *      arena_free - Free the memory allocated by an arena
+ *      pvm_host_memory_arena_free - Free the memory allocated by an arena
  *
  *  SYNOPSIS
- *      void arena_free(arena_t* arena);
+ *      void pvm_host_memory_arena_free(pvm_host_memory_arena_t* arena);
  *
  *  DESCRIPTION
- *      The function releases the memory buffer associated with a arena_t and
+ *      The function releases the memory buffer associated with a pvm_host_memory_arena_t and
  *      resets its capacity and size to zero. This marks the arena as invalid for
  *      future allocation unless reinitialized.
  */
-void arena_free(memory::arena_t* arena);
-
-}  // namespace pound::host::memory
-#endif  //POUND_ARENA_H
+void pvm_host_memory_arena_free(pvm_host_memory_arena_t* arena);
+#endif  //POUND_HOST_MEMORY_ARENA_H

@@ -1,7 +1,5 @@
 #ifndef POUND_JIT_ARM32_TYPES_H
 #define POUND_JIT_ARM32_TYPES_H
-
-namespace pound::jit {
 typedef enum
 {
     A32_REGISTER_R0,
@@ -23,6 +21,5 @@ typedef enum
     A32_REGISTER_LP      = A32_REGISTER_R14,
     A32_REGISTER_PC      = A32_REGISTER_R15,
     A32_REGISTER_INVALID = 99,
-} a32_register_t;
-}
+} pvm_jit_a32_register_t;
 #endif // POUND_JIT_ARM32_TYPES_H

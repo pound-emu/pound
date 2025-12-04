@@ -119,6 +119,7 @@ add_executable(tests
 
 add_subdirectory(3rd_Party)
 add_subdirectory(src/common)
+add_subdirectory(src/host)
 add_subdirectory(src/jit)
 
 #--------------------------------
@@ -128,7 +129,7 @@ add_subdirectory(src/jit)
 include(TestBigEndian)
 TEST_BIG_ENDIAN(WORDS_BIGENDIAN)
 
-list(APPEND POUND_PROJECT_TARGETS common jit)
+list(APPEND POUND_PROJECT_TARGETS common host jit)
 foreach(TARGET ${POUND_PROJECT_TARGETS})
     # Apply Endianness definitions to all our targets.
     if(WORDS_BIGENDIAN)

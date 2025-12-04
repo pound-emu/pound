@@ -771,5 +771,5 @@ A32OPC(CoprocGetOneWord,                                    IR_TYPE_U32,        
 A32OPC(CoprocGetTwoWords,                                   IR_TYPE_U64,            CoprocInfo                                                      )
 A32OPC(CoprocLoadWords,                                     IR_TYPE_VOID,           CoprocInfo,     IR_TYPE_U32                                             )
 A32OPC(CoprocStoreWords,                                    IR_TYPE_VOID,           CoprocInfo,     IR_TYPE_U32                                             )
-#endif 
+#endif
 // clang-format on

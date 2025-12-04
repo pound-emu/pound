@@ -11,7 +11,6 @@
 #define POUMD_JIT_IR_OPCODE_H
 #include "type.h"
 
-namespace pound::jit::ir {
 // The maximum number of argument types an IR opcode can have.
 #define OPCODE_ARGS_TYPES_SIZE 4
 
@@ -35,27 +34,25 @@ typedef enum
 #undef A32OPC
 #undef A64OPC
     NUM_OPCODE
-} opcode_t;
+} pvm_jit_ir_opcode_t;
 
 /*!
  * @brief Structure holding static metadata for an IR opcode.
  */
 typedef struct
 {
-    const char *name;
-    type_t      type;
-    type_t      arg_types[OPCODE_ARGS_TYPES_SIZE];
-} decoded_opcode_t;
+    const char       *name;
+    pvm_jit_ir_type_t type;
+    pvm_jit_ir_type_t arg_types[OPCODE_ARGS_TYPES_SIZE];
+} pvm_jit_ir_decoded_opcode_t;
 
 /*!
- * @brief Global array of `decoded_opcode_t` structures for all opcodes.
+ * @brief Global array of `pvm_jit_ir_decoded_opcode_t` structures for all
+ * opcodes.
  *
- * This array is indexed by the `opcode_t` enum values, providing a direct
- * lookup for opcode metadata. For example, `g_opcodes[OPCODE_Add32].name`
- * would yield "Add32".
+ * This array is indexed by the `pvm_jit_ir_opcode_t` enum values, providing a
+ * direct lookup for opcode metadata. For example,
+ * `g_pvm_jit_ir_opcodes[OPCODE_Add32].name` would yield "Add32".
  */
-extern decoded_opcode_t g_opcodes[NUM_OPCODE];
-
-void opcode_init(void);
-}
+extern pvm_jit_ir_decoded_opcode_t g_pvm_jit_ir_opcodes[NUM_OPCODE];
 #endif // POUMD_JIT_IR_OPCODE_H

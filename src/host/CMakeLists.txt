@@ -1,7 +1,7 @@
 add_library(host STATIC)
 
 target_sources(host PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/memory/arena.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/memory/arena.c
 )
 
 target_include_directories(host PUBLIC

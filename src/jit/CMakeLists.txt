@@ -17,13 +17,19 @@ add_library(jit STATIC)
 target_sources(jit PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/frontend/decoder/arm32.c
     ${CMAKE_CURRENT_SOURCE_DIR}/frontend/decoder/arm32_table_generated.c
-    #${CMAKE_CURRENT_SOURCE_DIR}/ir/type.cpp
-    #${CMAKE_CURRENT_SOURCE_DIR}/ir/value.cpp
-    #${CMAKE_CURRENT_SOURCE_DIR}/ir/opcode.cpp
-    #${CMAKE_CURRENT_SOURCE_DIR}/ir/instruction.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/ir/type.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/ir/value.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/ir/opcode.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/ir/instruction.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/ir/basic_block.c
 )
 
-target_link_libraries(jit PRIVATE common)
+set_source_files_properties(
+    ${CMAKE_CURRENT_SOURCE_DIR}/ir/opcode.c
+    PROPERTIES COMPILE_FLAGS "-Wno-c23-extensions -Wno-pedantic"
+)
+
+target_link_libraries(jit PRIVATE common host)
 
 target_include_directories(jit PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}
