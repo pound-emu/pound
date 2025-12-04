@@ -1,4 +1,4 @@
-# Multithreading
+# Tiered JIT Compilation
 Pound's current goal is to create a Task-Based Parrallel JIT with Work-Stealing. This should hopefully be faster than Dynarmic's multithreading model. Wish me luck.
 
 ## Roadmap:
