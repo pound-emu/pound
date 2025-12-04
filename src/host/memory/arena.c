@@ -23,7 +23,7 @@ pvm_host_memory_arena_t pvm_host_memory_arena_init(size_t capacity)
     void* const data = VirtualAlloc(NULL, capacity, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
     if (NULL == data)
     {
-        arena.caapcity = 0;
+        arena.capacity = 0;
         return arena;
     }
 #else
