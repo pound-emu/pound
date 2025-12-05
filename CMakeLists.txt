@@ -104,10 +104,10 @@ set(GEN_TEST_SRC ${CMAKE_CURRENT_SOURCE_DIR}/tests/jit/decoder/test_arm32_genera
 
 add_custom_command(
     OUTPUT ${GEN_TEST_SRC}
-    COMMAND Python3::Interpreter ${CMAKE_SOURCE_DIR}/scripts/generate_decoder_tests.py
+    COMMAND Python3::Interpreter ${CMAKE_SOURCE_DIR}/scripts/generate_jit_decoder_tests.py
             ${CMAKE_SOURCE_DIR}/src/jit/frontend/decoder/arm32.inc
             ${GEN_TEST_SRC}
-    DEPENDS ${CMAKE_SOURCE_DIR}/scripts/generate_decoder_tests.py
+    DEPENDS ${CMAKE_SOURCE_DIR}/scripts/generate_jit_decoder_tests.py
             ${CMAKE_SOURCE_DIR}/src/jit/frontend/decoder/arm32.inc
             COMMENT "Generating ARM32 Decoder Tests"
 )
