@@ -24,6 +24,9 @@
  * }
  */
 
+void init_log(void);
+void close_log(void);
+
 /*
  * log_level_t - Defines the severity for log messages.
  */

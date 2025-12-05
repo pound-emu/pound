@@ -10,7 +10,7 @@
 void pound_internal_assert_fail(const char* file, int line, const char* func, const char* expr_str,
                                 const char* user_msg, ...)
 {
-    char assert_format[] =
+    const char assert_format[] =
         " \
         ================================================================================ \n \
         PVM ASSERTION FAILURE \n \

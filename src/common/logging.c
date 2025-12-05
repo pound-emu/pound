@@ -32,6 +32,18 @@
  */
 #define LOG_LINE_BUFFER_SIZE 1024
 
+FILE *log_file;
+
+void init_log(void)
+{
+    log_file = fopen("log.txt", "w");
+}
+
+void close_log(void)
+{
+    fclose(log_file);
+}
+
 /*
  * Static strings to use when all else fails.
  * Its unique format makes it easy to search for in logs.
@@ -111,6 +123,7 @@ void log_message(log_level_t level, const char* module_name, const char* file, i
 
     /* Print the entire, fully-formed buffer to stderr in a SINGLE, ATOMIC call. */
     fprintf(stderr, "%s\n", buffer);
+    fprintf(log_file, "%s\n", buffer);
 
     /*
      *  TODO(GloriousTaco:common): For guaranteed atomicity across
