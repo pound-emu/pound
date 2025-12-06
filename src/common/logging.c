@@ -36,16 +36,9 @@
  * Static strings to use when all else fails.
  * Its unique format makes it easy to search for in logs.
  */
-static const char* const FAILED_TIMESTAMP = "[TIMESTAMP_UNAVAILABLE]";
 static const char* const FAILED_LOG_LEVEL = "[LOG_LEVEL_UNAVAILABLE]";
 
 log_level_t runtime_log_level = LOG_LEVEL_NONE;
-
-/*
- * Pre-allocate a buffer for the timestamp string.
- * Make it static so it's not constantly re-allocated on the stack.
- */
-static char timestamp_buffer[TIMESTMP_BUFFER_LEN] = {0};
 
 const char* get_current_timestamp_str(void);
 
@@ -53,7 +46,6 @@ void log_message(log_level_t level, const char* module_name, const char* file, i
 {
     assert(NULL != message);
 
-    const char* timestamp_str = get_current_timestamp_str();
     const char* level_str = NULL;
 
     if (level < runtime_log_level)
@@ -96,7 +88,7 @@ void log_message(log_level_t level, const char* module_name, const char* file, i
 
     /* Keep track of our position in the buffer */
     size_t offset = 0;
-    offset += (size_t)snprintf(buffer + offset, LOG_LINE_BUFFER_SIZE - offset, "[%s] [%s] [%s] [%s:%d] ", timestamp_str,
+    offset += (size_t)snprintf(buffer + offset, LOG_LINE_BUFFER_SIZE - offset, "[%s] [%s] [%s:%d] ",
                                level_str, module_name, file, line);
 
     /* Handle the user's variadic format string. */
@@ -122,45 +114,4 @@ void log_message(log_level_t level, const char* module_name, const char* file, i
      *  fprintf(stderr, "%s\n", buffer);
      *  unlock_logging_mutex();
      */
-}
-
-const char* get_current_timestamp_str(void)
-{
-    time_t now;
-
-    /* time() can fail, though it's rare. */
-    if (time(&now) == (time_t)-1)
-    {
-        return FAILED_TIMESTAMP;
-    }
-
-    struct tm time_since_epoch = {0};
-#ifdef WIN32
-    /* https://learn.microsoft.com/en-us/cpp/c-runtime-library/reference/gmtime-s-gmtime32-s-gmtime64-s?view=msvc-170 */
-    (void) gmtime_r(&now, &time_since_epoch);
-    
-#if 0
-      TODO(GloriousTacoo:common): Someone fix this error handling. I have little
-                                  patience for anything Windows related.
-      if ((struct tm)-1 == &time_since_epoch)
-      {
-         return FAILED_TIMESTAMP;
-      }
-#endif
-
-#else
-    if (NULL == gmtime_r(&now, &time_since_epoch))
-    {
-        return FAILED_TIMESTAMP;
-    }
-#endif  // WIN32
-
-    size_t bytes_written = strftime(timestamp_buffer, TIMESTMP_BUFFER_LEN, "%Y-%m-%dT%H:%M:%SZ", &time_since_epoch);
-
-    if (0 == bytes_written)
-    {
-        return FAILED_TIMESTAMP;
-    }
-
-    return timestamp_buffer;
 }
