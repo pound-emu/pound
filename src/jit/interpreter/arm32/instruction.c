@@ -3,11 +3,10 @@
  * opcodes.
  */
 
-#include "frontend/decoder/arm32_opcodes.h"
+#include "instruction.h"
 #include "common/passert.h"
 #include <stdlib.h>
 #include <stdio.h>
-#include <stdint.h>
 
 /*
  * Computed gotos are a GCC/Clang extension that significantly improves
@@ -21,14 +20,9 @@
 
 typedef struct
 {
-    uint32_t GPRs[16];
-    uint32_t PSTATE;
+    uint32_t gpr[16];
+    uint32_t pstate;
 } pvm_jit_interpreter_arm32_cpu_state_t;
-
-typedef struct
-{
-    pvm_jit_decoder_arm32_opcode_t opcode;
-} pvm_jit_interpreter_arm32_instruction_t;
 
 void
 temp (void)
@@ -52,17 +46,15 @@ temp (void)
  * DISPATCH macro increments IP and jumps to the next handler.
  */
 #define HANDLER(name) name
-#define DISPATCH() \
-    do             \
-    {              \
-        instr++;   \
-    goto *dispatch_table[instr->opcode]; \
-} while (0)
-
+#define DISPATCH()                           \
+    do                                       \
+    {                                        \
+        instr++;                             \
+        goto *dispatch_table[instr->opcode]; \
+    } while (0)
 
     /* Must perform the initial jump to start the race. */
     goto *dispatch_table[instr->opcode];
-
 
 /* Include the instruction logic */
 #include "handlers.inc"

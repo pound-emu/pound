@@ -1,4 +1,3 @@
-
 # Define all the files that will be generated
 set(GEN_OPCODES_H ${CMAKE_CURRENT_SOURCE_DIR}/frontend/decoder/arm32_opcodes.h)
 set(GEN_DECODER_C ${CMAKE_CURRENT_SOURCE_DIR}/frontend/decoder/arm32_table.c)
@@ -25,6 +24,7 @@ target_sources(jit PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/frontend/decoder/arm32.c
     ${CMAKE_CURRENT_SOURCE_DIR}/frontend/decoder/arm32_table.c
     ${CMAKE_CURRENT_SOURCE_DIR}/interpreter/arm32/instruction.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/interpreter/arm32/translator.c
     ${CMAKE_CURRENT_SOURCE_DIR}/ir/type.c
     ${CMAKE_CURRENT_SOURCE_DIR}/ir/value.c
     ${CMAKE_CURRENT_SOURCE_DIR}/ir/opcode.c
@@ -40,7 +40,7 @@ set_source_files_properties(
 
 set_source_files_properties(
     ${CMAKE_CURRENT_SOURCE_DIR}/interpreter/arm32/instruction.c
-    PROPERTIES COMPILE_FLAGS "-Wno-gnu-label-as-value -Wno-unused-label"
+    PROPERTIES COMPILE_FLAGS "-Wno-gnu-label-as-value -Wno-unused-label -Wno-pedantic"
 )
 
 target_link_libraries(jit PRIVATE common host)
