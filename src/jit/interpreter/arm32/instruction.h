@@ -1,0 +1,1 @@
+void temp(void);

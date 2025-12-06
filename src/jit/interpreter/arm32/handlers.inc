@@ -1249,7 +1249,7 @@ HANDLER(PVM_A32_OP_MSR_REG): {
 }
 
 HANDLER(PVM_A32_OP_STOP): {
-    // TODO: Implement handler for PVM_A32_OP_STOP
-    DISPATCH();
+    printf("IT WORKS!\n");
+    return;
 }
 
