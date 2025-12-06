@@ -11,6 +11,7 @@
 #ifndef POUND_JIT_DECODER_ARM32_H
 #define POUND_JIT_DECODER_ARM32_H
 
+#include "arm32_opcodes.h"
 #include <stdint.h>
 
 /* Extern C for unit tests. */
@@ -22,15 +23,18 @@ extern "C" {
  * instruction. */
 typedef struct
 {
+
     /*! @brief The instruction mnemonic (e.g., "ADD", "LDR"). */
     const char *name;
-
     /*!
      * @brief The raw bitstring representation.
      * @details Used during initialization to calculate mask and expected
      * values.
      */
     const char *bitstring;
+
+    /*! @brief The instruction's unique enum identifier. */
+    pvm_jit_decoder_arm32_opcode_t opcode;
 
     /*!
      * @brief The bitmask indicating which bits in the instruction word are

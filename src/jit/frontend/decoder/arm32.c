@@ -1,5 +1,5 @@
 #include "arm32.h"
-#include "arm32_table_generated.h"
+#include "arm32_table.h"
 #include "common/passert.h"
 #include <string.h>
 #include <stdbool.h>
