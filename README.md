@@ -15,6 +15,8 @@
 
 **IMPORTANT: THIS PROJECT WILL NOT BE READY FOR A DECADE MINIMUM!**     
 
+**ALSO IMPORTANT: DEVELOPMENT HAS FULLY SHIFTED TO CREATING A [NEW ARM RECOMPILER](https://github.com/pound-emu/ballistic)**     
+
 Join the [**Pound Discord Server**](https://discord.gg/aMmTmKsVC7)!
 
 **Pound** is an early-stage emulator for the **Nintendo Switch 1 and hopefully Switch 2**, targeting **Windows**, **Linux** and **macOS** (
