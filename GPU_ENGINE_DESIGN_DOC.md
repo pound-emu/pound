@@ -20,4 +20,17 @@
     //
     ALIGN uint32_t *page_table;
 } gpu_engine_t
-```                                                     
+```   
+
+# SM86 Instructions
+
+```c
+
+// A raw 128-bit SM86 SASS instruction.
+//
+typedef struct
+{
+    uint64_t low;
+    uint64_t high;
+} sm86_raw_instruction_t
+```
