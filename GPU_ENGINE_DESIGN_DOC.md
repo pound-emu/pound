@@ -25,7 +25,6 @@
 # SM86 Instructions
 
 ```c
-
 // A raw 128-bit SM86 SASS instruction.
 //
 typedef struct
@@ -33,4 +32,15 @@ typedef struct
     uint64_t low;
     uint64_t high;
 } sm86_raw_instruction_t
+
+
+// SM86 SASS Encoding
+// Ref: https://gitlab.freedesktop.org/mesa/mesa/-/blob/main/src/nouveau/compiler/nak/sm70_encode.rs?ref_type=heads
+typedef struct
+{
+    uint16_t opcode;
+    uint8_t destination_register;
+    uint8_t predicate_register : 3;
+    uint8_t predicate_not : 1;
+} sm86_decoded_instruction_t;
 ```
