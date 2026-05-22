@@ -85,5 +85,12 @@ typedef struct
             uint8_t padding;
         } cbuf;
     }
+    
+    // Extracted from bits 105..126 in set_instr_deps().
+    //
+    uint8_t delay_cycles;    // Cycles to stall before executing.
+    uint8_t yield_flag;      // True if warp can yield to scheduler.
+    uint8_t read_barrier;    // Wait on read barrier index.
+    uint8_t write_barrier;   // Set write barrier index.
 } sm86_decoded_instruction_t;
 ```
