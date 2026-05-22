@@ -93,4 +93,6 @@ typedef struct
     uint8_t read_barrier;    // Wait on read barrier index.
     uint8_t write_barrier;   // Set write barrier index.
 } sm86_decoded_instruction_t;
+
+static_assert(sizeof(sm_86_decoded_instruction_t) == 16, "Struct must be 16 bytes or less");
 ```
