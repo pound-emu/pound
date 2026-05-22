@@ -67,5 +67,23 @@ typedef struct
     uint8_t ftz         : 1; // .FTZ (Flush to zero)
     uint8_t is_uniform  : 1; // True if Uniform ALU (UGPR)
     uint8_t reserved    : 1;
+    
+    // An instruction cannot use an immediate and a constant buffer at the same time.
+    //
+    union 
+    {
+        // form == 4.
+        //
+        int32_t immediate_value;
+        
+        // form == 5. 
+        //
+        struct
+        {
+            uint16_t byte_offset;
+            uint8_t binding_index;
+            uint8_t padding;
+        } cbuf;
+    }
 } sm86_decoded_instruction_t;
 ```
