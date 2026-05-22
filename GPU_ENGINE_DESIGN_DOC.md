@@ -42,5 +42,17 @@ typedef struct
     uint8_t destination_register;
     uint8_t predicate_register : 3;
     uint8_t predicate_not : 1;
+    
+    // Src1:
+    //      1 = Reg
+    //      6 = UReg
+    //      4 = Imm32
+    //      5 = CBuf
+    // 
+    // Src2:
+    //      7 = UReg
+    //      2 = Imm32
+    //      3 = CBuf
+    uint8_t form : 8 
 } sm86_decoded_instruction_t;
 ```
