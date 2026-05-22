@@ -58,5 +58,14 @@ typedef struct
     uint8_t source0_register;
     uint8_t source1_register;
     uint8_t source2_register;
+    
+    uint8_t source0_neg : 1; // -src0
+    uint8_t source0_abs : 1; // |src0|
+    uint8_t source1_neg : 1; // -src1
+    uint8_t source1_abs : 1; // |src1|
+    uint8_t saturate    : 1; // .SAT (Clamp to 0.0 - 1.0)
+    uint8_t ftz         : 1; // .FTZ (Flush to zero)
+    uint8_t is_uniform  : 1; // True if Uniform ALU (UGPR)
+    uint8_t reserved    : 1;
 } sm86_decoded_instruction_t;
 ```
