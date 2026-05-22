@@ -53,6 +53,10 @@ typedef struct
     //      7 = UReg
     //      2 = Imm32
     //      3 = CBuf
-    uint8_t form : 8 
+    uint8_t form : 8;
+    
+    uint8_t source0_register;
+    uint8_t source1_register;
+    uint8_t source2_register;
 } sm86_decoded_instruction_t;
 ```
