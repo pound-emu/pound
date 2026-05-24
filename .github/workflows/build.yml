@@ -1,0 +1,58 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  BUILD_DIR: ${{ github.workspace }}/build
+
+jobs:
+  Build:
+    name: ${{ matrix.os }} / ${{ matrix.type }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ ubuntu-24.04, windows-latest, macos-14 ]
+        type: [ Debug, Release ]
+        include:
+          - os: ubuntu-24.04
+            cc: clang-18
+            cxx: clang++-18
+            flags_debug: "-fsanitize=address,undefined -fno-omit-frame-pointer"
+            deps_cmd: sudo apt-get update && sudo apt-get install -y ninja-build ccache clang-18 libclang-18-dev pkg-config
+
+          - os: windows-latest
+            cc: clang-cl
+            cxx: clang-cl
+            flags_debug: "/Zi /Od -Wno-unknown-argument"
+            deps_cmd: choco install ccache
+
+          - os: macos-14
+            cc: $(brew --prefix llvm@18)/bin/clang
+            cxx: $(brew --prefix llvm@18)/bin/clang++
+            flags_debug: "-fsanitize=address,undefined"
+            deps_cmd: brew install ninja ccache llvm@18
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 1
+
+      - name: Upload Source Code
+        if: matrix.type == 'Release'
+        uses: actions/upload-artifact@v4
+        with:
+          name: do-not-use-${{ matrix.os }}
+          if-no-files-found: ignore
+          path: |
+            src/
+            tools/
