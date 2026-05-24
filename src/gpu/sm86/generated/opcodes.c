@@ -1,7 +1,7 @@
 //! GENERATED_FILE - DO NOT EDIT
 //! Generated with tools/sm86/generate_sm86.py
 
-#include "gpu/sm86/generated/sm86_opcodes.h"
+#include "gpu/sm86/generated/opcodes.h"
 
 // Maps the opcode bits to its enum.
 const sm86_opcode_t g_sm86_opcodes[4096] = {

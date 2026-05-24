@@ -20,7 +20,7 @@ set(SM70_FILE_PATH ${CMAKE_SOURCE_DIR}/tools/sm86/sm70_encode.rs)
 set(OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/src/gpu/sm86/generated/)
 
 add_custom_command(
-        OUTPUT ${CMAKE_SOURCE_DIR}/src/gpu/sm86/generated/sm86_opcodes.h ${CMAKE_SOURCE_DIR}/src/gpu/sm86/generated/sm86_opcodes.c
+        OUTPUT ${CMAKE_SOURCE_DIR}/src/gpu/sm86/generated/opcodes.h ${CMAKE_SOURCE_DIR}/src/gpu/sm86/generated/opcodes.c
         COMMAND Python3::Interpreter ${SCRIPT_GENERATE_SM86} --sm70-encode ${SM70_FILE_PATH} --output-directory ${OUTPUT_DIRECTORY}
         DEPENDS ${SCRIPT_GENERATE_SM86}
 )
@@ -40,6 +40,6 @@ else ()
 endif ()
 
 add_library(${PROJECT_NAME} STATIC
-        src/gpu/sm86/generated/sm86_opcodes.c
+        src/gpu/sm86/generated/opcodes.c
 )
 target_include_directories(${PROJECT_NAME} PRIVATE src/)

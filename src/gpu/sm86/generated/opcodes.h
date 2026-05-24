@@ -99,6 +99,8 @@ typedef enum : uint16_t
     SM86_OPCODE_MAX_INSTRUCTIONS
 } sm86_opcode_t;
 
+extern const sm86_opcode_t g_sm86_opcodes[4096];
+
 #endif // POUND_GPU_SM86_OPCODES_H
 
 /*** end of file ***/

@@ -61,11 +61,12 @@ if __name__ == "__main__":
 
     c_header += "   SM86_OPCODE_MAX_INSTRUCTIONS\n"
     c_header += "} sm86_opcode_t;\n\n"
+    c_header += "extern const sm86_opcode_t g_sm86_opcodes[4096]; \n\n"
     c_header += "#endif // POUND_GPU_SM86_OPCODES_H\n\n"
     c_header += "/*** end of file ***/\n"
     c_source: str = "//! GENERATED_FILE - DO NOT EDIT\n"
     c_source += "//! Generated with tools/sm86/generate_sm86.py\n\n"
-    c_source += "#include \"gpu/sm86/generated/sm86_opcodes.h\" \n\n"
+    c_source += "#include \"gpu/sm86/generated/opcodes.h\" \n\n"
     c_source += "// Maps the opcode bits to its enum.\n"
     c_source += "const sm86_opcode_t g_sm86_opcodes[4096] =\n{\n"
     lut: list[str] = ["    SM86_OPCODE_NOP"] * 4096
@@ -81,8 +82,8 @@ if __name__ == "__main__":
     c_source += "};\n\n"
     c_source += "/*** end of file ***/\n"
 
-    c_header_path: str = output_directory + "sm86_opcodes.h"
-    c_source_path: str = output_directory + "sm86_opcodes.c"
+    c_header_path: str = output_directory + "opcodes.h"
+    c_source_path: str = output_directory + "opcodes.c"
 
     with open(c_header_path, "w") as file:
         file.write(c_header)
