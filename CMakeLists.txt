@@ -28,7 +28,7 @@ add_custom_command(
 if (MSVC)
     add_compile_definitions(_CRT_SECURE_NO_WARNINGS)
 else ()
-    set(BALLISTIC_COMPILER_OPTIONS_UNIX
+    set(POUND_COMPILER_OPTIONS_UNIX
             -Wall -Wextra -Werror
             -Wconversion -Wsign-conversion -Wshadow
             -Wstrict-prototypes -Wmissing-prototypes
@@ -44,3 +44,11 @@ add_library(${PROJECT_NAME} STATIC
         src/gpu/sm86/generated/opcodes.c
 )
 target_include_directories(${PROJECT_NAME} PRIVATE src/)
+
+
+if (WIN32)
+    # Disable some Windows SDK deprecation warnings
+    target_compile_options(${PROJECT_NAME} PRIVATE -DNOMINMAX -DWIN32_LEAN_AND_MEAN)
+else ()
+    target_compile_options(${PROJECT_NAME} PRIVATE ${POUND_COMPILER_OPTIONS_UNIX})
+endif ()
