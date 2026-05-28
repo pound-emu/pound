@@ -1,10 +1,78 @@
 import argparse
 import re
 from collections import defaultdict
-from typing import Any
+from typing import Any, Tuple
 
 DEFAULT_SM70_ENCODE_RS_PATH = "sm70_encode.txt"
 DEFAULT_OUTPUT_DIRECTORY = "../../src/gpu/sm86/generated/"
+
+
+def classify_opcode(opcode_name: str) -> Tuple[str, int, int, int]:
+    """ Returns: (class_enum, has_destination, num_inputs, is_memory)"""
+    class_enum: str = "SM86_CLASS_UNKNOWN"
+    has_destination: int = 1
+    num_inputs: int = 2
+    is_memory: int = 0
+    FLOAT_ALU: set[str] = {"FADD", "FFMA", "FMNMX", "FMUL", "FSET", "FSETP", "FSWZADD", "MUFU", "DADD", "DFMA", "DMUL",
+                           "DSETP",
+                           "F2F", "F2I", "I2F", "FRND"}
+    HALF_FLOAT_ALU: set[str] = {"HADD2", "HFMA2", "HMMA", "HMNMX2", "HMUL2", "HSET2", "HSETP2", "F2FP"}
+    MEMORY_OPS: set[str] = {"LD", "LDC", "LDSM", "LDTRAM", "ST", "ATOM", "REDUX", "MEMBAR", "CCTL", "ALD", "AST"}
+    TEXTURE_OPS: set[str] = {"TEX", "TLD", "TLD4", "TMML", "TXD", "TXQ"}
+    SURFACE_OPS: set[str] = {"SULD", "SUST", "SUATOM"}
+    CONTROL_FLOW: set[str] = {"BRA", "BREAK", "BSSY", "BSYNC", "EXIT", "KILL"}
+    SYNC_OPS: set[str] = {"BAR", "WARPSYNC"}
+
+    if opcode_name in FLOAT_ALU:
+        class_enum = "SM86_CLASS_FLOAT_ALU"
+
+        if opcode_name in {"FFMA", "DFMA"}:
+            num_inputs = 3
+
+        if opcode_name in {"FSETP", "DSETP"}:
+            has_destination = 0
+    elif opcode_name in HALF_FLOAT_ALU:
+        class_enum = "SM86_CLASS_HALF_FLOAT_ALU"
+
+        if opcode_name in {"HFMA2", "HMMA"}:
+            num_inputs = 3
+
+        if opcode_name == "HSETP2":
+            has_destination = 0
+    elif opcode_name in MEMORY_OPS:
+        class_enum = "SM86_CLASS_MEMORY_LOAD_STORE"
+        is_memory = 1
+
+        if opcode_name in {"ST", "MEMBAR", "CCTL"}:
+            has_destination = 0
+    elif opcode_name in TEXTURE_OPS:
+        class_enum = "SM86_CLASS_TEXTURE_FETCH"
+        is_memory = 1
+    elif opcode_name in SURFACE_OPS:
+        class_enum = "SM86_CLASS_SURFACE_ATOMIC"
+        is_memory = 1
+
+        if opcode_name == "SUST":
+            has_destination = 0
+    elif opcode_name in CONTROL_FLOW:
+        class_enum = "SM86_CLASS_CONTROL_FLOW"
+        has_destination = 0
+        num_inputs = 0
+    elif opcode_name in SYNC_OPS:
+        class_enum = "SM86_CLASS_SYNC_AND_YIELD"
+        has_destination = 0
+        num_inputs = 0
+    else:
+        class_enum = "SM86_CLASS_INT_ALU"
+
+        if opcode_name in {"IADD3", "IADD3X", "IMAD", "IMAD64", "LOP3", "PLOP3"}:
+            num_inputs = 3
+
+        if opcode_name in {"ISETP"}:
+            has_destination = 0
+
+    return class_enum, has_destination, num_inputs, is_memory
+
 
 if __name__ == "__main__":
     parser: argparse.ArgumentParser = argparse.ArgumentParser(description="Generate SM86 definitions")
@@ -63,10 +131,11 @@ if __name__ == "__main__":
     c_header += "} sm86_opcode_t;\n\n"
     c_header += "extern const sm86_opcode_t g_sm86_opcodes_bits_to_enum[4096]; \n\n"
     c_header += "#endif // POUND_GPU_SM86_OPCODES_H\n\n"
-    c_header += "/*** end of file ***/\n"
+    c_header += "/*** end of file ***/\n\n"
     c_source: str = "//! GENERATED_FILE - DO NOT EDIT\n"
     c_source += "//! Generated with tools/sm86/generate_sm86.py\n\n"
-    c_source += "#include \"gpu/sm86/generated/opcodes.h\" \n\n"
+    c_source += "#include \"gpu/sm86/decoder.h\"\n"
+    c_source += "#include \"gpu/sm86/generated/opcodes.h\"\n\n"
     c_source += "// Maps the opcode bits to its enum.\n"
     c_source += "const sm86_opcode_t g_sm86_opcodes_bits_to_enum[4096] =\n{\n"
     lut: list[str] = ["    SM86_OPCODE_NOP"] * 4096
@@ -80,8 +149,19 @@ if __name__ == "__main__":
             c_source += f"    [0x{i:03x}] = {lut[i]},\n"
 
     c_source += "};\n\n"
-    c_source += "/*** end of file ***/\n"
+    c_source += "// Maps the opcode enum to its metadata\n"
+    c_source += "const sm86_instruction_metadata_t g_sm86_opcode_metadata[SM86_OPCODE_MAX_INSTRUCTIONS] =\n{\n"
+    c_source += f"    [SM86_OPCODE_NOP] = {{ SM86_CLASS_UNKNOWN, 0, 0, 0}},\n"
 
+    for opcode_name in sorted(opcodes.keys()):
+        if opcode_name == "NOP":
+            continue
+
+        class_name, has_destination, num_inputs, is_memory = classify_opcode(opcode_name)
+        c_source += f"    [SM86_OPCODE_{opcode_name}] ={{ {class_name}, {has_destination}, {num_inputs}, {is_memory} }},\n"
+
+    c_source += "};\n\n"
+    c_source += "/*** end of file ***/\n\n"
     c_header_path: str = output_directory + "opcodes.h"
     c_source_path: str = output_directory + "opcodes.c"
 
