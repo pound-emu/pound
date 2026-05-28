@@ -97,7 +97,8 @@ typedef struct
 
 extern const sm86_instruction_metadata_t g_sm86_opcode_metadata[SM86_OPCODE_MAX_INSTRUCTIONS];
 
-void sm86_decode(const uint32_t raw_hex[4], sm86_decoded_instruction_t *out_instruction);
+void sm86_decode(const sm86_raw_instruction_t *raw_instruction,
+                 sm86_decoded_instruction_t   *out_instruction);
 
 #endif // POUND_GPU_SM86_DECODER_H
 
