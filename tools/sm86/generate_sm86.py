@@ -3,7 +3,7 @@ import re
 from collections import defaultdict
 from typing import Any
 
-DEFAULT_SM70_ENCODE_RS_PATH = "sm70_encode.rs"
+DEFAULT_SM70_ENCODE_RS_PATH = "sm70_encode.txt"
 DEFAULT_OUTPUT_DIRECTORY = "../../src/gpu/sm86/generated/"
 
 if __name__ == "__main__":
