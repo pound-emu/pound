@@ -12,7 +12,7 @@ sm86_decode(const sm86_raw_instruction_t *POUND_RESTRICT raw_instruction,
     const uint32_t word2                  = raw_instruction->high & 0xFFFFFFFFUL;
     const uint32_t word3                  = raw_instruction->high >> 32;
     const uint16_t raw_opcode             = word0 & 0x0FFF;
-    out_instruction->opcode               = g_sm86_opcodes[raw_opcode];
+    out_instruction->opcode               = g_sm86_opcodes_bits_to_enum[raw_opcode];
     out_instruction->form                 = word0 >> 9 & 0x07;
     out_instruction->predicate_register   = word0 >> 12 & 0x07;
     out_instruction->predicate_not        = word0 >> 15 & 0x01;

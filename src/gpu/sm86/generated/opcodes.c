@@ -4,7 +4,7 @@
 #include "gpu/sm86/generated/opcodes.h"
 
 // Maps the opcode bits to its enum.
-const sm86_opcode_t g_sm86_opcodes[4096] = {
+const sm86_opcode_t g_sm86_opcodes_bits_to_enum[4096] = {
     [0x002] = SM86_OPCODE_MOV,     [0x007] = SM86_OPCODE_SEL,      [0x009] = SM86_OPCODE_FMNMX,
     [0x00a] = SM86_OPCODE_FSET,    [0x00b] = SM86_OPCODE_FSETP,    [0x00c] = SM86_OPCODE_ISETP,
     [0x010] = SM86_OPCODE_IADD3X,  [0x011] = SM86_OPCODE_LEAX,     [0x012] = SM86_OPCODE_LOP3,
