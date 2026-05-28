@@ -37,5 +37,38 @@ sm86_decode(const sm86_raw_instruction_t *POUND_RESTRICT raw_instruction,
         out_instruction->source1_register = word1 & 0xFF;
     }
 
-    out_instruction->source2_register = word2 & 0xFF;
+    out_instruction->source2_register           = word2 & 0xFF;
+    const sm86_instruction_metadata_t *metadata = &g_sm86_opcode_metadata[out_instruction->opcode];
+
+    switch (metadata->class)
+    {
+        case SM86_CLASS_FLOAT_ALU:
+        case SM86_CLASS_HALF_FLOAT_ALU:
+            out_instruction->source0_neg = word2 >> 8 & 0x01;
+            out_instruction->source0_abs = word2 >> 9 & 0x01;
+            out_instruction->source1_abs = word1 >> 30 & 0x01;
+            out_instruction->source1_neg = word1 >> 31 & 0x01;
+            out_instruction->saturate    = word2 >> 13 & 0x01;
+            out_instruction->ftz         = word2 >> 16 & 0x01;
+            out_instruction->is_uniform  = word2 >> 27 & 0x01;
+            break;
+        case SM86_CLASS_INT_ALU:
+            out_instruction->source0_neg = word2 >> 8 & 0x01;
+            out_instruction->source1_neg = word1 >> 31 & 0x01;
+            out_instruction->is_uniform  = word2 >> 27 & 0x01;
+            break;
+        case SM86_CLASS_MEMORY_LOAD_STORE:
+        case SM86_CLASS_TEXTURE_FETCH:
+        case SM86_CLASS_SURFACE_ATOMIC:
+        case SM86_CLASS_CONTROL_FLOW:
+            out_instruction->is_uniform = word2 >> 27 & 0x01;
+            break;
+        case SM86_CLASS_SYNC_AND_YIELD:
+            // Handled by the universal barrier bits in word 3.
+            //
+            break;
+        case SM86_CLASS_UNKNOWN:
+        default:
+            break;
+    }
 }

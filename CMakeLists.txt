@@ -16,7 +16,7 @@ project(Pound LANGUAGES C VERSION 0.1.0)
 find_package(Python3 REQUIRED)
 
 set(SCRIPT_GENERATE_SM86 ${CMAKE_SOURCE_DIR}/tools/sm86/generate_sm86.py)
-set(SM70_FILE_PATH ${CMAKE_SOURCE_DIR}/tools/sm86/sm70_encode.rs)
+set(SM70_FILE_PATH ${CMAKE_SOURCE_DIR}/tools/sm86/sm70_encode.txt)
 set(OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/src/gpu/sm86/generated/)
 
 add_custom_command(
