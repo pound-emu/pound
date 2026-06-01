@@ -28,7 +28,13 @@ sm86_decode(const sm86_raw_instruction_t *POUND_RESTRICT raw_instruction,
 
     if (4 == instruction.form)
     {
-        instruction.payload.immediate_value = (int32_t)word1;
+        // Safely cast word1 to int32_t with type punning.
+        const union
+        {
+            uint32_t u;
+            int32_t  i;
+        } pun                               = { .u = word1 };
+        instruction.payload.immediate_value = pun.i;
     }
     else if (5 == instruction.form)
     {
