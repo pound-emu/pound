@@ -14,6 +14,8 @@ static void sm86_execute_iadd3(sm86_warp_t                      *warp,
                                const sm86_decoded_instruction_t *inst,
                                uint32_t                          active_threads);
 
+static void sm86_execute_exit(uint32_t active_threads, uint32_t *out_execution_mask);
+
 void
 sm86_warp_execute(sm86_warp_t *POUND_RESTRICT                      warp,
                   const sm86_decoded_instruction_t *POUND_RESTRICT instructions,
@@ -57,7 +59,10 @@ sm86_warp_execute(sm86_warp_t *POUND_RESTRICT                      warp,
             {
                 case SM86_OPCODE_IADD3:;
                     sm86_execute_iadd3(warp, &inst, active_threads);
-
+                    break;
+                case SM86_OPCODE_EXIT:
+                case SM86_OPCODE_KILL:
+                    sm86_execute_exit(active_threads, &execution_mask);
                     break;
                 default:
                     break;
@@ -241,6 +246,12 @@ sm86_execute_iadd3(sm86_warp_t *POUND_RESTRICT                      warp,
             thread_mask >>= 1;
         }
     }
+}
+
+POUND_HOT static void
+sm86_execute_exit(const uint32_t active_threads, uint32_t *POUND_RESTRICT out_execution_mask)
+{
+    *out_execution_mask &= ~active_threads;
 }
 
 /*** end of file ***/
