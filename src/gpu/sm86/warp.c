@@ -1,5 +1,15 @@
 #include "warp.h"
 
+static const uint32_t *sm86_fetch_source1(const sm86_warp_t *POUND_RESTRICT warp,
+                                          const sm86_decoded_instruction_t *POUND_RESTRICT
+                                                                   instruction,
+                                          uint32_t *POUND_RESTRICT temp_buffer);
+
+static const uint32_t *sm86_fetch_source2(const sm86_warp_t *POUND_RESTRICT warp,
+                                          const sm86_decoded_instruction_t *POUND_RESTRICT
+                                                                   instruction,
+                                          uint32_t *POUND_RESTRICT temp_buffer);
+
 void
 sm86_warp_execute(sm86_warp_t *POUND_RESTRICT                      warp,
                   const sm86_decoded_instruction_t *POUND_RESTRICT instructions,
@@ -65,6 +75,110 @@ sm86_warp_execute(sm86_warp_t *POUND_RESTRICT                      warp,
 
     warp->pc             = pc;
     warp->execution_mask = execution_mask;
+}
+
+/// Resolves source 1 via splatting.
+///
+/// If it's a scalar (Imm, CBuf, or UReg), it broadcasts the value into `temp_buffer` and returns
+/// `temp_buffer`. Otherwise, it returns the direct pointer to the GPR array.
+POUND_HOT static const uint32_t *
+sm86_fetch_source1(const sm86_warp_t *POUND_RESTRICT                warp,
+                   const sm86_decoded_instruction_t *POUND_RESTRICT instruction,
+                   uint32_t *POUND_RESTRICT                         temp_buffer)
+{
+    if (4 == instruction->form) // Imm32
+    {
+        const uint32_t           value  = (uint32_t)instruction->payload.immediate_value;
+        uint32_t *POUND_RESTRICT cursor = temp_buffer;
+
+        for (int i = 0; i < SM86_WARP_SIZE; ++i)
+        {
+            *cursor++ = value;
+        }
+
+        return temp_buffer;
+    }
+
+    if (6 == instruction->form) // UReg
+    {
+        const uint32_t           value  = warp->uniform_gprs[instruction->source1_register];
+        uint32_t *POUND_RESTRICT cursor = temp_buffer;
+
+        for (int i = 0; i < SM86_WARP_SIZE; ++i)
+        {
+            *cursor++ = value;
+        }
+
+        return temp_buffer;
+    }
+
+    if (5 == instruction->form) // CBuf
+    {
+        // TODO: Read from Constant Buffer Memory.
+        const uint32_t           value  = 0;
+        uint32_t *POUND_RESTRICT cursor = temp_buffer;
+
+        for (int i = 0; i < SM86_WARP_SIZE; ++i)
+        {
+            *cursor++ = value;
+        }
+
+        return temp_buffer;
+    }
+
+    return warp->gprs[instruction->source1_register];
+}
+
+/// Resolves source 2 via splatting.
+///
+/// If it's a scalar (Imm, CBuf, or UReg), it broadcasts the value into `temp_buffer` and returns
+/// `temp_buffer`. Otherwise, it returns the direct pointer to the GPR array.
+POUND_HOT static const uint32_t *
+sm86_fetch_source2(const sm86_warp_t *POUND_RESTRICT                warp,
+                   const sm86_decoded_instruction_t *POUND_RESTRICT instruction,
+                   uint32_t *POUND_RESTRICT                         temp_buffer)
+{
+    if (2 == instruction->form) // Imm32
+    {
+        const uint32_t           value  = (uint32_t)instruction->payload.immediate_value;
+        uint32_t *POUND_RESTRICT cursor = temp_buffer;
+
+        for (int i = 0; i < SM86_WARP_SIZE; ++i)
+        {
+            *cursor++ = value;
+        }
+
+        return temp_buffer;
+    }
+
+    if (7 == instruction->form) // UReg
+    {
+        const uint32_t           value  = warp->uniform_gprs[instruction->source2_register];
+        uint32_t *POUND_RESTRICT cursor = temp_buffer;
+
+        for (int i = 0; i < SM86_WARP_SIZE; ++i)
+        {
+            *cursor++ = value;
+        }
+
+        return temp_buffer;
+    }
+
+    if (3 == instruction->form) // CBuf
+    {
+        // TODO: Read from Constant Buffer Memory.
+        const uint32_t           value  = 0;
+        uint32_t *POUND_RESTRICT cursor = temp_buffer;
+
+        for (int i = 0; i < SM86_WARP_SIZE; ++i)
+        {
+            *cursor++ = value;
+        }
+
+        return temp_buffer;
+    }
+
+    return warp->gprs[instruction->source2_register];
 }
 
 /*** end of file ***/
