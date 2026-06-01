@@ -1,5 +1,7 @@
 #include "warp.h"
+#include "cta.h"
 #include <stdbool.h>
+#include <stddef.h>
 
 /// Generates a comparison loop.
 #define SM86_EVAL_CMP(TYPE, OP_SYMBOL)                                   \
@@ -29,6 +31,11 @@ static const uint32_t *sm86_fetch_source2(const sm86_warp_t *POUND_RESTRICT warp
                                           const sm86_decoded_instruction_t *POUND_RESTRICT
                                                                    instruction,
                                           uint32_t *POUND_RESTRICT temp_buffer);
+
+static void sm86_execute_bar(sm86_cta_t                       *cta,
+                             uint32_t                          warp_id,
+                             const sm86_decoded_instruction_t *instruction,
+                             bool                             *yield_execution);
 
 static void sm86_execute_bra(const sm86_decoded_instruction_t *POUND_RESTRICT instruction,
                              uint32_t                                         active_threads,
@@ -66,16 +73,19 @@ static void sm86_execute_ld(sm86_warp_t                      *warp,
 
 static void sm86_execute_exit(uint32_t active_threads, uint32_t *out_execution_mask);
 
-void
-sm86_warp_execute(sm86_warp_t *POUND_RESTRICT                      warp,
+POUND_HOT bool
+sm86_warp_execute(sm86_cta_t *POUND_RESTRICT                       cta,
+                  uint32_t                                         warp_id,
                   const sm86_mmu_t *POUND_RESTRICT                 mmu,
                   const sm86_decoded_instruction_t *POUND_RESTRICT instructions,
                   const uint32_t                                   max_cycles)
 {
-    uint32_t pc                  = warp->pc;
-    uint32_t execution_mask      = warp->execution_mask;
-    uint32_t reconvergence_depth = warp->reconvergence_depth;
-    uint32_t cycles              = 0;
+    sm86_warp_t *POUND_RESTRICT warp                = &cta->warps[warp_id];
+    uint32_t                    pc                  = warp->pc;
+    uint32_t                    execution_mask      = warp->execution_mask;
+    uint32_t                    reconvergence_depth = warp->reconvergence_depth;
+    uint32_t                    cycles              = 0;
+    bool                        yield               = false;
     const sm86_decoded_instruction_t *POUND_RESTRICT instructions_cursor = &instructions[pc];
 
     while (POUND_LIKELY(cycles < max_cycles && execution_mask != 0))
@@ -110,6 +120,9 @@ sm86_warp_execute(sm86_warp_t *POUND_RESTRICT                      warp,
         {
             switch (inst.opcode)
             {
+                case SM86_OPCODE_BAR:
+                    sm86_execute_bar(cta, warp_id, &inst, &yield);
+                    break;
                 case SM86_OPCODE_BRA:
                     sm86_execute_bra(&inst,
                                      active_threads,
@@ -163,6 +176,7 @@ sm86_warp_execute(sm86_warp_t *POUND_RESTRICT                      warp,
     warp->pc                  = pc;
     warp->execution_mask      = execution_mask;
     warp->reconvergence_depth = reconvergence_depth;
+    return 0 == execution_mask;
 }
 
 /// Resolves source 1 via splatting.
@@ -267,6 +281,37 @@ sm86_fetch_source2(const sm86_warp_t *POUND_RESTRICT                warp,
     }
 
     return warp->gprs[instruction->source2_register];
+}
+
+POUND_HOT void
+sm86_execute_bar(sm86_cta_t *POUND_RESTRICT                       cta,
+                 const uint32_t                                   warp_id,
+                 const sm86_decoded_instruction_t *POUND_RESTRICT instruction,
+                 bool *POUND_RESTRICT                             yield_execution)
+{
+    // TODO: Also check source0 for bar id.
+    const uint32_t bar_id = instruction->payload.immediate_value & 0x0F;
+    cta->barrier_arrival_mask[bar_id] |= 1U << warp_id;
+
+    if (cta->barrier_arrival_mask[bar_id] == cta->barrier_expected_mask[bar_id])
+    {
+        const uint32_t release_mask = cta->barrier_expected_mask[bar_id];
+
+        for (int i = 0; i < SM86_MAX_WARPS_PER_CTA; ++i)
+        {
+            if (release_mask & (1U << i))
+            {
+                cta->warp_states[i] = SM86_WARP_STATE_READY;
+            }
+        }
+
+        cta->barrier_arrival_mask[bar_id] = 0;
+    }
+    else
+    {
+        cta->warp_states[warp_id] = SM86_WARP_STATE_BLOCKED;
+        *yield_execution          = true;
+    }
 }
 
 POUND_HOT static void

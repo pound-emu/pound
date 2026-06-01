@@ -3,6 +3,8 @@
 
 #include "attributes.h"
 #include "decoder.h"
+#include "mmu.h"
+#include <stdbool.h>
 #include <stdint.h>
 
 #define SM86_WARP_SIZE                32
@@ -10,6 +12,8 @@
 #define SM86_MAX_UGPRS                64
 #define SM86_MAX_PREDICATES           8
 #define SM86_RECONVERGENCE_STACK_SIZE 32
+
+typedef struct sm86_cta_t sm86_cta_t;
 
 typedef enum
 {
@@ -43,7 +47,9 @@ typedef struct POUND_ALIGNED(64)
     sm86_reconvergence_token_t reconvergence_stack[SM86_RECONVERGENCE_STACK_SIZE];
 } sm86_warp_t;
 
-POUND_HOT void sm86_warp_execute(sm86_warp_t                      *warp,
+POUND_HOT bool sm86_warp_execute(sm86_cta_t                       *cta,
+                                 uint32_t                          warp_id,
+                                 const sm86_mmu_t                 *mmu,
                                  const sm86_decoded_instruction_t *instructions,
                                  uint32_t                          max_cycles);
 
