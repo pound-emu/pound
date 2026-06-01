@@ -44,36 +44,26 @@ extern "C"
         //      3 = CBuf
         uint8_t form : 4;
 
-    uint8_t source0_neg : 1; // -src0
-    uint8_t source0_abs : 1; // |src0|
-    uint8_t source1_neg : 1; // -src1
-    uint8_t source1_abs : 1; // |src1|
-    uint8_t saturate : 1;    // .SAT (Clamp to 0.0 - 1.0)
-    uint8_t ftz : 1;         // .FTZ (Flush to zero)
-    uint8_t is_uniform : 1;  // True if Uniform ALU (UGPR)
-    uint8_t cmp_type : 1;
-        uint8_t source0_neg : 1; // -src0
-        uint8_t source0_abs : 1; // |src0|
-        uint8_t source1_neg : 1; // -src1
-        uint8_t source1_abs : 1; // |src1|
-        uint8_t saturate : 1;    // .SAT (Clamp to 0.0 - 1.0)
-        uint8_t ftz : 1;         // .FTZ (Flush to zero)
-        uint8_t is_uniform : 1;  // True if Uniform ALU (UGPR)
+        uint8_t  source0_neg : 1;   // -src0
+        uint8_t  source0_abs : 1;   // |src0|
+        uint8_t  source1_neg : 1;   // -src1
+        uint8_t  source1_abs : 1;   // |src1|
+        uint8_t  saturate : 1;      // .SAT (Clamp to 0.0 - 1.0)
+        uint8_t  ftz : 1;           // .FTZ (Flush to zero)
+        uint8_t  is_uniform : 1;    // True if Uniform ALU (UGPR)
+        uint8_t  extended_math : 1; // .X
+        uint16_t padding : 11;
+        uint8_t  cmp_type : 1;
 
-    uint8_t  delay_cycles : 4;  // Cycles to stall before executing.
-    uint8_t  yield_flag : 1;    // True if warp can yield to scheduler.
-    uint8_t  read_barrier : 3;  // Wait on read barrier index.
-    uint8_t  write_barrier : 3; // Set write barrier index.
-    uint16_t cmp_operator : 3;
-    uint16_t bool_operator : 2;
         uint8_t  delay_cycles : 4;  // Cycles to stall before executing.
         uint8_t  yield_flag : 1;    // True if warp can yield to scheduler.
         uint8_t  read_barrier : 3;  // Wait on read barrier index.
         uint8_t  write_barrier : 3; // Set write barrier index.
+        uint16_t cmp_operator : 3;
+        uint16_t bool_operator : 2;
 
-    uint16_t accumulator_predicate : 3;
-    uint16_t accumulator_predicate_not : 1;
-    uint16_t padding : 12;
+        uint16_t accumulator_predicate : 3;
+        uint16_t accumulator_predicate_not : 1;
 
         // An instruction cannot use an immediate and a constant buffer at the same time.
         //

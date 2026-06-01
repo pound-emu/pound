@@ -63,9 +63,10 @@ sm86_decode(const sm86_raw_instruction_t *POUND_RESTRICT raw_instruction,
             instruction.is_uniform  = word2 >> 27 & 0x01;
             break;
         case SM86_CLASS_INT_ALU:
-            instruction.source0_neg = word2 >> 8 & 0x01;
-            instruction.source1_neg = word1 >> 31 & 0x01;
-            instruction.is_uniform  = word2 >> 27 & 0x01;
+            instruction.source0_neg   = word2 >> 8 & 0x01;
+            instruction.source1_neg   = word1 >> 31 & 0x01;
+            instruction.is_uniform    = word2 >> 27 & 0x01;
+            instruction.extended_math = word2 >> 10 & 0x01;
 
             if (SM86_OPCODE_ISETP == instruction.opcode)
             {
