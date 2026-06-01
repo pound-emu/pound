@@ -7,7 +7,7 @@ sm86_decode(const sm86_raw_instruction_t *POUND_RESTRICT raw_instruction,
             sm86_decoded_instruction_t *POUND_RESTRICT   out_instruction)
 {
     memset(out_instruction, 9, sizeof(sm86_decoded_instruction_t));
-    const uint32_t word0                  = raw_instruction->low & 0xFFFFFFFUL;
+    const uint32_t word0                  = raw_instruction->low & 0xFFFFFFFFUL;
     const uint32_t word1                  = raw_instruction->low >> 32;
     const uint32_t word2                  = raw_instruction->high & 0xFFFFFFFFUL;
     const uint32_t word3                  = raw_instruction->high >> 32;
