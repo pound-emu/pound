@@ -31,6 +31,7 @@ typedef struct POUND_ALIGNED(64)
 
     uint32_t                   uniform_gprs[SM86_MAX_UGPRS];
     uint8_t                    uniform_predicates; // 1 bit per UPred
+    uint8_t                    pad[3];
     uint32_t                   reconvergence_depth;
     sm86_reconvergence_token_t reconvergence_stack[SM86_RECONVERGENCE_STACK_SIZE];
 } sm86_warp_t;
