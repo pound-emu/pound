@@ -50,7 +50,7 @@ sm86_decode(const sm86_raw_instruction_t *POUND_RESTRICT raw_instruction,
     const sm86_instruction_metadata_t *POUND_RESTRICT metadata
         = &g_sm86_opcode_metadata[instruction.opcode];
 
-    switch (metadata->class)
+    switch (metadata->instruction_class)
     {
         case SM86_CLASS_FLOAT_ALU:
         case SM86_CLASS_HALF_FLOAT_ALU:
