@@ -107,6 +107,11 @@ if __name__ == "__main__":
             continue
 
         opcode_name: str = name_match.group(1).upper()
+
+        # This will be handled manually in Pound.
+        if opcode_name == "IADD3X":
+            continue
+
         hex_matches: list[str] = hex_pattern.findall(chunk)
 
         for hex_str in hex_matches:
