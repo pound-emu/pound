@@ -83,7 +83,8 @@ sm86_decode(const sm86_raw_instruction_t *POUND_RESTRICT raw_instruction,
         case SM86_CLASS_TEXTURE_FETCH:
         case SM86_CLASS_SURFACE_ATOMIC:
         case SM86_CLASS_CONTROL_FLOW:
-            instruction.is_uniform = word2 >> 27 & 0x01;
+            instruction.is_uniform            = word2 >> 27 & 0x01;
+            instruction.payload.memory_offset = (int32_t)word1 >> 8;
             break;
         case SM86_CLASS_SYNC_AND_YIELD:
             // Handled by the universal barrier bits in word 3.

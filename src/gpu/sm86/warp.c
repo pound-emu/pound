@@ -59,10 +59,16 @@ static void sm86_execute_isetp(sm86_warp_t                      *warp,
                                const sm86_decoded_instruction_t *instruction,
                                uint32_t                          active_threads);
 
+static void sm86_execute_ld(sm86_warp_t                      *warp,
+                            const sm86_mmu_t                 *mmu,
+                            const sm86_decoded_instruction_t *instruction,
+                            uint32_t                          active_threads);
+
 static void sm86_execute_exit(uint32_t active_threads, uint32_t *out_execution_mask);
 
 void
 sm86_warp_execute(sm86_warp_t *POUND_RESTRICT                      warp,
+                  const sm86_mmu_t *POUND_RESTRICT                 mmu,
                   const sm86_decoded_instruction_t *POUND_RESTRICT instructions,
                   const uint32_t                                   max_cycles)
 {
@@ -127,6 +133,9 @@ sm86_warp_execute(sm86_warp_t *POUND_RESTRICT                      warp,
                     break;
                 case SM86_OPCODE_ISETP:
                     sm86_execute_isetp(warp, &inst, active_threads);
+                    break;
+                case SM86_OPCODE_LD:
+                    sm86_execute_ld(warp, mmu, &inst, active_threads);
                     break;
                 case SM86_OPCODE_EXIT:
                 case SM86_OPCODE_KILL:
@@ -503,6 +512,49 @@ sm86_execute_isetp(sm86_warp_t *POUND_RESTRICT                      warp,
     uint32_t old_destination = warp->predicates[instruction->destination_register];
     warp->predicates[instruction->destination_register]
         = (old_destination & ~active_threads) | (final_mask & active_threads);
+}
+
+POUND_HOT static void
+sm86_execute_ld(sm86_warp_t *POUND_RESTRICT                      warp,
+                const sm86_mmu_t *POUND_RESTRICT                 mmu,
+                const sm86_decoded_instruction_t *POUND_RESTRICT instruction,
+                uint32_t                                         active_threads)
+{
+    uint32_t *POUND_RESTRICT destination_cursor  = warp->gprs[instruction->destination_register];
+    const uint32_t *POUND_RESTRICT offset_cursor = warp->gprs[instruction->source0_register];
+    const uint32_t                 base_low = warp->uniform_gprs[instruction->source1_register];
+    const uint32_t base_high                = warp->uniform_gprs[instruction->source1_register + 1];
+    const uint64_t base_address             = (uint64_t)base_high << 32 | base_low;
+    const uint64_t base_plus_immediate
+        = base_address + (uint64_t)instruction->payload.memory_offset;
+
+    uint32_t thread_mask = active_threads;
+
+    for (int i = 0; i < SM86_WARP_SIZE; ++i)
+    {
+        const uint32_t thread_offset = *offset_cursor++;
+
+        if (thread_mask & 1)
+        {
+            const uint64_t virtual_address = base_plus_immediate + thread_offset;
+            const uint32_t page_index = (virtual_address >> SM86_PAGE_SHIFT) & (SM86_PAGE_MAX - 1);
+            uint8_t       *host_page  = mmu->host_pages[page_index];
+
+            if (POUND_LIKELY(host_page != NULL))
+            {
+                const uint32_t page_offset = virtual_address & SM86_PAGE_MASK;
+                *destination_cursor        = *(uint32_t *)(host_page + page_offset);
+            }
+            else
+            {
+                // Unmapped memory / Page fault.
+                *destination_cursor = 0;
+            }
+        }
+
+        ++destination_cursor;
+        thread_mask >>= 1;
+    }
 }
 
 POUND_HOT static void

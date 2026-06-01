@@ -73,15 +73,8 @@ extern "C"
             //
             int32_t immediate_value;
 
-        // form == 5.
-        //
-        struct
-        {
-            uint16_t byte_offset;
-            uint8_t  binding_index;
-            uint8_t  padding;
-        } constant_buffer;
-    } payload;
+            // 24-bit sign-extended offset for LD/ST.
+            int32_t memory_offset;
 
             // form == 5.
             //
