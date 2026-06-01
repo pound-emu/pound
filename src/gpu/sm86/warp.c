@@ -1,6 +1,25 @@
 #include "warp.h"
 #include <stdbool.h>
 
+/// Generates a comparison loop.
+#define SM86_EVAL_CMP(TYPE, OP_SYMBOL)                                   \
+    do                                                                   \
+    {                                                                    \
+        const uint32_t *POUND_RESTRICT source0_current = source0_cursor; \
+        const uint32_t *POUND_RESTRICT source1_current = source1_cursor; \
+        uint32_t                       t_mask          = thread_mask;    \
+        for (int i = 0; i < SM86_WARP_SIZE; ++i)                         \
+        {                                                                \
+            TYPE source0 = (TYPE) * source0_current++;                   \
+            TYPE source1 = (TYPE) * source1_current++;                   \
+            if ((t_mask & 1) && (source0 OP_SYMBOL source1))             \
+            {                                                            \
+                cmp_result_mask |= 1U << i;                              \
+            }                                                            \
+            t_mask >>= 1;                                                \
+        }                                                                \
+    } while (0)
+
 static const uint32_t *sm86_fetch_source1(const sm86_warp_t *POUND_RESTRICT warp,
                                           const sm86_decoded_instruction_t *POUND_RESTRICT
                                                                    instruction,
@@ -34,6 +53,10 @@ static void sm86_execute_bsync(uint32_t                          current_pc,
 
 static void sm86_execute_iadd3(sm86_warp_t                      *warp,
                                const sm86_decoded_instruction_t *inst,
+                               uint32_t                          active_threads);
+
+static void sm86_execute_isetp(sm86_warp_t                      *warp,
+                               const sm86_decoded_instruction_t *instruction,
                                uint32_t                          active_threads);
 
 static void sm86_execute_exit(uint32_t active_threads, uint32_t *out_execution_mask);
@@ -101,6 +124,9 @@ sm86_warp_execute(sm86_warp_t *POUND_RESTRICT                      warp,
                         pc, &execution_mask, warp->reconvergence_stack, &reconvergence_depth);
                 case SM86_OPCODE_IADD3:;
                     sm86_execute_iadd3(warp, &inst, active_threads);
+                    break;
+                case SM86_OPCODE_ISETP:
+                    sm86_execute_isetp(warp, &inst, active_threads);
                     break;
                 case SM86_OPCODE_EXIT:
                 case SM86_OPCODE_KILL:
@@ -373,6 +399,110 @@ sm86_execute_iadd3(sm86_warp_t *POUND_RESTRICT                      warp,
             thread_mask >>= 1;
         }
     }
+}
+
+POUND_HOT void
+sm86_execute_isetp(sm86_warp_t *POUND_RESTRICT                      warp,
+                   const sm86_decoded_instruction_t *POUND_RESTRICT instruction,
+                   uint32_t                                         active_threads)
+{
+    POUND_ALIGNED(64) uint32_t     temp_source1[SM86_WARP_SIZE];
+    const uint32_t *POUND_RESTRICT source0_cursor = warp->gprs[instruction->source0_register];
+    const uint32_t *POUND_RESTRICT source1_cursor
+        = sm86_fetch_source1(warp, instruction, temp_source1);
+    uint32_t thread_mask     = active_threads;
+    uint32_t cmp_result_mask = 0;
+
+    if (0 == instruction->cmp_type) // .U32
+    {
+        switch (instruction->cmp_operator)
+        {
+            case 0:
+                break; // False
+            case 1:
+                SM86_EVAL_CMP(uint32_t, <);
+                break;
+            case 2:
+                SM86_EVAL_CMP(uint32_t, ==);
+                break;
+            case 3:
+                SM86_EVAL_CMP(uint32_t, <=);
+                break;
+            case 4:
+                SM86_EVAL_CMP(uint32_t, >);
+                break;
+            case 5:
+                SM86_EVAL_CMP(uint32_t, !=);
+                break;
+            case 6:
+                SM86_EVAL_CMP(uint32_t, >=);
+                break;
+            case 7:
+                cmp_result_mask = thread_mask;
+                break; // True
+            default:
+                break;
+        }
+    }
+    else // .I32
+    {
+        switch (instruction->cmp_operator)
+        {
+            case 0:
+                break; // False
+            case 1:
+                SM86_EVAL_CMP(int32_t, <);
+                break;
+            case 2:
+                SM86_EVAL_CMP(int32_t, ==);
+                break;
+            case 3:
+                SM86_EVAL_CMP(int32_t, <=);
+                break;
+            case 4:
+                SM86_EVAL_CMP(int32_t, >);
+                break;
+            case 5:
+                SM86_EVAL_CMP(int32_t, !=);
+                break;
+            case 6:
+                SM86_EVAL_CMP(int32_t, >=);
+                break;
+            case 7:
+                cmp_result_mask = thread_mask;
+                break; // True
+            default:
+                break;
+        }
+    }
+
+    uint32_t accumulator_mask = warp->predicates[instruction->accumulator_predicate];
+
+    if (instruction->accumulator_predicate_not)
+    {
+        accumulator_mask = ~accumulator_mask;
+    }
+
+    uint32_t final_mask = 0;
+
+    switch (instruction->bool_operator)
+    {
+        case 0:
+            final_mask = cmp_result_mask & accumulator_mask;
+            break; // AND
+        case 1:
+            final_mask = cmp_result_mask | accumulator_mask;
+            break; // OR
+        case 2:
+            final_mask = cmp_result_mask ^ accumulator_mask;
+            break; // XOR
+        default:
+            break;
+    }
+
+    uint32_t old_destination = warp->predicates[instruction->destination_register];
+    warp->predicates[instruction->destination_register]
+        = (old_destination & ~active_threads) | (final_mask & active_threads);
 }
 
 POUND_HOT static void

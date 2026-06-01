@@ -20,8 +20,12 @@ typedef struct
 {
     uint16_t opcode;
     uint8_t  destination_register;
-    uint8_t  predicate_register : 3;
-    uint8_t  predicate_not : 1;
+    uint8_t  source0_register;
+    uint8_t  source1_register;
+    uint8_t  source2_register;
+
+    uint8_t predicate_register : 3;
+    uint8_t predicate_not : 1;
 
     // Src1:
     //      1 = Reg
@@ -35,10 +39,6 @@ typedef struct
     //      3 = CBuf
     uint8_t form : 4;
 
-    uint8_t source0_register;
-    uint8_t source1_register;
-    uint8_t source2_register;
-
     uint8_t source0_neg : 1; // -src0
     uint8_t source0_abs : 1; // |src0|
     uint8_t source1_neg : 1; // -src1
@@ -46,7 +46,18 @@ typedef struct
     uint8_t saturate : 1;    // .SAT (Clamp to 0.0 - 1.0)
     uint8_t ftz : 1;         // .FTZ (Flush to zero)
     uint8_t is_uniform : 1;  // True if Uniform ALU (UGPR)
-    uint8_t padding : 1;
+    uint8_t cmp_type : 1;
+
+    uint8_t  delay_cycles : 4;  // Cycles to stall before executing.
+    uint8_t  yield_flag : 1;    // True if warp can yield to scheduler.
+    uint8_t  read_barrier : 3;  // Wait on read barrier index.
+    uint8_t  write_barrier : 3; // Set write barrier index.
+    uint16_t cmp_operator : 3;
+    uint16_t bool_operator : 2;
+
+    uint16_t accumulator_predicate : 3;
+    uint16_t accumulator_predicate_not : 1;
+    uint16_t padding : 12;
 
     // An instruction cannot use an immediate and a constant buffer at the same time.
     //
@@ -66,10 +77,6 @@ typedef struct
         } constant_buffer;
     } payload;
 
-    uint8_t delay_cycles;  // Cycles to stall before executing.
-    uint8_t yield_flag;    // True if warp can yield to scheduler.
-    uint8_t read_barrier;  // Wait on read barrier index.
-    uint8_t write_barrier; // Set write barrier index.
 } sm86_decoded_instruction_t;
 
 static_assert(sizeof(sm86_decoded_instruction_t) == 16, "Struct must be 16 bytes or less");

@@ -66,6 +66,17 @@ sm86_decode(const sm86_raw_instruction_t *POUND_RESTRICT raw_instruction,
             instruction.source0_neg = word2 >> 8 & 0x01;
             instruction.source1_neg = word1 >> 31 & 0x01;
             instruction.is_uniform  = word2 >> 27 & 0x01;
+
+            if (SM86_OPCODE_ISETP == instruction.opcode)
+            {
+                instruction.cmp_type                  = word2 >> 9 & 0x01;
+                instruction.bool_operator             = word2 >> 10 & 0x03;
+                instruction.cmp_operator              = word2 >> 12 & 0x07;
+                instruction.destination_register      = word2 >> 17 & 0x07;
+                instruction.accumulator_predicate     = word2 >> 23 & 0x07;
+                instruction.accumulator_predicate_not = word2 >> 26 & 0x01;
+            }
+
             break;
         case SM86_CLASS_MEMORY_LOAD_STORE:
         case SM86_CLASS_TEXTURE_FETCH:
