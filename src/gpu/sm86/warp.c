@@ -10,9 +10,9 @@ static const uint32_t *sm86_fetch_source2(const sm86_warp_t *POUND_RESTRICT warp
                                                                    instruction,
                                           uint32_t *POUND_RESTRICT temp_buffer);
 
-void sm86_execute_iadd3(sm86_warp_t                      *warp,
-                        const sm86_decoded_instruction_t *inst,
-                        uint32_t                          active_threads);
+static void sm86_execute_iadd3(sm86_warp_t                      *warp,
+                               const sm86_decoded_instruction_t *inst,
+                               uint32_t                          active_threads);
 
 void
 sm86_warp_execute(sm86_warp_t *POUND_RESTRICT                      warp,
@@ -177,7 +177,7 @@ sm86_fetch_source2(const sm86_warp_t *POUND_RESTRICT                warp,
     return warp->gprs[instruction->source2_register];
 }
 
-POUND_HOT void
+POUND_HOT static void
 sm86_execute_iadd3(sm86_warp_t *POUND_RESTRICT                      warp,
                    const sm86_decoded_instruction_t *POUND_RESTRICT inst,
                    const uint32_t                                   active_threads)
