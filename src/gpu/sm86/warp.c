@@ -37,29 +37,66 @@ sm86_warp_execute(sm86_warp_t *POUND_RESTRICT                      warp,
             switch (inst.opcode)
             {
                 case SM86_OPCODE_IADD3:;
-                    uint32_t *POUND_RESTRICT destination_cursor
-                        = warp->gprs[inst.destination_register];
-                    const uint32_t *POUND_RESTRICT source0_cursor
-                        = warp->gprs[inst.source0_register];
-                    const uint32_t *POUND_RESTRICT source1_cursor
-                        = warp->gprs[inst.source1_register];
-                    const uint32_t *POUND_RESTRICT source2_cursor
-                        = warp->gprs[inst.source2_register];
-                    uint32_t thread_mask = active_threads;
-
-                    for (int i = 0; i < SM86_WARP_SIZE; ++i)
+                    if (POUND_UNLIKELY(inst.is_uniform))
                     {
-                        const uint32_t source0 = *source0_cursor++;
-                        const uint32_t source1 = *source1_cursor++;
-                        const uint32_t source2 = *source2_cursor++;
+                        const uint32_t source0 = warp->uniform_gprs[inst.source0_register];
+                        uint32_t       source1 = 0;
 
-                        if (thread_mask & 1)
+                        if (4 == inst.form)
                         {
-                            *destination_cursor = source0 + source1 + source2;
+                            source1 = (uint32_t)inst.payload.immediate_value;
+                        }
+                        else if (1 == inst.form)
+                        {
+                            source1 = warp->uniform_gprs[inst.source1_register];
+                        }
+                        else
+                        {
                         }
 
-                        ++destination_cursor;
-                        thread_mask >>= 1;
+                        uint32_t source2 = 0;
+
+                        if (2 == inst.form)
+                        {
+                            source2 = (uint32_t)inst.payload.immediate_value;
+                        }
+                        else
+                        {
+                            source2 = warp->uniform_gprs[inst.source2_register];
+                        }
+
+                        warp->uniform_gprs[inst.destination_register] = source0 + source1 + source2;
+                    }
+                    else
+                    {
+                        // Allocate 128 bytes on the stack for splatting.
+                        POUND_ALIGNED(64) uint32_t temp_source1[SM86_WARP_SIZE];
+                        POUND_ALIGNED(64) uint32_t temp_source2[SM86_WARP_SIZE];
+
+                        uint32_t *POUND_RESTRICT destination_cursor
+                            = warp->gprs[inst.destination_register];
+                        const uint32_t *POUND_RESTRICT source0_cursor
+                            = warp->gprs[inst.source0_register];
+                        const uint32_t *POUND_RESTRICT source1_cursor
+                            = sm86_fetch_source1(warp, &inst, temp_source1);
+                        const uint32_t *POUND_RESTRICT source2_cursor
+                            = sm86_fetch_source2(warp, &inst, temp_source2);
+                        uint32_t thread_mask = active_threads;
+
+                        for (int i = 0; i < SM86_WARP_SIZE; ++i)
+                        {
+                            const uint32_t source0 = *source0_cursor++;
+                            const uint32_t source1 = *source1_cursor++;
+                            const uint32_t source2 = *source2_cursor++;
+
+                            if (thread_mask & 1)
+                            {
+                                *destination_cursor = source0 + source1 + source2;
+                            }
+
+                            ++destination_cursor;
+                            thread_mask >>= 1;
+                        }
                     }
 
                     break;
