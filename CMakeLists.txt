@@ -45,6 +45,7 @@ add_library(${PROJECT_NAME} STATIC
         src/gpu/sm86/generated/opcodes.c
         src/gpu/sm86/cta.c
         src/gpu/sm86/warp.c
+        src/gpu/engine.c
 )
 target_include_directories(${PROJECT_NAME} PRIVATE src/)
 
