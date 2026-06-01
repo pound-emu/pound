@@ -27,6 +27,11 @@ static void sm86_execute_bssy(const sm86_decoded_instruction_t *instruction,
                               sm86_reconvergence_token_t       *stack,
                               uint32_t                         *depth);
 
+static void sm86_execute_bsync(uint32_t                          current_pc,
+                               uint32_t                         *out_execution_mask,
+                               const sm86_reconvergence_token_t *stack,
+                               uint32_t                         *depth);
+
 static void sm86_execute_iadd3(sm86_warp_t                      *warp,
                                const sm86_decoded_instruction_t *inst,
                                uint32_t                          active_threads);
@@ -91,6 +96,9 @@ sm86_warp_execute(sm86_warp_t *POUND_RESTRICT                      warp,
                     sm86_execute_bssy(
                         &inst, pc, execution_mask, warp->reconvergence_stack, &reconvergence_depth);
                     break;
+                case SM86_OPCODE_BSYNC:
+                    sm86_execute_bsync(
+                        pc, &execution_mask, warp->reconvergence_stack, &reconvergence_depth);
                 case SM86_OPCODE_IADD3:;
                     sm86_execute_iadd3(warp, &inst, active_threads);
                     break;
@@ -277,6 +285,28 @@ sm86_execute_bssy(const sm86_decoded_instruction_t *POUND_RESTRICT instruction,
     stack[d].active_mask     = current_execution_mask;
     stack[d].type            = SM86_TOKEN_SYNC;
     *depth                   = d + 1;
+}
+
+POUND_HOT void
+sm86_execute_bsync(const uint32_t                                   current_pc,
+                   uint32_t *POUND_RESTRICT                         out_execution_mask,
+                   const sm86_reconvergence_token_t *POUND_RESTRICT stack,
+                   uint32_t *POUND_RESTRICT                         depth)
+{
+    uint32_t d = *depth;
+
+    if (POUND_LIKELY(d > 0 && SM86_TOKEN_SYNC == stack[d - 1].type
+                     && stack[d - 1].pc == current_pc))
+    {
+        // We are at the LAST divergent path to reach the sync point.
+        *out_execution_mask = stack[d - 1].active_mask;
+        *depth              = d - 1;
+    }
+    else
+    {
+        // We are an EARLY divergent path. Yield execution by wiping the active mask.
+        *out_execution_mask = 0;
+    }
 }
 
 POUND_HOT static void
