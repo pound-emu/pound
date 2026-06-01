@@ -1,4 +1,5 @@
 #include "warp.h"
+#include <stdbool.h>
 
 static const uint32_t *sm86_fetch_source1(const sm86_warp_t *POUND_RESTRICT warp,
                                           const sm86_decoded_instruction_t *POUND_RESTRICT
@@ -9,6 +10,16 @@ static const uint32_t *sm86_fetch_source2(const sm86_warp_t *POUND_RESTRICT warp
                                           const sm86_decoded_instruction_t *POUND_RESTRICT
                                                                    instruction,
                                           uint32_t *POUND_RESTRICT temp_buffer);
+
+static void sm86_execute_bra(const sm86_decoded_instruction_t *POUND_RESTRICT instruction,
+                             uint32_t                                         active_threads,
+                             uint32_t                                         current_pc,
+                             uint32_t                    current_execution_mask,
+                             uint32_t                   *next_pc,
+                             uint32_t                   *out_execution_mask,
+                             sm86_reconvergence_token_t *stack,
+                             uint32_t                   *depth,
+                             bool                       *branched);
 
 static void sm86_execute_bssy(const sm86_decoded_instruction_t *instruction,
                               uint32_t                          current_pc,
@@ -58,11 +69,24 @@ sm86_warp_execute(sm86_warp_t *POUND_RESTRICT                      warp,
         }
 
         const uint32_t active_threads = execution_mask & predicate_mask;
+        uint32_t       next_pc        = pc + 1;
+        bool           branched       = false;
 
         if (POUND_LIKELY(active_threads != 0))
         {
             switch (inst.opcode)
             {
+                case SM86_OPCODE_BRA:
+                    sm86_execute_bra(&inst,
+                                     active_threads,
+                                     pc,
+                                     execution_mask,
+                                     &next_pc,
+                                     &execution_mask,
+                                     warp->reconvergence_stack,
+                                     &reconvergence_depth,
+                                     &branched);
+                    break;
                 case SM86_OPCODE_BSSY:
                     sm86_execute_bssy(
                         &inst, pc, execution_mask, warp->reconvergence_stack, &reconvergence_depth);
@@ -79,13 +103,23 @@ sm86_warp_execute(sm86_warp_t *POUND_RESTRICT                      warp,
             }
         }
 
-        ++pc;
-        ++instructions_cursor;
+        pc = next_pc;
+
+        if (POUND_UNLIKELY(true == branched || 0 == execution_mask))
+        {
+            instructions_cursor = &instructions[pc];
+        }
+        else
+        {
+            ++instructions_cursor;
+        }
+
         ++cycles;
     }
 
-    warp->pc             = pc;
-    warp->execution_mask = execution_mask;
+    warp->pc                  = pc;
+    warp->execution_mask      = execution_mask;
+    warp->reconvergence_depth = reconvergence_depth;
 }
 
 /// Resolves source 1 via splatting.
@@ -190,6 +224,44 @@ sm86_fetch_source2(const sm86_warp_t *POUND_RESTRICT                warp,
     }
 
     return warp->gprs[instruction->source2_register];
+}
+
+POUND_HOT static void
+sm86_execute_bra(const sm86_decoded_instruction_t *POUND_RESTRICT instruction,
+                 const uint32_t                                   active_threads,
+                 const uint32_t                                   current_pc,
+                 const uint32_t                                   current_execution_mask,
+                 uint32_t *POUND_RESTRICT                         next_pc,
+                 uint32_t *POUND_RESTRICT                         out_execution_mask,
+                 sm86_reconvergence_token_t *POUND_RESTRICT       stack,
+                 uint32_t *POUND_RESTRICT                         depth,
+                 bool *POUND_RESTRICT                             branched)
+{
+    const uint32_t target_pc      = current_pc + (uint32_t)instruction->payload.immediate_value;
+    const uint32_t taken_mask     = active_threads;
+    const uint32_t not_taken_mask = current_execution_mask & ~taken_mask;
+
+    if (taken_mask != 0 && not_taken_mask != 0)
+    {
+        // Push the fallthrough path to the stack.
+        const uint32_t d     = *depth;
+        stack[d].pc          = current_pc + 1;
+        stack[d].active_mask = not_taken_mask;
+        stack[d].type        = SM86_TOKEN_DIVERGENCE;
+        *depth               = d + 1;
+        *out_execution_mask  = taken_mask;
+        *next_pc             = target_pc;
+        *branched            = true;
+    }
+    else if (0 == not_taken_mask)
+    {
+        // All active threads take the branch.
+        *next_pc  = target_pc;
+        *branched = true;
+    }
+    else
+    {
+    }
 }
 
 POUND_HOT static void
