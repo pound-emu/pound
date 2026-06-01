@@ -56,3 +56,4 @@ jobs:
           path: |
             src/
             tools/
+            docs/
