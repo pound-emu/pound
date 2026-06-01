@@ -19,13 +19,28 @@ sm86_warp_execute(sm86_warp_t *POUND_RESTRICT                      warp,
                   const sm86_decoded_instruction_t *POUND_RESTRICT instructions,
                   const uint32_t                                   max_cycles)
 {
-    uint32_t                                         pc                  = warp->pc;
-    const uint32_t                                   execution_mask      = warp->execution_mask;
-    uint32_t                                         cycles              = 0;
+    uint32_t pc                  = warp->pc;
+    uint32_t execution_mask      = warp->execution_mask;
+    uint32_t reconvergence_depth = warp->reconvergence_depth;
+    uint32_t cycles              = 0;
     const sm86_decoded_instruction_t *POUND_RESTRICT instructions_cursor = &instructions[pc];
 
     while (POUND_LIKELY(cycles < max_cycles && execution_mask != 0))
     {
+        // Pop paths if current paths yielded/exited.
+        while (POUND_UNLIKELY(0 == execution_mask && reconvergence_depth > 0))
+        {
+            --reconvergence_depth;
+            pc                  = warp->reconvergence_stack[reconvergence_depth].pc;
+            execution_mask      = warp->reconvergence_stack[reconvergence_depth].active_mask;
+            instructions_cursor = &instructions[pc];
+        }
+
+        if (POUND_UNLIKELY(0 == execution_mask))
+        {
+            break;
+        }
+
         const sm86_decoded_instruction_t inst           = *instructions_cursor;
         uint32_t                         predicate_mask = warp->predicates[inst.predicate_register];
 
