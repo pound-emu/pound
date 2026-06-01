@@ -177,7 +177,7 @@ sm86_fetch_source2(const sm86_warp_t *POUND_RESTRICT                warp,
     return warp->gprs[instruction->source2_register];
 }
 
-void
+POUND_HOT void
 sm86_execute_iadd3(sm86_warp_t *POUND_RESTRICT                      warp,
                    const sm86_decoded_instruction_t *POUND_RESTRICT inst,
                    const uint32_t                                   active_threads)
