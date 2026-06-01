@@ -10,6 +10,12 @@ static const uint32_t *sm86_fetch_source2(const sm86_warp_t *POUND_RESTRICT warp
                                                                    instruction,
                                           uint32_t *POUND_RESTRICT temp_buffer);
 
+static void sm86_execute_bssy(const sm86_decoded_instruction_t *instruction,
+                              uint32_t                          current_pc,
+                              uint32_t                          current_execution_mask,
+                              sm86_reconvergence_token_t       *stack,
+                              uint32_t                         *depth);
+
 static void sm86_execute_iadd3(sm86_warp_t                      *warp,
                                const sm86_decoded_instruction_t *inst,
                                uint32_t                          active_threads);
@@ -57,6 +63,10 @@ sm86_warp_execute(sm86_warp_t *POUND_RESTRICT                      warp,
         {
             switch (inst.opcode)
             {
+                case SM86_OPCODE_BSSY:
+                    sm86_execute_bssy(
+                        &inst, pc, execution_mask, warp->reconvergence_stack, &reconvergence_depth);
+                    break;
                 case SM86_OPCODE_IADD3:;
                     sm86_execute_iadd3(warp, &inst, active_threads);
                     break;
@@ -180,6 +190,21 @@ sm86_fetch_source2(const sm86_warp_t *POUND_RESTRICT                warp,
     }
 
     return warp->gprs[instruction->source2_register];
+}
+
+POUND_HOT static void
+sm86_execute_bssy(const sm86_decoded_instruction_t *POUND_RESTRICT instruction,
+                  const uint32_t                                   current_pc,
+                  const uint32_t                                   current_execution_mask,
+                  sm86_reconvergence_token_t *POUND_RESTRICT       stack,
+                  uint32_t *POUND_RESTRICT                         depth)
+{
+    const uint32_t target_pc = current_pc + (uint32_t)instruction->payload.immediate_value;
+    const uint32_t d         = *depth;
+    stack[d].pc              = target_pc;
+    stack[d].active_mask     = current_execution_mask;
+    stack[d].type            = SM86_TOKEN_SYNC;
+    *depth                   = d + 1;
 }
 
 POUND_HOT static void
