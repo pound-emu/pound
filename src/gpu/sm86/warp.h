@@ -11,10 +11,17 @@
 #define SM86_MAX_PREDICATES           8
 #define SM86_RECONVERGENCE_STACK_SIZE 32
 
+typedef enum
+{
+    SM86_TOKEN_DIVERGENCE = 0,
+    SM86_TOKEN_SYNC       = 1
+} sm86_token_type_t;
+
 typedef struct
 {
-    uint32_t pc;
-    uint32_t active_mask;
+    uint32_t          pc;
+    uint32_t          active_mask;
+    sm86_token_type_t type;
 } sm86_reconvergence_token_t;
 
 typedef struct POUND_ALIGNED(64)
