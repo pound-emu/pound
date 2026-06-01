@@ -35,6 +35,7 @@ else ()
             -Wno-gnu-zero-variadic-macro-arguments # Make formatting assert messages easier
             -fno-strict-aliasing # Prevent common C aliasing UB
             -fstack-protector-strong
+            -Wpadded
             -Wvla
     )
 endif ()
