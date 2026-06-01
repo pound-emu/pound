@@ -2,12 +2,15 @@ cmake_minimum_required(VERSION 3.25)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS OFF) # Strict ISO C
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
 if (NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Debug)
 endif ()
 
-project(Pound LANGUAGES C VERSION 0.1.0)
+project(Pound LANGUAGES C CXX VERSION 0.1.0)
 
 # -----------------------------------------------------------------------------
 # Compile Pound
@@ -66,3 +69,7 @@ add_subdirectory(extern/googletest-1.17.0)
 target_compile_options(gtest PUBLIC -Wno-error -w)
 include(GoogleTest)
 enable_testing()
+add_executable(test_engine tests/test_engine.cpp)
+target_include_directories(test_engine PRIVATE src/ extern/googletest-1.17.0/googletest/include)
+target_link_libraries(test_engine PRIVATE gtest gtest_main ${PROJECT_NAME})
+gtest_discover_tests(test_engine)
