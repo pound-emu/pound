@@ -17,4 +17,4 @@
 
 Join the [**Pound Discord Server**](https://discord.gg/aMmTmKsVC7)!
 
-An very early switch 2 emulator attempting to translate SASS to SPIR-V.
+A very early switch 2 emulator attempting to translate SASS to SPIR-V.
