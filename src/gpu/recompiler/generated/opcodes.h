@@ -1,5 +1,5 @@
 //! GENERATED_FILE - DO NOT EDIT
-//! Generated with tools/sm86/generate_sm86.py
+//! Generated with tools/recompiler/generate_sm86.py
 
 #ifndef POUND_GPU_SM86_OPCODES_H
 #define POUND_GPU_SM86_OPCODES_H
