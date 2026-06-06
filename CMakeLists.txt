@@ -44,8 +44,8 @@ else ()
 endif ()
 
 add_library(${PROJECT_NAME} STATIC
-        src/gpu/recompiler/decoder.c
-        src/gpu/recompiler/generated/opcodes.c
+        src/gpu/sm86/decoder.c
+        src/gpu/sm86/generated/opcodes.c
 )
 target_include_directories(${PROJECT_NAME} PRIVATE src/)
 

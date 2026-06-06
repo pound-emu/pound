@@ -1,8 +1,8 @@
 //! GENERATED_FILE - DO NOT EDIT
-//! Generated with tools/recompiler/generate_sm86.py
+//! Generated with tools/sm86/generate_sm86.py
 
-#include "gpu/recompiler/generated/opcodes.h"
-#include "gpu/recompiler/decoder.h"
+#include "gpu/sm86/generated/opcodes.h"
+#include "gpu/sm86/decoder.h"
 
 // Maps the opcode bits to its enum.
 const sm86_opcode_t g_sm86_opcodes_bits_to_enum[4096] = {

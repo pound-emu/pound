@@ -1,5 +1,5 @@
 //! GENERATED_FILE - DO NOT EDIT
-//! Generated with tools/recompiler/generate_sm86.py
+//! Generated with tools/sm86/generate_sm86.py
 
 #ifndef POUND_GPU_SM86_OPCODES_H
 #define POUND_GPU_SM86_OPCODES_H
@@ -103,3 +103,4 @@ extern const sm86_opcode_t g_sm86_opcodes_bits_to_enum[4096];
 #endif // POUND_GPU_SM86_OPCODES_H
 
 /*** end of file ***/
+

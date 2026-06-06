@@ -4,7 +4,7 @@ from collections import defaultdict
 from typing import Any, Tuple
 
 DEFAULT_SM70_ENCODE_RS_PATH = "sm70_encode.txt"
-DEFAULT_OUTPUT_DIRECTORY = "../../src/gpu/recompiler/generated/"
+DEFAULT_OUTPUT_DIRECTORY = "../../src/gpu/sm86/generated/"
 
 
 def classify_opcode(opcode_name: str) -> Tuple[str, int, int, int]:
@@ -119,7 +119,7 @@ if __name__ == "__main__":
             opcodes[opcode_name].add(hex_value)
 
     c_header: str = "//! GENERATED_FILE - DO NOT EDIT\n"
-    c_header += "//! Generated with tools/recompiler/generate_sm86.py\n\n"
+    c_header += "//! Generated with tools/sm86/generate_sm86.py\n\n"
     c_header += "#ifndef POUND_GPU_SM86_OPCODES_H\n"
     c_header += "#define POUND_GPU_SM86_OPCODES_H\n\n"
     c_header += "#include \"stdint.h\"\n\n"
@@ -138,9 +138,9 @@ if __name__ == "__main__":
     c_header += "#endif // POUND_GPU_SM86_OPCODES_H\n\n"
     c_header += "/*** end of file ***/\n\n"
     c_source: str = "//! GENERATED_FILE - DO NOT EDIT\n"
-    c_source += "//! Generated with tools/recompiler/generate_sm86.py\n\n"
-    c_source += "#include \"gpu/recompiler/decoder.h\"\n"
-    c_source += "#include \"gpu/recompiler/generated/opcodes.h\"\n\n"
+    c_source += "//! Generated with tools/sm86/generate_sm86.py\n\n"
+    c_source += "#include \"gpu/sm86/decoder.h\"\n"
+    c_source += "#include \"gpu/sm86/generated/opcodes.h\"\n\n"
     c_source += "// Maps the opcode bits to its enum.\n"
     c_source += "const sm86_opcode_t g_sm86_opcodes_bits_to_enum[4096] =\n{\n"
     lut: list[str] = ["    SM86_OPCODE_NOP"] * 4096
