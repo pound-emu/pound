@@ -112,6 +112,8 @@ extern "C"
         uint8_t                  is_memory_instruction;
     } sm86_instruction_metadata_t;
 
+    static_assert(4 == sizeof(sm86_instruction_metadata_t), "Struct size mismatch");
+
     extern const sm86_instruction_metadata_t g_sm86_opcode_metadata[SM86_OPCODE_MAX_INSTRUCTIONS];
 
     POUND_HOT void sm86_decode(const sm86_raw_instruction_t *raw_instruction,
