@@ -119,6 +119,10 @@ extern "C"
     POUND_HOT void sm86_decode(const sm86_raw_instruction_t *raw_instruction,
                                sm86_decoded_instruction_t   *out_instruction);
 
+    POUND_HOT void sm86_decode_block(const sm86_raw_instruction_t *raw_instructions,
+                                     sm86_decoded_instruction_t   *out_decoded_instructions,
+                                     uint32_t                      instruction_count);
+
 #ifdef __cplusplus
 }
 #endif

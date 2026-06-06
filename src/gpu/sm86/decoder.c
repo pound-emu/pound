@@ -97,3 +97,18 @@ sm86_decode(const sm86_raw_instruction_t *POUND_RESTRICT raw_instruction,
 
     *out_instruction = instruction;
 }
+void
+sm86_decode_block(const sm86_raw_instruction_t *POUND_RESTRICT raw_instructions,
+                  sm86_decoded_instruction_t *POUND_RESTRICT   out_decoded_instructions,
+                  const uint32_t                               instruction_count)
+{
+    const sm86_raw_instruction_t *POUND_RESTRICT raw_cursor     = raw_instructions;
+    sm86_decoded_instruction_t *POUND_RESTRICT   decoded_cursor = out_decoded_instructions;
+
+    for (uint32_t i = 0; i < instruction_count; ++i)
+    {
+        sm86_decode(raw_cursor++, decoded_cursor++);
+    }
+}
+
+/*** end of file ***/
