@@ -1,6 +1,7 @@
 #ifndef POUND_GPU_SM86_DECODER_H
 #define POUND_GPU_SM86_DECODER_H
 
+#include "attributes.h"
 #include "generated/opcodes.h"
 #include <assert.h>
 #include <stdint.h>
@@ -113,8 +114,8 @@ extern "C"
 
     extern const sm86_instruction_metadata_t g_sm86_opcode_metadata[SM86_OPCODE_MAX_INSTRUCTIONS];
 
-    void sm86_decode(const sm86_raw_instruction_t *raw_instruction,
-                     sm86_decoded_instruction_t   *out_instruction);
+    POUND_HOT void sm86_decode(const sm86_raw_instruction_t *raw_instruction,
+                               sm86_decoded_instruction_t   *out_instruction);
 
 #ifdef __cplusplus
 }
