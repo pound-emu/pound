@@ -13,8 +13,15 @@
 
 ## Overview
 
-**IMPORTANT: IN ORDER TO SQUEEZE AS MUCH PERFORMANCE FOR SWITCH 1 AND 2 EMULATORS, DEVELOPMENT HAS FULLY SHIFTED TO CREATING A [NEW ARM RECOMPILER](https://github.com/pound-emu/ballistic) FROM THE GROUND UP. IF YOU ARE A COMPILER DEVELOPER PLEASE GIVE US YOUR SUPPORT**     
+**IMPORTANT: IN ORDER TO SQUEEZE AS MUCH PERFORMANCE FOR SWITCH 1 AND 2 EMULATORS, DEVELOPMENT HAS FULLY SHIFTED TO
+CREATING A [NEW ARM RECOMPILER](https://github.com/pound-emu/ballistic) FROM THE GROUND UP. IF YOU ARE A COMPILER
+DEVELOPER PLEASE GIVE US YOUR SUPPORT**
 
 Join the [**Pound Discord Server**](https://discord.gg/aMmTmKsVC7)!
 
-A very early switch 2 emulator attempting to translate SASS to SPIR-V.
+- [ ] Translate SM86 to SPIR-V to Vulkan.
+- [ ] Add `mimalloc` for host allocator.
+- [ ] Create a custom pool / slab allocator for Horizon OS.
+- [ ] Create a JIT code cache memory allocator for Ballistic.
+- [ ] Create a JIT metadata manager.
+- [ ] Integrate Ballistic into Pound.
