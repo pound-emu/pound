@@ -25,3 +25,5 @@ Join the [**Pound Discord Server**](https://discord.gg/aMmTmKsVC7)!
 - [ ] Create a JIT code cache memory allocator for Ballistic.
 - [ ] Create a JIT metadata manager.
 - [ ] Integrate Ballistic into Pound.
+
+If you're capable of reverse engineering the switch 2 kernel dumps when it get hacked, it would help me if you focus on figuring out the switch 2's execution and memory model (like W^X) so I can support running switch 2 code on my JIT compiler as fast as possible.
