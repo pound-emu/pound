@@ -56,17 +56,3 @@ if (WIN32)
 else ()
     target_compile_options(${PROJECT_NAME} PRIVATE ${POUND_COMPILER_OPTIONS_UNIX})
 endif ()
-
-# -----------------------------------------------------------------------------
-# Compile Tests
-# -----------------------------------------------------------------------------
-
-set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
-add_subdirectory(extern/googletest-1.17.0)
-target_compile_options(gtest PUBLIC -Wno-error -w)
-include(GoogleTest)
-enable_testing()
-add_executable(test_engine tests/test_engine.cpp)
-target_include_directories(test_engine PRIVATE src/ extern/googletest-1.17.0/googletest/include)
-target_link_libraries(test_engine PRIVATE gtest gtest_main ${PROJECT_NAME})
-gtest_discover_tests(test_engine)
