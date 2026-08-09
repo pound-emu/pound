@@ -1,0 +1,160 @@
+{
+  "version": 6,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 25,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "base",
+      "hidden": true,
+      "generator": "Ninja",
+      "cacheVariables": {
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+      }
+    },
+    {
+      "name": "debug",
+      "displayName": "Debug Unix",
+      "inherits": "base",
+      "binaryDir": "${sourceDir}/build/debug",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_C_COMPILER": "clang",
+        "CMAKE_CXX_COMPILER": "clang++",
+        "CMAKE_C_COMPILER_LAUNCHER": "ccache",
+        "CMAKE_CXX_COMPILER_LAUNCHER": "ccache",
+        "CMAKE_C_FLAGS": "",
+        "CMAKE_CXX_FLAGS": "",
+        "CMAKE_EXE_LINKER_FLAGS": "-fuse-ld=mold",
+        "CMAKE_SHARED_LINKER_FLAGS": "-fuse-ld=mold",
+        "POUND_BUILD_TESTS": "ON",
+        "POUND_COMPILER_FLAGS": "-Wall -Wextra -Werror -Wconversion -Wsign-conversion -Wshadow -Wstrict-prototypes -fstack-protector-strong -Wpadded -Wvla -fstrict-aliasing -fno-omit-frame-pointer -ftrivial-auto-var-init=zero -gsplit-dwarf -g",
+        "POUND_LINKER_FLAGS": "",
+        "POUND_SANITIZERS": "-fsanitize=address,undefined",
+        "POUND_ENABLE_LINK_TIME_OPTIMIZATION": "OFF"
+      }
+    },
+    {
+      "name": "release",
+      "displayName": "Release Unix",
+      "inherits": "base",
+      "binaryDir": "${sourceDir}/build/release",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_C_COMPILER": "clang",
+        "CMAKE_CXX_COMPILER": "clang++",
+        "CMAKE_C_COMPILER_LAUNCHER": "ccache",
+        "CMAKE_CXX_COMPILER_LAUNCHER": "ccache",
+        "CMAKE_C_FLAGS": "-ffile-prefix-map=${sourceDir}=. -O3",
+        "CMAKE_CXX_FLAGS": "-ffile-prefix-map=${sourceDir}=. -O3",
+        "CMAKE_EXE_LINKER_FLAGS": "-fuse-ld=lld",
+        "CMAKE_SHARED_LINKER_FLAGS": "-fuse-ld=lld",
+        "POUND_BUILD_TESTS": "OFF",
+        "POUND_COMPILER_FLAGS": "-fstrict-aliasing -fno-omit-frame-pointer -ffunction-sections -fdata-sections -flto=full",
+        "POUND_LINKER_FLAGS": "-Wl,--gc-sections",
+        "POUND_SANITIZERS": "",
+        "POUND_ENABLE_LINK_TIME_OPTIMIZATION": "ON"
+      }
+    },
+    {
+      "name": "debug-windows",
+      "displayName": "Debug Windows",
+      "inherits": "base",
+      "binaryDir": "${sourceDir}/build/debug",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      },
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_C_COMPILER": "clang-cl",
+        "CMAKE_CXX_COMPILER": "clang-cl",
+        "CMAKE_C_COMPILER_LAUNCHER": "sccache",
+        "CMAKE_CXX_COMPILER_LAUNCHER": "sccache",
+        "CMAKE_C_FLAGS": "-MP -DNOMINMAX -DWIN32_LEAN_AND_MEAN",
+        "CMAKE_CXX_FLAGS": "-MP -DNOMINMAX -DWIN32_LEAN_AND_MEAN",
+        "CMAKE_EXE_LINKER_FLAGS": "",
+        "CMAKE_SHARED_LINKER_FLAGS": "",
+        "POUND_BUILD_TESTS": "ON",
+        "POUND_COMPILER_FLAGS": "-fstrict-aliasing -fno-omit-frame-pointer -ftrivial-auto-var-init=zero -gsplit-dwarf",
+        "POUND_LINKER_FLAGS": "",
+        "POUND_SANITIZERS": "",
+        "POUND_ENABLE_LINK_TIME_OPTIMIZATION": "OFF"
+      }
+    },
+    {
+      "name": "release-windows",
+      "displayName": "Release Windows",
+      "inherits": "base",
+      "binaryDir": "${sourceDir}/build/release",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      },
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_C_COMPILER": "clang-cl",
+        "CMAKE_CXX_COMPILER": "clang-cl",
+        "CMAKE_C_COMPILER_LAUNCHER": "sccache",
+        "CMAKE_CXX_COMPILER_LAUNCHER": "sccache",
+        "CMAKE_C_FLAGS": "-MP -DNOMINMAX -DWIN32_LEAN_AND_MEAN -GL -O2",
+        "CMAKE_CXX_FLAGS": "-MP -DNOMINMAX -DWIN32_LEAN_AND_MEAN -GL -O2",
+        "CMAKE_EXE_LINKER_FLAGS": "-LTCG:incremental -OPT:REF -OPT:ICF",
+        "CMAKE_SHARED_LINKER_FLAGS": "-LTCG:incremental -OPT:REF -OPT:ICF",
+        "POUND_BUILD_TESTS": "OFF",
+        "POUND_COMPILER_FLAGS": "-fstrict-aliasing -fno-omit-frame-pointer -ffunction-sections -fdata-sections -flto=full",
+        "POUND_LINKER_FLAGS": "-Wl,--gc-sections",
+        "POUND_SANITIZERS": "",
+        "POUND_ENABLE_LINK_TIME_OPTIMIZATION": "ON"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "debug",
+      "configurePreset": "debug"
+    },
+    {
+      "name": "release",
+      "configurePreset": "release"
+    },
+    {
+      "name": "debug-windows",
+      "configurePreset": "debug-windows"
+    },
+    {
+      "name": "release-windows",
+      "configurePreset": "release-windows"
+    }
+  ],
+  "testPresets": [
+    {
+      "name": "debug",
+      "configurePreset": "debug",
+      "output": {
+        "outputOnFailure": true,
+        "verbosity": "verbose"
+      },
+      "execution": {
+        "noTestsAction": "error",
+        "jobs": 0
+      }
+    },
+    {
+      "name": "debug-windows",
+      "configurePreset": "debug-windows",
+      "output": {
+        "outputOnFailure": true,
+        "verbosity": "verbose"
+      },
+      "execution": {
+        "noTestsAction": "error",
+        "jobs": 0
+      }
+    }
+  ]
+}
