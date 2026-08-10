@@ -15,6 +15,9 @@ typedef enum
 
     /// Tried to access memory it was not allowed to access.
     POUND_ERROR_MEMORY_FAULT = -51,
+
+    /// Guest Address Size is way to big and caused an overflow.
+    POUND_ERROR_GUEST_ADDRESS_OVERFLOW = -52,
 } error_t;
 
 #endif // POUND_ERRORS_H
