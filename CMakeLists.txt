@@ -40,12 +40,12 @@ endforeach ()
 
 
 message(STATUS "==================================================================")
-message(STATUS "[POUND] Configuring Pound Emulator v${PROJECT_VERSION}")
-message(STATUS "[POUND] Build Type: ${CMAKE_BUILD_TYPE}")
-message(STATUS "[POUND] Target OS:  ${CMAKE_SYSTEM_NAME}")
-message(STATUS "[POUND] Compiler:   ${CMAKE_C_COMPILER_ID} ${CMAKE_C_COMPILER_VERSION}")
-message(STATUS "[POUND] Binaries:   ${POUND_BINARIES_DIRECTORY}")
-message(STATUS "[POUND] Libraries:  ${POUND_LIBRARIES_DIRECTORY}")
+message(STATUS "[Pound] Configuring Pound Emulator v${PROJECT_VERSION}")
+message(STATUS "[Pound] Build Type: ${CMAKE_BUILD_TYPE}")
+message(STATUS "[Pound] Target OS:  ${CMAKE_SYSTEM_NAME}")
+message(STATUS "[Pound] Compiler:   ${CMAKE_C_COMPILER_ID} ${CMAKE_C_COMPILER_VERSION}")
+message(STATUS "[Pound] Binaries:   ${POUND_BINARIES_DIRECTORY}")
+message(STATUS "[Pound] Libraries:  ${POUND_LIBRARIES_DIRECTORY}")
 message(STATUS "==================================================================")
 
 
