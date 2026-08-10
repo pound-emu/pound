@@ -70,11 +70,19 @@ endif ()
 # -----------------------------------------------------------------------------
 
 include(Ballistic)
+
+message(STATUS "[PoundCore] Configuring Pound Core Library...")
+add_library(PoundCore STATIC src/core/guest_state.c)
+target_include_directories(PoundCore PUBLIC src/core)
+add_compiler_flags(PoundCore)
+add_linker_flags(PoundCore)
+add_sanitizers(PoundCore)
+
 message(STATUS "[Pound] Configuring Pound Executable...")
 
 add_executable(${PROJECT_NAME} src/main.c)
 target_include_directories(${PROJECT_NAME} PRIVATE src/)
-target_link_libraries(${PROJECT_NAME} PRIVATE Ballistic::Engine)
+target_link_libraries(${PROJECT_NAME} PRIVATE PoundCore Ballistic::Engine)
 add_compiler_flags(${PROJECT_NAME})
 add_linker_flags(${PROJECT_NAME})
 add_sanitizers(${PROJECT_NAME})
