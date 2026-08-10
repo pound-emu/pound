@@ -69,9 +69,9 @@ endif ()
 # Compile Pound
 # -----------------------------------------------------------------------------
 
-add_library(${PROJECT_NAME} STATIC
-        src/main.c
-)
+message(STATUS "[Pound] Configuring Pound Executable...")
+
+add_executable(${PROJECT_NAME} src/main.c)
 target_include_directories(${PROJECT_NAME} PRIVATE src/)
 add_compiler_flags(${PROJECT_NAME})
 add_linker_flags(${PROJECT_NAME})
