@@ -12,6 +12,9 @@ endif ()
 
 project(Pound LANGUAGES C CXX VERSION 0.1.0)
 
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+include(CompilerFlags)
+
 # -----------------------------------------------------------------------------
 # Compile Pound
 # -----------------------------------------------------------------------------
@@ -28,31 +31,11 @@ add_custom_command(
         DEPENDS ${SCRIPT_GENERATE_SM86}
 )
 
-if (MSVC)
-    add_compile_definitions(_CRT_SECURE_NO_WARNINGS)
-else ()
-    set(POUND_COMPILER_OPTIONS_UNIX
-            -Wall -Wextra -Werror
-            -Wconversion -Wsign-conversion -Wshadow
-            -Wstrict-prototypes -Wmissing-prototypes
-            -Wno-gnu-zero-variadic-macro-arguments # Make formatting assert messages easier
-            -fno-strict-aliasing # Prevent common C aliasing UB
-            -fstack-protector-strong
-            -Wpadded
-            -Wvla
-    )
-endif ()
-
 add_library(${PROJECT_NAME} STATIC
         src/gpu/sm86/decoder.c
         src/gpu/sm86/generated/opcodes.c
 )
 target_include_directories(${PROJECT_NAME} PRIVATE src/)
-
-
-if (WIN32)
-    # Disable some Windows SDK deprecation warnings
-    target_compile_options(${PROJECT_NAME} PRIVATE -DNOMINMAX -DWIN32_LEAN_AND_MEAN)
-else ()
-    target_compile_options(${PROJECT_NAME} PRIVATE ${POUND_COMPILER_OPTIONS_UNIX})
-endif ()
+add_compiler_flags(${PROJECT_NAME})
+add_linker_flags(${PROJECT_NAME})
+add_sanitizers(${PROJECT_NAME})
