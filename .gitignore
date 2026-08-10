@@ -1,0 +1,9 @@
+# Prerequisites
+*.d
+build/
+*.bin
+docs/cdoc
+.idea/
+.run/
+/.vs
+/compile_commands.json
