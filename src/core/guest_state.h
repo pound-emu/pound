@@ -1,0 +1,4 @@
+#ifndef POUND_GUEST_STATE_H
+#define POUND_GUEST_STATE_H
+
+#endif // POUND_GUEST_STATE_H
