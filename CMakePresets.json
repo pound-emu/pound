@@ -33,7 +33,7 @@
         "POUND_COMPILER_FLAGS": "-Wall -Wextra -Werror -Wconversion -Wsign-conversion -Wshadow -Wstrict-prototypes -fstack-protector-strong -Wpadded -Wvla -fstrict-aliasing -fno-omit-frame-pointer -ftrivial-auto-var-init=zero -gsplit-dwarf -g",
         "POUND_LINKER_FLAGS": "",
         "POUND_SANITIZERS": "-fsanitize=address,undefined",
-        "POUND_ENABLE_LINK_TIME_OPTIMIZATION": "OFF"
+        "POUND_ENABLE_LINK_TIME_OPTIMIZATION": "ON"
       }
     },
     {
@@ -82,7 +82,7 @@
         "POUND_COMPILER_FLAGS": "-fstrict-aliasing -fno-omit-frame-pointer -ftrivial-auto-var-init=zero -gsplit-dwarf",
         "POUND_LINKER_FLAGS": "",
         "POUND_SANITIZERS": "",
-        "POUND_ENABLE_LINK_TIME_OPTIMIZATION": "OFF"
+        "POUND_ENABLE_LINK_TIME_OPTIMIZATION": "ON"
       }
     },
     {
