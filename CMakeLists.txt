@@ -72,7 +72,10 @@ endif ()
 include(Ballistic)
 
 message(STATUS "[PoundCore] Configuring Pound Core Library...")
-add_library(PoundCore STATIC src/core/guest_state.c)
+add_library(PoundCore STATIC
+        src/core/guest_memory.c
+        src/core/guest_state.c
+)
 target_include_directories(PoundCore PUBLIC src/core)
 add_compiler_flags(PoundCore)
 add_linker_flags(PoundCore)
