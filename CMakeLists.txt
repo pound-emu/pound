@@ -69,12 +69,13 @@ endif ()
 # Compile Pound
 # -----------------------------------------------------------------------------
 
-#add_library(${PROJECT_NAME} STATIC
-#)
-#target_include_directories(${PROJECT_NAME} PRIVATE src/)
-#add_compiler_flags(${PROJECT_NAME})
-#add_linker_flags(${PROJECT_NAME})
-#add_sanitizers(${PROJECT_NAME})
+add_library(${PROJECT_NAME} STATIC
+        src/main.c
+)
+target_include_directories(${PROJECT_NAME} PRIVATE src/)
+add_compiler_flags(${PROJECT_NAME})
+add_linker_flags(${PROJECT_NAME})
+add_sanitizers(${PROJECT_NAME})
 
 message(STATUS "==================================================================")
 message(STATUS "[Pound] Cmake configuration completed successfully.")
