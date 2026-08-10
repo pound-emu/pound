@@ -53,4 +53,6 @@
 /// Usage: POUND_NOINLINE void my_function();
 #define POUND_NOINLINE __attribute__((noinline))
 
+#endif // POUND_ATTRIBUTES_H
+
 /*** end of file ***/
