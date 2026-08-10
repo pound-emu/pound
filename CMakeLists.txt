@@ -48,6 +48,23 @@ message(STATUS "[POUND] Binaries:   ${POUND_BINARIES_DIRECTORY}")
 message(STATUS "[POUND] Libraries:  ${POUND_LIBRARIES_DIRECTORY}")
 message(STATUS "==================================================================")
 
+
+if (POUND_ENABLE_LINK_TIME_OPTIMIZATION)
+    include(CheckIPOSupported)
+    check_ipo_supported(RESULT ipo_supported OUTPUT ipo_error)
+
+    if (ipo_supported)
+        message(STATUS "[Pound] Link Time Optimization is ENABLED and supported.")
+        set(CMAKE_INTERPROCEDURAL_OPTIMIZATION ON)
+    else ()
+        message(WARNING "[Pound] Link Time Optimization was requested but is NOT supported by your compiler, disabling LTO. "
+                "Reason: ${ipo_error}")
+        set(CMAKE_INTERPROCEDURAL_OPTIMIZATION OFF)
+    endif ()
+else ()
+    message(STATUS "[Pound] Link Time Optimization is DISABLED via CMake options.")
+endif ()
+
 # -----------------------------------------------------------------------------
 # Compile Pound
 # -----------------------------------------------------------------------------
