@@ -15,6 +15,7 @@ POUND_ALIGNED(64) typedef struct
     uint8_t  flag_z;
     uint8_t  flag_c;
     uint8_t  flag_v;
+    uint32_t pad;
 } guest_state_t;
 
 error_t guest_state_init(guest_state_t *state);
