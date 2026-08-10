@@ -12,6 +12,9 @@ typedef enum
 
     /// Buffer is not aligned to the required memory alignment.
     POUND_ERROR_MEMORY_ALIGNMENT = -50,
+
+    /// Tried to access memory it was not allowed to access.
+    POUND_ERROR_MEMORY_FAULT = -51,
 } error_t;
 
 #endif // POUND_ERRORS_H
