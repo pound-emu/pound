@@ -16,6 +16,39 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 include(CompilerFlags)
 
 # -----------------------------------------------------------------------------
+# Setup Build Directory
+# -----------------------------------------------------------------------------
+
+if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
+    set(POUND_PLATFORM "windows")
+elseif (CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+    set(POUND_PLATFORM "mac")
+elseif (CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    set(POUND_PLATFORM "linux")
+else ()
+    set(POUND_PLATFORM "Unknown")
+endif ()
+
+set(POUND_BINARIES_DIRECTORY "${CMAKE_BINARY_DIR}/bin/${POUND_PLATFORM}")
+set(POUND_LIBRARIES_DIRECTORY "${CMAKE_BINARY_DIR}/lib/${POUND_PLATFORM}")
+
+foreach (CONFIG IN ITEMS "" _DEBUG _RELEASE _MINSIZEREL _RELWITHDEBINFO)
+    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY${CONFIG} "${POUND_BINARIES_DIRECTORY}")
+    set(CMAKE_LIBRARY_OUTPUT_DIRECTORY${CONFIG} "${POUND_LIBRARIES_DIRECTORY}")
+    set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY${CONFIG} "${POUND_LIBRARIES_DIRECTORY}")
+endforeach ()
+
+
+message(STATUS "==================================================================")
+message(STATUS "[POUND] Configuring Pound Emulator v${PROJECT_VERSION}")
+message(STATUS "[POUND] Build Type: ${CMAKE_BUILD_TYPE}")
+message(STATUS "[POUND] Target OS:  ${CMAKE_SYSTEM_NAME}")
+message(STATUS "[POUND] Compiler:   ${CMAKE_C_COMPILER_ID} ${CMAKE_C_COMPILER_VERSION}")
+message(STATUS "[POUND] Binaries:   ${POUND_BINARIES_DIRECTORY}")
+message(STATUS "[POUND] Libraries:  ${POUND_LIBRARIES_DIRECTORY}")
+message(STATUS "==================================================================")
+
+# -----------------------------------------------------------------------------
 # Compile Pound
 # -----------------------------------------------------------------------------
 
