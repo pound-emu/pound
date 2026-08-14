@@ -20,7 +20,7 @@ DEVELOPER PLEASE GIVE US YOUR SUPPORT**
 Join the [**Pound Discord Server**](https://discord.gg/aMmTmKsVC7)!
 
 - [ ] Translate SM86 to SPIR-V to Vulkan.
-- [ ] Add `mimalloc` for host allocator.
+- [X] Add `mimalloc` for host allocator.
 - [ ] Create a custom pool / slab allocator for Horizon OS.
 - [ ] Create a JIT code cache memory allocator for Ballistic.
 - [ ] Create a JIT metadata manager.
