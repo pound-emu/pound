@@ -72,6 +72,49 @@ endif ()
 include(Ballistic)
 include(Mimalloc)
 
+message(STATUS "[SDL] Configuring SDL library...")
+
+# Build static SDL.
+set(SDL_SHARED OFF CACHE BOOL "" FORCE)
+set(SDL_STATIC ON CACHE BOOL "" FORCE)
+set(SDL_INSTALL OFF CACHE BOOL "" FORCE)
+set(SDL_TESTS OFF CACHE BOOL "" FORCE)
+set(SDL_TEST_LIBRARY OFF CACHE BOOL "" FORCE)
+set(SDL_EXAMPLES OFF CACHE BOOL "" FORCE)
+
+# Bare minimum required for rendering.
+set(SDL_VIDEO ON CACHE BOOL "" FORCE)
+set(SDL_RENDER ON CACHE BOOL "" FORCE)
+set(SDL_EVENTS ON CACHE BOOL "" FORCE)
+set(SDL_THREADS ON CACHE BOOL "" FORCE)
+set(SDL_TIMERS ON CACHE BOOL "" FORCE)
+set(OFF CACHE BOOL "" FORCE)
+
+# Disable everything nonessential.
+foreach (sdl_option
+        SDL_AUDIO
+        SDL_JOYSTICK
+        SDL_HAPTIC
+        SDL_SENSOR
+        SDL_POWER
+        SDL_HIDAPI
+        SDL_CAMERA
+        SDL_GPU
+        SDL_STORAGE
+        SDL_DIALOG
+        SDL_FILE
+        SDL_FILESYSTEM
+        SDL_LOCALE
+        SDL_MISC
+        SDL_ATOMIC
+        SDL_CPUINFO
+        SDL_X11_XSCRNSAVER
+        SDL_X11_XTEST
+)
+    set(${sdl_option} OFF CACHE BOOL "" FORCE)
+endforeach ()
+add_subdirectory(extern/sdl/sdl)
+
 message(STATUS "[PoundCore] Configuring Pound Core Library...")
 add_library(PoundCore STATIC
         src/core/guest_memory.c
@@ -86,7 +129,7 @@ message(STATUS "[Pound] Configuring Pound Executable...")
 
 add_executable(${PROJECT_NAME} src/main.c)
 target_include_directories(${PROJECT_NAME} PRIVATE src/)
-target_link_libraries(${PROJECT_NAME} PRIVATE PoundCore Ballistic::Engine Mimalloc::Mimalloc)
+target_link_libraries(${PROJECT_NAME} PRIVATE PoundCore Ballistic::Engine Mimalloc::Mimalloc SDL3::SDL3)
 add_compiler_flags(${PROJECT_NAME})
 add_linker_flags(${PROJECT_NAME})
 add_sanitizers(${PROJECT_NAME})
