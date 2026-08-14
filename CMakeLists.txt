@@ -115,6 +115,11 @@ foreach (sdl_option
 endforeach ()
 add_subdirectory(extern/sdl/sdl)
 
+# Suppress clang warnings.
+set_target_properties(SDL3-static PROPERTIES
+        INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "$<TARGET_PROPERTY:SDL3::SDL3,INTERFACE_INCLUDE_DIRECTORIES>"
+)
+
 message(STATUS "[PoundCore] Configuring Pound Core Library...")
 add_library(PoundCore STATIC
         src/core/guest_memory.c
