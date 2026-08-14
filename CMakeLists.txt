@@ -10,7 +10,7 @@ if (NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Debug)
 endif ()
 
-project(Pound LANGUAGES C VERSION 0.1.0)
+project(Pound LANGUAGES C CXX VERSION 0.1.0)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 include(CompilerFlags)
@@ -71,6 +71,27 @@ endif ()
 
 include(Ballistic)
 include(Mimalloc)
+
+message(STATUS "[ImGUI] Configuring ImGUI...")
+add_subdirectory(extern/cimgui)
+add_library(imgui SHARED
+        ${cimgui_SOURCE_DIR}/cimgui.cpp
+        ${cimgui_SOURCE_DIR}/imgui/imgui.cpp
+        ${cimgui_SOURCE_DIR}/imgui/imgui_draw.cpp
+        ${cimgui_SOURCE_DIR}/imgui/imgui_demo.cpp
+        ${cimgui_SOURCE_DIR}/imgui/imgui_tables.cpp
+        ${cimgui_SOURCE_DIR}/imgui/imgui_widgets.cpp
+        ${cimgui_SOURCE_DIR}/imgui/backends/imgui_impl_opengl3.cpp
+        ${cimgui_SOURCE_DIR}/imgui/backends/imgui_impl_sdl3.cpp
+)
+target_include_directories(imgui PUBLIC ${cimgui_SOURCE_DIR} ${cimgui_SOURCE_DIR}/imgui)
+target_compile_definitions(imgui PUBLIC "-DIMGUI_IMPL_API=extern \"C\" ")
+target_compile_definitions(imgui PUBLIC -DIMGUI_DISABLE_OBSOLETE_FUNCTIONS=1)
+target_link_libraries(imgui PRIVATE SDL3::SDL3)
+set_target_properties(imgui PROPERTIES
+        INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "$<TARGET_PROPERTY:imgui,INTERFACE_INCLUDE_DIRECTORIES>"
+)
+
 
 message(STATUS "[SDL] Configuring SDL library...")
 
@@ -135,7 +156,8 @@ message(STATUS "[Pound] Configuring Pound Executable...")
 
 add_executable(${PROJECT_NAME} src/main.c)
 target_include_directories(${PROJECT_NAME} PRIVATE src/)
-target_link_libraries(${PROJECT_NAME} PRIVATE PoundCore Ballistic::Engine Mimalloc::Mimalloc SDL3::SDL3)
+target_link_libraries(${PROJECT_NAME} PRIVATE PoundCore Ballistic::Engine Mimalloc::Mimalloc SDL3::SDL3 imgui)
+target_compile_definitions(${PROJECT_NAME} PUBLIC -DCIMGUI_USE_OPENGL3 -DCIMGUI_USE_SDL3)
 add_compiler_flags(${PROJECT_NAME})
 add_linker_flags(${PROJECT_NAME})
 add_sanitizers(${PROJECT_NAME})
