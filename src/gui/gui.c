@@ -1,11 +1,14 @@
+#include "mimalloc-override.h"
+
 #include "gui.h"
 #include "log.h"
-
-#include "mimalloc-override.h"
+#include "mimalloc_tracker.h"
 #include <stdio.h>
+
 #include <string.h>
 
 #define CIMGUI_DEFINE_ENUMS_AND_STRUCTS
+
 #include <cimgui.h>
 
 #if POUND_PLATFORM_WINDOWS
@@ -25,7 +28,8 @@ typedef struct
     int  selected_tab;
     bool show_demo;
     bool show_hot_reload_panel;
-    char pad[2];
+    bool show_mimalloc_panel;
+    char pad[1];
 } gui_state_t;
 
 typedef bool (*get_exports_function_t)(gui_exports_t *);
@@ -599,8 +603,14 @@ gui_render_frame(void *gui_state)
     igSetNextWindowPos(debug_menu_position, ImGuiCond_Always, debug_menu_pivot);
     igSetNextWindowSize(debug_menu_size, ImGuiCond_Always);
     igBegin("Debug Menu", NULL, 0);
+    igCheckbox("Show Mimalloc Tracker", &state->show_mimalloc_panel);
     igCheckbox("Show Hot Reloading Guide", &state->show_hot_reload_panel);
     igCheckbox("Show ImGui Demo", &state->show_demo);
+
+    if (state->show_mimalloc_panel)
+    {
+        gui_render_mimalloc_tracker();
+    }
 
     if (state->show_hot_reload_panel)
     {

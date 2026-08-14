@@ -153,7 +153,7 @@ add_linker_flags(PoundCore)
 add_sanitizers(PoundCore)
 
 message(STATUS "[PoundGUI] Configuring Pound GUI Library...")
-add_library(PoundGui SHARED src/gui/gui.c)
+add_library(PoundGui SHARED src/gui/gui.c src/gui/mimalloc_tracker.c)
 target_include_directories(PoundGui PUBLIC src/gui)
 target_link_libraries(PoundGui PRIVATE PoundCore imgui Mimalloc::Mimalloc)
 add_compiler_flags(PoundGui)
