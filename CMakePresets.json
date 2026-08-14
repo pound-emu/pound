@@ -52,7 +52,7 @@
         "CMAKE_EXE_LINKER_FLAGS": "-fuse-ld=lld",
         "CMAKE_SHARED_LINKER_FLAGS": "-fuse-ld=lld",
         "POUND_BUILD_TESTS": "OFF",
-        "POUND_COMPILER_FLAGS": "-fstrict-aliasing -fno-omit-frame-pointer -ffunction-sections -fdata-sections -flto=full",
+        "POUND_COMPILER_FLAGS": "-fPIC -fstrict-aliasing -fno-omit-frame-pointer -ffunction-sections -fdata-sections -flto=full",
         "POUND_LINKER_FLAGS": "-Wl,--gc-sections",
         "POUND_SANITIZERS": "",
         "POUND_ENABLE_LINK_TIME_OPTIMIZATION": "ON"
@@ -106,7 +106,7 @@
         "CMAKE_EXE_LINKER_FLAGS": "-LTCG:incremental -OPT:REF -OPT:ICF",
         "CMAKE_SHARED_LINKER_FLAGS": "-LTCG:incremental -OPT:REF -OPT:ICF",
         "POUND_BUILD_TESTS": "OFF",
-        "POUND_COMPILER_FLAGS": "-fstrict-aliasing -fno-omit-frame-pointer -ffunction-sections -fdata-sections -flto=full",
+        "POUND_COMPILER_FLAGS": "-fPIC -fstrict-aliasing -fno-omit-frame-pointer -ffunction-sections -fdata-sections -flto=full",
         "POUND_LINKER_FLAGS": "-Wl,--gc-sections",
         "POUND_SANITIZERS": "",
         "POUND_ENABLE_LINK_TIME_OPTIMIZATION": "ON"
