@@ -18,9 +18,8 @@
 //! ```c
 //! #include "bal_log.h"
 //!
-//! bal_logger_t logger = {0};
-//! bal_logger_init_default(&logger);
-//! BAL_LOG_INFO(&logger, "Engine initialized.");
+//! bal_logger_init_default();
+//! BAL_LOG_INFO(&bal_thread_logger, "Engine initialized.");
 //! ```
 //!
 //! ## Custom Backend
@@ -42,13 +41,10 @@
 //! // ---
 //!
 //! FILE *log_file = fopen("jit.log", "w");
-//! bal_logger_t logger = {
-//!     .user_data = log_file,
-//!     .log = my_file_logger,
-//!     .min_level = BAL_LOG_LEVEL_DEBUG
-//! };
-//!
-//! BAL_LOG_DEBUG(&logger, "Writing to custom file backend");
+//! bal_thread_logger.user_data = log_file;
+//! bal_thread_logger.log = my_file_logger;
+//! bal_thread_logger.min_level = BAL_LOG_LEVEL_DEBUG;
+//! BAL_LOG_DEBUG(&bal_thread_logger, "Writing to custom file backend");
 //! fclose(log_file);
 //! ```
 
@@ -140,6 +136,8 @@ extern "C"
         uint32_t pad;
     } bal_logger_t;
 
+    extern BAL_THREAD_LOCAL bal_logger_t bal_thread_logger;
+
 // Remove all log code if log level not defined.
 //
 #ifndef BAL_MAX_LOG_LEVEL
@@ -170,12 +168,8 @@ extern "C"
                                  const char         *format,
                                  ...);
 
-    /// Populates `logger` with Ballistic's default logging implementation.
-    ///
-    /// # Safety
-    ///
-    /// `logger` must NOT be `NULL`.
-    BAL_COLD void bal_logger_init_default(bal_logger_t *logger);
+    /// Populates the thread local storage logger with Ballistic's default logging implementation.
+    BAL_COLD void bal_logger_init_default(void);
 
 #define BAL_LOG_ERROR(logger, format, ...)      \
     bal_log_message((logger),                   \

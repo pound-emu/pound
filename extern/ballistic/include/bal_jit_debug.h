@@ -16,11 +16,10 @@
 //! bal_allocator_t allocator = {0};
 //! bal_allocator_default_init(&allocator);
 //!
-//! bal_logger_t logger = {0};
-//! bal_logger_init_default(&logger);
+//! bal_logger_init_default();
 //!
 //! bal_jit_debug_context_t debug_context = {0};
-//! bal_error_t err = bal_jit_debug_init(&allocator, &debug_context, logger);
+//! bal_error_t err = bal_jit_debug_init(&allocator, &debug_context);
 //! assert(err == BAL_SUCCESS);
 //!
 //! uint8_t jit_code[64] = {0};
@@ -113,9 +112,8 @@ extern "C"
         /// Offset 0x0020 + (N*8):  bal_jit_block_metadata_t (Block 1).
         /// Offset ....:            Array of bal_jit_instruction_map_t (M * 8 bytes).
         /// etc...
-        uint8_t     *metadata_arena;
-        bal_logger_t logger;
-        size_t       entry_count;
+        uint8_t *metadata_arena;
+        size_t   entry_count;
 
         // The entry list capacity. This is NOT in bytes.
         size_t entry_capacity;
@@ -135,7 +133,7 @@ extern "C"
         /// Integrity check.
         uint32_t magic;
 
-        uint8_t pad[16];
+        uint8_t pad[40];
     } bal_jit_debug_context_t;
 
     static_assert(128 == sizeof(bal_jit_debug_context_t), "Struct size mismatch");
@@ -157,19 +155,17 @@ extern "C"
     //! bal_allocator_t allocator = {0};
     //! bal_allocator_default_init(&allocator);
     //!
-    //! bal_logger_t logger = {0};
-    //! bal_logger_init_default(&logger);
+    //! bal_logger_init_default();
     //!
     //! bal_jit_debug_context_t debug_context = {0};
-    //! bal_error_t err = bal_jit_debug_init(&allocator, &debug_context, logger);
+    //! bal_error_t err = bal_jit_debug_init(&allocator, &debug_context);
     //! assert(err == BAL_SUCCESS);
     //!
     //! bal_jit_debug_unregister_signal_handler(&debug_context);
     //! bal_jit_debug_destroy(&allocator, &debug_context);
     /// ```
     BAL_COLD bal_error_t bal_jit_debug_init(const bal_allocator_t   *allocator,
-                                            bal_jit_debug_context_t *context,
-                                            bal_logger_t             logger);
+                                            bal_jit_debug_context_t *context);
 
     /// Destroys the JIT debug context and frees all internal allocations.
     ///
@@ -187,11 +183,10 @@ extern "C"
     /// bal_allocator_t allocator = {0};
     /// bal_allocator_default_init(&allocator);
     ///
-    /// bal_logger_t logger = {0};
-    /// bal_logger_init_default(&logger);
+    /// bal_logger_init_default();
     ///
     /// bal_jit_debug_context_t context = {0};
-    /// bal_jit_debug_init(&allocator, &context, logger);
+    /// bal_jit_debug_init(&allocator, &context);
     ///
     /// bal_jit_debug_destroy(&allocator, &context);
     /// assert(context.entries == NULL);
@@ -223,11 +218,10 @@ extern "C"
     /// bal_allocator_t allocator = {0};
     /// bal_allocator_default_init(&allocator);
     ///
-    /// bal_logger_t logger = {0};
-    /// bal_logger_init_default(&logger);
+    /// bal_logger_init_default();
     ///
     /// bal_jit_debug_context_t context = {0};
-    /// bal_jit_debug_init(&allocator, &context, logger);
+    /// bal_jit_debug_init(&allocator, &context);
     ///
     /// uint8_t jit_code[64] = {0};
     /// bal_jit_instruction_map_t mappings[] = {
@@ -276,11 +270,10 @@ extern "C"
     /// bal_allocator_t allocator = {0};
     /// bal_allocator_default_init(&allocator);
     ///
-    /// bal_logger_t logger = {0};
-    /// bal_logger_init_default(&logger);
+    /// bal_logger_init_default();
     ///
     /// bal_jit_debug_context_t context = {0};
-    /// bal_jit_debug_init(&allocator, &context, logger);
+    /// bal_jit_debug_init(&allocator, &context);
     ///
     /// uint8_t jit_buffer[4096] = {0};
     /// bal_error_t err = bal_jit_debug_register_signal_handler(&context, jit_buffer,
@@ -314,11 +307,10 @@ extern "C"
     /// bal_allocator_t allocator = {0};
     /// bal_allocator_default_init(&allocator);
     ///
-    /// bal_logger_t logger = {0};
-    /// bal_logger_init_default(&logger);
+    /// bal_logger_init_default();
     ///
     /// bal_jit_debug_context_t context = {0};
-    /// bal_jit_debug_init(&allocator, &context, logger);
+    /// bal_jit_debug_init(&allocator, &context);
     ///
     /// uint8_t jit_buffer[4096] = {0};
     /// bal_jit_debug_register_signal_handler(&context, jit_buffer, sizeof(jit_buffer));

@@ -17,17 +17,16 @@ extern "C"
     {
         bal_x86_assembler_t      assembler;
         bal_sliding_window_t     window;
-        bal_logger_t             logger;
         int8_t                   arm_to_x86[32];
         int8_t                   x86_to_arm[16];
         uint32_t                 is_dirty;
         uint32_t                 pad0;
         bal_jit_debug_context_t *debug_context;
         bal_error_t              status;
-        char                     pad1[20];
+        uint32_t                 pad1;
     } bal_tier1_compiler_t;
 
-    static_assert(320 == sizeof(bal_tier1_compiler_t), "Struct size mismatch");
+    static_assert(256 == sizeof(bal_tier1_compiler_t), "Struct size mismatch");
 
     /// Initializes the Tier 1 Compiler.
     ///
@@ -43,7 +42,6 @@ extern "C"
     BAL_COLD bal_error_t bal_tier1_compiler_init(bal_tier1_compiler_t    *compiler,
                                                  bal_executable_buffer_t  executable_buffer,
                                                  size_t                   buffer_size,
-                                                 bal_logger_t             logger,
                                                  bal_jit_debug_context_t *debug_context);
 
     BAL_HOT void bal_tier1_compiler_reset(bal_tier1_compiler_t *compiler);

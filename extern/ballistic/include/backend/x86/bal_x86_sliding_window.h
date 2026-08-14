@@ -18,12 +18,8 @@
 //!     .rx_pointer = raw_buffer,
 //! };
 //!
-//! bal_logger_t logger = {0};
-//! bal_logger_init_default(&logger);
-//! logger.min_level = BAL_LOG_LEVEL_INFO;
-//!
 //! bal_x86_assembler_t assembler = {0};
-//! bal_error_t error = bal_x86_assembler_init(&assembler, exec_buffer, sizeof(raw_buffer), logger);
+//! bal_error_t error = bal_x86_assembler_init(&assembler, exec_buffer, sizeof(raw_buffer));
 //! if (error != BAL_SUCCESS) {
 //!     return 1;
 //! }

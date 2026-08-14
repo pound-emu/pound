@@ -181,8 +181,7 @@ extern "C"
     bal_flat_translation_interface_init(bal_allocator_t *BAL_RESTRICT        allocator,
                                         bal_memory_interface_t *BAL_RESTRICT interface,
                                         void *BAL_RESTRICT                   buffer,
-                                        size_t                               size,
-                                        bal_logger_t                         logger);
+                                        size_t                               size);
 
     /// Frees the internal state allocated within `interface` using the provided
     /// `allocator` and resets `interface` to 0 with a memset.

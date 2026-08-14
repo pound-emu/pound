@@ -25,9 +25,7 @@
 //! #include <string.h>
 //!
 //! // Setup logging and default system allocator.
-//! bal_logger_t logger = {0};
-//! bal_logger_init_default(&logger);
-//!
+//! bal_logger_init_default();
 //! bal_allocator_t allocator = {0};
 //! bal_allocator_default_init(&allocator);
 //!
@@ -38,12 +36,12 @@
 //!
 //! bal_memory_interface_t memory_interface = {0};
 //! bal_flat_translation_interface_init(&allocator, &memory_interface, guest_memory,
-//! guest_memory_size, logger);
+//! guest_memory_size);
 //!
 //! // Initialize CPU and Engine.
 //! bal_cpu_t cpu = {0};
 //! bal_engine_t engine = {0};
-//! bal_engine_init(&engine, &cpu, &allocator, &memory_interface, logger);
+//! bal_engine_init(&engine, &cpu, &allocator, &memory_interface);
 //!
 //! guest_memory[0] = 0xD2800054; // MOVZ X0, #42
 //! guest_memory[1] = 0xD65F03C0; // RET
@@ -139,8 +137,7 @@ extern "C"
     BAL_COLD bal_error_t bal_engine_init(bal_engine_t                 *engine,
                                          bal_cpu_t                    *cpu,
                                          const bal_allocator_t        *allocator,
-                                         const bal_memory_interface_t *memory_interface,
-                                         bal_logger_t                  logger);
+                                         const bal_memory_interface_t *memory_interface);
 
     /// The sole entry point for executing guest code.
     ///
