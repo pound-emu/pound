@@ -548,12 +548,14 @@ gui_create(const void *POUND_RESTRICT saved_state, size_t saved_size)
         return NULL;
     }
 
+    gui_state->show_mimalloc_panel   = false;
     gui_state->show_demo             = false;
     gui_state->show_hot_reload_panel = true;
 
     if (saved_state && saved_size >= sizeof(*gui_state))
     {
         const gui_state_t *POUND_RESTRICT saved = saved_state;
+        gui_state->show_mimalloc_panel          = saved->show_mimalloc_panel;
         gui_state->show_demo                    = saved->show_demo;
         gui_state->show_hot_reload_panel        = saved->show_hot_reload_panel;
         gui_state->selected_tab                 = saved->selected_tab;
@@ -602,26 +604,27 @@ gui_render_frame(void *gui_state)
     const ImVec2_c debug_menu_pivot    = { .x = 0, .y = 0 };
     igSetNextWindowPos(debug_menu_position, ImGuiCond_Always, debug_menu_pivot);
     igSetNextWindowSize(debug_menu_size, ImGuiCond_Always);
-    igBegin("Debug Menu", NULL, 0);
-    igCheckbox("Show Mimalloc Tracker", &state->show_mimalloc_panel);
-    igCheckbox("Show Hot Reloading Guide", &state->show_hot_reload_panel);
-    igCheckbox("Show ImGui Demo", &state->show_demo);
-
-    if (state->show_mimalloc_panel)
+    if (igBegin("Debug Menu", NULL, 0))
     {
-        gui_render_mimalloc_tracker();
-    }
+        igCheckbox("Show Mimalloc Tracker", &state->show_mimalloc_panel);
+        igCheckbox("Show Hot Reloading Guide", &state->show_hot_reload_panel);
+        igCheckbox("Show ImGui Demo", &state->show_demo);
 
-    if (state->show_hot_reload_panel)
-    {
-        igSeparator();
-        igText("Rebuild PoundGui to relaod GUI code.");
-        igText("Press F5 to force reload.");
-    }
+        if (state->show_mimalloc_panel)
+        {
+            gui_render_mimalloc_tracker();
+        }
 
-    if (state->show_demo)
-    {
-        igShowDemoWindow(NULL);
+        if (state->show_hot_reload_panel)
+        {
+            igText("Rebuild PoundGui to relaod GUI code.");
+            igText("Press F5 to force reload.");
+        }
+
+        if (state->show_demo)
+        {
+            igShowDemoWindow(NULL);
+        }
     }
 
     igEnd();
