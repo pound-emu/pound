@@ -84,6 +84,7 @@ host_address_space_range(uint64_t *POUND_RESTRICT out_low, uint64_t *POUND_RESTR
     uint64_t low  = UINT64_MAX;
     uint64_t high = 0;
 
+    // TODO: Support Windows Builds.
 #if POUND_PLATFORM_POSIX
 
     char          exe_path[TRACKER_PATH_CAPACITY] = { 0 };
