@@ -12,7 +12,7 @@
 
 #if POUND_PLATFORM_WINDOWS
 
-#define PLUGIN_NAME "libPoundGui.dll"
+#define GUI_PLUGIN_NAME "libPoundGui.dll"
 
 #else
 
