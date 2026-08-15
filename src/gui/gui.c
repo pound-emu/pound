@@ -604,30 +604,31 @@ gui_render_frame(void *gui_state)
     const ImVec2_c debug_menu_pivot    = { .x = 0, .y = 0 };
     igSetNextWindowPos(debug_menu_position, ImGuiCond_Always, debug_menu_pivot);
     igSetNextWindowSize(debug_menu_size, ImGuiCond_Always);
+
     if (igBegin("Debug Menu", NULL, 0))
     {
         igCheckbox("Show Mimalloc Tracker", &state->show_mimalloc_panel);
         igCheckbox("Show Hot Reloading Guide", &state->show_hot_reload_panel);
         igCheckbox("Show ImGui Demo", &state->show_demo);
-
-        if (state->show_mimalloc_panel)
-        {
-            gui_render_mimalloc_tracker();
-        }
-
-        if (state->show_hot_reload_panel)
-        {
-            igText("Rebuild PoundGui to relaod GUI code.");
-            igText("Press F5 to force reload.");
-        }
-
-        if (state->show_demo)
-        {
-            igShowDemoWindow(NULL);
-        }
     }
 
     igEnd();
+
+    if (state->show_mimalloc_panel)
+    {
+        gui_render_mimalloc_tracker();
+    }
+
+    if (state->show_hot_reload_panel)
+    {
+        igText("Rebuild PoundGui to relaod GUI code.");
+        igText("Press F5 to force reload.");
+    }
+
+    if (state->show_demo)
+    {
+        igShowDemoWindow(NULL);
+    }
 }
 
 size_t
