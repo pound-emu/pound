@@ -1,4 +1,3 @@
-#include "mimalloc-override.h"
 
 #include "gui/gui.h"
 #include "log.h"
@@ -6,6 +5,8 @@
 #include "SDL3/SDL.h"
 #include "backends/imgui_impl_opengl3_loader.h"
 #include <stdlib.h>
+
+#include "mimalloc-override.h"
 
 #define CIMGUI_DEFINE_ENUMS_AND_STRUCTS
 #include "cimgui.h"

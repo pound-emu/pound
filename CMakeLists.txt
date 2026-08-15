@@ -93,6 +93,11 @@ target_link_libraries(imgui PRIVATE SDL3::SDL3)
 set_target_properties(imgui PROPERTIES
         INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "$<TARGET_PROPERTY:imgui,INTERFACE_INCLUDE_DIRECTORIES>"
 )
+set_target_properties(imgui PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS ON)
+
+# clang-cl doesn't receive /EHsc by default; mimalloc's alloc.c is compiled
+# as C++ and requires exceptions for its new/delete overrides.
+target_compile_options(mimalloc PRIVATE $<$<COMPILE_LANGUAGE:CXX>:/EHsc>)
 
 
 message(STATUS "[SDL] Configuring SDL library...")
@@ -159,6 +164,7 @@ add_library(PoundGui SHARED src/gui/gui.c src/gui/mimalloc_tracker.c)
 target_include_directories(PoundGui PUBLIC src/gui)
 target_link_libraries(PoundGui PRIVATE PoundCore imgui mimalloc)
 set_target_properties(PoundGui PROPERTIES C_VISIBILITY_PRESET hidden)
+set_target_properties(PoundGui PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS ON)
 add_compiler_flags(PoundGui)
 add_linker_flags(PoundGui)
 add_sanitizers(PoundGui)
