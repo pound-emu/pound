@@ -7,7 +7,6 @@
 void
 gui_render_mimalloc_tracker(void)
 {
-
     mi_stats_t_decl(stats);
 
     if (true == igBegin("Mimalloc Arena", NULL, 0))
@@ -22,7 +21,7 @@ gui_render_mimalloc_tracker(void)
                 (double)stats.malloc_requested.current / 1024.0,
                 (double)stats.malloc_requested.total / (1024.0 * 1024.0));
         }
-
-        igEnd();
     }
+
+    igEnd();
 }
