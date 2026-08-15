@@ -10,6 +10,7 @@
 #define CIMGUI_DEFINE_ENUMS_AND_STRUCTS
 
 #include <cimgui.h>
+#include <errno.h>
 
 #if POUND_PLATFORM_WINDOWS
 
@@ -437,7 +438,8 @@ copy_file(const char *source, const char *destination)
 
         if (fclose(in) != 0)
         {
-            POUND_LOG_WARN(&thread_logger, "fclose(source) also failed.");
+            POUND_LOG_WARN(
+                &thread_logger, "fclose(/proc/self/maps) also failed because %s.", strerror(errno));
         }
 
         return false;
@@ -487,7 +489,8 @@ copy_file(const char *source, const char *destination)
 
     if (fclose(in) != 0)
     {
-        POUND_LOG_WARN(&thread_logger, "fclose(source) failed for '%s'.", source);
+        POUND_LOG_WARN(
+            &thread_logger, "fclose(source) failed for '%s' becasue %s.", source, strerror(errno));
         ok = false;
     }
 
@@ -500,8 +503,9 @@ copy_file(const char *source, const char *destination)
     if (fclose(out) != 0)
     {
         POUND_LOG_ERROR(&thread_logger,
-                        "fclose(destination) failed for '%s', data may be incomplete.",
-                        destination);
+                        "fclose(destination) failed for '%s' because %s, data may be incomplete.",
+                        destination,
+                        strerror(errno));
         ok = false;
     }
 
