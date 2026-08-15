@@ -550,7 +550,7 @@ gui_create(const void *POUND_RESTRICT saved_state, size_t saved_size)
 
     gui_state->show_mimalloc_panel   = false;
     gui_state->show_demo             = false;
-    gui_state->show_hot_reload_panel = true;
+    gui_state->show_hot_reload_panel = false;
 
     if (saved_state && saved_size >= sizeof(*gui_state))
     {
