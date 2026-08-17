@@ -3,6 +3,8 @@
 #include "log.h"
 
 #include "SDL3/SDL.h"
+
+#define IMGL3W_IMPL
 #include "backends/imgui_impl_opengl3_loader.h"
 #include <stdlib.h>
 
@@ -221,6 +223,13 @@ app_video_init(app_t *app)
         POUND_LOG_ERROR(&thread_logger,
                         "Aborting function: failed to make OpenGL context current because %s.",
                         SDL_GetError());
+        return false;
+    }
+
+    if (imgl3wInit() != GL3W_OK)
+    {
+        POUND_LOG_ERROR(&thread_logger,
+                        "Aborting function: failed to initialise OpenGL loader (imgl3wInit).");
         return false;
     }
 

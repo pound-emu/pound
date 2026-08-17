@@ -1023,8 +1023,9 @@ get_proc(const char *proc)
         glGetIntegerv(GL_MINOR_VERSION, &version.minor);
         if (version.major == 0 && version.minor == 0)
         {
-            // Query GL_VERSION in desktop GL 2.x, the string will start with "<major>.<minor>"
-            if (const char *gl_version = (const char *)glGetString(GL_VERSION))
+            const char *gl_version = (const char *)glGetString(GL_VERSION);
+
+            if (gl_version != NULL)
             {
                 sscanf(gl_version, "%d.%d", &version.major, &version.minor);
             }
@@ -1162,7 +1163,7 @@ get_proc(const char *proc)
         size_t i;
         for (i = 0; i < GL3W_ARRAY_SIZE(proc_names); i++)
         {
-            imgl3wProcs.ptr[i] = nullptr;
+            imgl3wProcs.ptr[i] = NULL;
         }
     }
 
