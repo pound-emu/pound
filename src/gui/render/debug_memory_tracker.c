@@ -8,12 +8,17 @@
 #define CIMGUI_DEFINE_ENUMS_AND_STRUCTS
 #include "cimgui.h"
 
-#if POUND_PLATFORM_POSIX
+#if POUND_PLATFORM_WINDOWS
+
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+
+#elif POUND_PLATFORM_POSIX
 
 #define __USE_XOPEN_EXTENDED
 #include <unistd.h>
 
-#endif // POUND_PLATFORM_POSIX
+#endif // POUND_PLATFORM_WINDOWS
 
 #define TRACKER_PATH_CAPACITY 4096
 #define TRACKER_LINE_CAPACITY 1024
@@ -96,8 +101,97 @@ get_host_address_space_range(uint64_t *POUND_RESTRICT out_low, uint64_t *POUND_R
     uint64_t low  = UINT64_MAX;
     uint64_t high = 0;
 
-    // TODO: Support Windows Builds.
-#if POUND_PLATFORM_POSIX
+#if POUND_PLATFORM_WINDOWS
+
+    const HMODULE self_module = GetModuleHandleW(NULL);
+
+    if (NULL == self_module)
+    {
+        POUND_LOG_ERROR(&thread_logger,
+                        "Aborting function: GetModuleHandleW(NULL) failed (Win32 error %lu).",
+                        (unsigned long)GetLastError());
+        return false;
+    }
+
+    uint64_t       matched_regions = 0;
+    const uint8_t *address         = NULL;
+
+    for (;;)
+    {
+        MEMORY_BASIC_INFORMATION info;
+        const SIZE_T             queried = VirtualQuery(address, &info, sizeof(info));
+
+        if (0 == queried)
+        {
+            if (NULL == address)
+            {
+                POUND_LOG_ERROR(
+                    &thread_logger,
+                    "Aborting function: VirtualQuery failed at address 0 (Win32 error %lu).",
+                    (unsigned long)GetLastError());
+                return false;
+            }
+
+            break;
+        }
+
+        if (queried < sizeof(info))
+        {
+            POUND_LOG_ERROR(&thread_logger,
+                            "Aborting function: VirtualQuery returned %zu bytes, expected %zu.",
+                            (size_t)queried,
+                            sizeof(info));
+            return false;
+        }
+
+        const uint8_t *const region_start = (const uint8_t *)info.BaseAddress;
+        const uint8_t       *region_end   = region_start + info.RegionSize;
+
+        if (region_end < region_start)
+        {
+            POUND_LOG_WARN(&thread_logger, "Stopping VirtualQuery walk: region end overflowed.");
+            break;
+        }
+
+        const bool is_free    = (MEM_FREE == info.State);
+        const bool is_private = (MEM_PRIVATE == info.Type);
+        const bool is_self    = (info.AllocationBase == (PVOID)self_module);
+
+        if (false == is_free && (is_private || is_self))
+        {
+            const uint64_t start_hex = (uint64_t)(uintptr_t)region_start;
+            const uint64_t end_hex   = (uint64_t)(uintptr_t)region_end;
+
+            if (start_hex < low)
+            {
+                low = start_hex;
+            }
+
+            if (end_hex > high)
+            {
+                high = end_hex;
+            }
+
+            ++matched_regions;
+        }
+
+        if (region_end <= address)
+        {
+            POUND_LOG_ERROR(&thread_logger,
+                            "Aborting function: VirtualQuery region did not advance.");
+            return false;
+        }
+
+        address = region_end;
+    }
+
+    if (0 == matched_regions)
+    {
+        POUND_LOG_WARN(&thread_logger, "No host program regions found via VirtualQuery.");
+        return false;
+    }
+
+#elif POUND_PLATFORM_POSIX
 
     char          exe_path[TRACKER_PATH_CAPACITY] = { 0 };
     const ssize_t exe_length = readlink("/proc/self/exe", exe_path, sizeof(exe_path) - 1);
@@ -367,7 +461,7 @@ get_host_address_space_range(uint64_t *POUND_RESTRICT out_low, uint64_t *POUND_R
         return false;
     }
 
-#endif // POUND_PLATFORM_POSIX
+#endif // POUND_PLATFORM_WINDOWS
 
     *out_low  = low;
     *out_high = high;
