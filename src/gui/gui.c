@@ -1,9 +1,8 @@
-#include "mimalloc-override.h"
-
 #include "gui.h"
 #include "log.h"
 #include "render/debug_memory_tracker.h"
 #include <string.h>
+#include "mimalloc-override.h"
 
 #define CIMGUI_DEFINE_ENUMS_AND_STRUCTS
 #include <cimgui.h>
