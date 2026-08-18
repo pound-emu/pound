@@ -2,15 +2,11 @@
 
 #include "gui.h"
 #include "log.h"
-#include "mimalloc_tracker.h"
-#include <stdio.h>
-
+#include "render/debug_memory_tracker.h"
 #include <string.h>
 
 #define CIMGUI_DEFINE_ENUMS_AND_STRUCTS
-
 #include <cimgui.h>
-#include <errno.h>
 
 typedef struct
 {
