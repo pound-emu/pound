@@ -1,7 +1,8 @@
+#include <mimalloc-override.h>
+
 #include "gui/gui.h"
 #include "log.h"
 #include <SDL3/SDL.h>
-#include <mimalloc.h>
 #include <stdlib.h>
 
 // This is required to perform hot reloading using Windows DLLs.
@@ -50,6 +51,7 @@ static bool app_hot_reload_shutdown(app_t *app);
 static void app_poll_events(app_t *app);
 static void app_render_frame(app_t *app);
 static void app_render_frozen_overlay(app_t *app);
+static void app_memory_churn(void);
 
 int
 main(void)
@@ -120,6 +122,7 @@ main(void)
     while (app.running)
     {
         app_poll_events(&app);
+        app_memory_churn();
         app_render_frame(&app);
     }
 
@@ -803,6 +806,74 @@ app_render_frozen_overlay(app_t *app)
     }
 
     igEnd();
+}
+
+// Slowly allocate and deallocate memory over 10 seconds.
+// This is meant to test the GUI memory debug tracker.
+static void
+app_memory_churn(void)
+{
+    enum
+    {
+        BLOCK_MAX = 128
+    };
+
+    static void    *blocks[BLOCK_MAX] = { 0 };
+    static size_t   count             = 0;
+    static uint64_t start_ms          = 0;
+
+    const size_t   block_size  = 256 * 1024;
+    const uint64_t duration_ms = 10000;
+    const uint64_t half_ms     = duration_ms / 2;
+    const size_t   max_step    = 4;
+
+    const uint64_t now = SDL_GetTicks();
+
+    if (0 == start_ms)
+    {
+        start_ms = now;
+    }
+
+    const uint64_t elapsed = (now - start_ms) % duration_ms;
+
+    size_t target;
+
+    if (elapsed < half_ms)
+    {
+        target = (size_t)((elapsed * BLOCK_MAX) / half_ms);
+    }
+    else
+    {
+        target = BLOCK_MAX - (size_t)(((elapsed - half_ms) * BLOCK_MAX) / half_ms);
+    }
+
+    if (target > BLOCK_MAX)
+    {
+        target = BLOCK_MAX;
+    }
+
+    size_t step = 0;
+
+    while (count < target && step < max_step)
+    {
+        void *p = malloc(block_size);
+
+        if (NULL == p)
+        {
+            break;
+        }
+
+        memset(p, 0xCD, block_size);
+        blocks[count++] = p;
+        ++step;
+    }
+
+    while (count > target && step < max_step)
+    {
+        free(blocks[--count]);
+        blocks[count] = NULL;
+        ++step;
+    }
 }
 
 /*** end of file ***/
