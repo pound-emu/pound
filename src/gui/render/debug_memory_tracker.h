@@ -11,6 +11,8 @@ typedef struct
     uint64_t gva_low;
     uint64_t gva_text_start;
     uint64_t gva_text_end;
+    uint64_t gva_data_start;
+    uint64_t gva_data_end;
     bool     first_time_run;
     char     pad[7];
 } debug_memory_tracker_t;

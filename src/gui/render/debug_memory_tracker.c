@@ -69,6 +69,11 @@ gui_render_debug_memory_tracker(debug_memory_tracker_t *context)
                (unsigned long long)context->gva_text_start,
                (unsigned long long)context->gva_text_end);
 
+        // TODO (GloriousTaco): Add Windows Support.
+        igText(".data: 0x%llx - 0x%llx",
+               (unsigned long long)context->gva_data_start,
+               (unsigned long long)context->gva_data_end);
+
         if (mi_stats_get(&stats))
         {
             const double memory_in_use
@@ -102,8 +107,8 @@ get_host_address_space_range(debug_memory_tracker_t *context)
     uint64_t high       = 0;
     uint64_t text_start = UINT64_MAX;
     uint64_t text_end   = 0;
-    // uint64_t data_start = UINT64_MAX;
-    // uint64_t data_end   = 0;
+    uint64_t data_start = UINT64_MAX;
+    uint64_t data_end   = 0;
 
 #if POUND_PLATFORM_WINDOWS
 
@@ -443,6 +448,15 @@ get_host_address_space_range(debug_memory_tracker_t *context)
             text_start = start_hex;
             text_end   = end_hex;
         }
+        else if (true == is_self && 'r' == permissions[0] && 'w' == permissions[1]
+                 && '-' == permissions[2])
+        {
+            data_start = start_hex;
+            data_end   = end_hex;
+        }
+        else
+        {
+        }
     }
 
     if (ferror(maps))
@@ -478,6 +492,8 @@ get_host_address_space_range(debug_memory_tracker_t *context)
     context->gva_high       = high;
     context->gva_text_start = text_start;
     context->gva_text_end   = text_end;
+    context->gva_data_start = data_start;
+    context->gva_data_end   = data_end;
     return true;
 }
 
