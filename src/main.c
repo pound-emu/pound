@@ -1,9 +1,8 @@
-#include <mimalloc-override.h>
-
 #include "gui/gui.h"
 #include "log.h"
 #include <SDL3/SDL.h>
 #include <stdlib.h>
+#include <mimalloc-override.h>
 
 // This is required to perform hot reloading using Windows DLLs.
 #if POUND_PLATFORM_WINDOWS

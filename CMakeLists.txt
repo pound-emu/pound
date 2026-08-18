@@ -97,7 +97,11 @@ set_target_properties(imgui PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS ON)
 
 # clang-cl doesn't receive /EHsc by default; mimalloc's alloc.c is compiled
 # as C++ and requires exceptions for its new/delete overrides.
-target_compile_options(mimalloc PRIVATE $<$<COMPILE_LANGUAGE:CXX>:/EHsc>)
+foreach (mi_target mimalloc mimalloc-static mimalloc-obj)
+    if (TARGET ${mi_target})
+        target_compile_options(${mi_target} PRIVATE $<$<COMPILE_LANGUAGE:CXX>:/EHsc>)
+    endif ()
+endforeach ()
 
 
 message(STATUS "[SDL] Configuring SDL library...")
