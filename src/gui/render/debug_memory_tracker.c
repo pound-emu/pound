@@ -61,12 +61,16 @@ gui_render_debug_memory_tracker(debug_memory_tracker_t *context)
     {
         if (mi_stats_get(&stats))
         {
+            const double memory_in_use
+                = (double)(stats.malloc_normal.current + stats.malloc_huge.current)
+                  / (1024.0 * 1024.0);
+
             igText(
-                "reserved: %.1f MiB   committed: %.1f MiB   in use: %.1f KiB   malloc req: %.1f "
+                "reserved: %.1f MiB   committed: %.1f MiB   in use: %.1f MiB   malloc req: %.1f "
                 "MiB",
                 (double)stats.reserved.current / (1024.0 * 1024.0),
                 (double)stats.committed.current / (1024.0 * 1024.0),
-                (double)stats.malloc_requested.current / 1024.0,
+                memory_in_use,
                 (double)stats.malloc_requested.total / (1024.0 * 1024.0));
         }
     }
