@@ -23,7 +23,7 @@
 #define TRACKER_PATH_CAPACITY 4096
 #define TRACKER_LINE_CAPACITY 1024
 
-static bool get_host_address_space_range(uint64_t *out_low, uint64_t *out_high);
+static bool get_host_address_space_range(debug_memory_tracker_t *context);
 
 void
 gui_render_debug_memory_tracker(debug_memory_tracker_t *context)
@@ -36,13 +36,13 @@ gui_render_debug_memory_tracker(debug_memory_tracker_t *context)
 
     if (POUND_UNLIKELY(true == context->first_time_run))
     {
-        get_host_address_space_range(&context->gva_low, &context->gva_high);
+        get_host_address_space_range(context);
         context->first_time_run = false;
     }
 
     if (0 == (++context->current_frame & 127))
     {
-        get_host_address_space_range(&context->gva_low, &context->gva_high);
+        get_host_address_space_range(context);
     }
 
     char title[160];
@@ -64,12 +64,18 @@ gui_render_debug_memory_tracker(debug_memory_tracker_t *context)
 
     if (true == igBegin(title, NULL, 0))
     {
+        // TODO (GloriousTaco): Add Windows Support.
+        igText(".text: 0x%llx - 0x%llx",
+               (unsigned long long)context->gva_text_start,
+               (unsigned long long)context->gva_text_end);
+
         if (mi_stats_get(&stats))
         {
             const double memory_in_use
                 = (double)(stats.malloc_normal.current + stats.malloc_huge.current)
                   / (1024.0 * 1024.0);
 
+            igSeparator();
             igText(
                 "reserved: %.1f MiB   committed: %.1f MiB   in use: %.1f MiB   malloc req: %.1f "
                 "MiB",
@@ -84,22 +90,20 @@ gui_render_debug_memory_tracker(debug_memory_tracker_t *context)
 }
 
 static bool
-get_host_address_space_range(uint64_t *POUND_RESTRICT out_low, uint64_t *POUND_RESTRICT out_high)
+get_host_address_space_range(debug_memory_tracker_t *context)
 {
-    if (NULL == out_low)
+    if (NULL == context)
     {
-        POUND_LOG_ERROR(&thread_logger, "Aborting function: out_low is NULL.");
+        POUND_LOG_ERROR(&thread_logger, "Aborting function: context is NULL.");
         return false;
     }
 
-    if (NULL == out_high)
-    {
-        POUND_LOG_ERROR(&thread_logger, "Aborting function: out_high is NULL.");
-        return false;
-    }
-
-    uint64_t low  = UINT64_MAX;
-    uint64_t high = 0;
+    uint64_t low        = UINT64_MAX;
+    uint64_t high       = 0;
+    uint64_t text_start = UINT64_MAX;
+    uint64_t text_end   = 0;
+    // uint64_t data_start = UINT64_MAX;
+    // uint64_t data_end   = 0;
 
 #if POUND_PLATFORM_WINDOWS
 
@@ -299,17 +303,17 @@ get_host_address_space_range(uint64_t *POUND_RESTRICT out_low, uint64_t *POUND_R
         }
 
         ++line_cursor;
-        const char *field = line_cursor;
+        char permissions[5] = { 0 };
 
-        while ('\0' != *line_cursor && ' ' != *line_cursor)
+        for (int p = 0; p < 4 && '\0' != *line_cursor && ' ' != *line_cursor; ++p, ++line_cursor)
         {
-            ++line_cursor;
+            permissions[p] = *line_cursor;
         }
 
-        if (line_cursor == field)
+        if ('\0' != *line_cursor && ' ' != *line_cursor)
         {
             POUND_LOG_WARN(&thread_logger,
-                           "Skipping /proc/self/maps line %llu: empty permissions field.",
+                           "Skipping /proc/self/maps line %llu: permissions field too long.",
                            (unsigned long long)line_number);
             continue;
         }
@@ -432,6 +436,13 @@ get_host_address_space_range(uint64_t *POUND_RESTRICT out_low, uint64_t *POUND_R
 
             ++matched_regions;
         }
+
+        if (true == is_self && 'r' == permissions[0] && '-' == permissions[1]
+            && 'x' == permissions[2])
+        {
+            text_start = start_hex;
+            text_end   = end_hex;
+        }
     }
 
     if (ferror(maps))
@@ -463,8 +474,10 @@ get_host_address_space_range(uint64_t *POUND_RESTRICT out_low, uint64_t *POUND_R
 
 #endif // POUND_PLATFORM_WINDOWS
 
-    *out_low  = low;
-    *out_high = high;
+    context->gva_low        = low;
+    context->gva_high       = high;
+    context->gva_text_start = text_start;
+    context->gva_text_end   = text_end;
     return true;
 }
 
