@@ -1,4 +1,5 @@
 #include "debug_memory_tracker.h"
+#include "debug_memory_tracker_gui_box.h"
 #include "log.h"
 #include "mimalloc-stats.h"
 #include "platform.h"
@@ -64,6 +65,62 @@ gui_render_debug_memory_tracker(debug_memory_tracker_t *context)
 
     if (true == igBegin(title, NULL, 0))
     {
+        ImDrawList *POUND_RESTRICT draw_list   = igGetWindowDrawList();
+        const ImVec2_c             origin      = igGetCursorScreenPos();
+        const float                box_width   = 150.0f;
+        const float                box_height  = 60.0f;
+        const float                box_gap     = 4.0f;
+        const float                font_height = igGetFontSize();
+        const ImU32                box_color   = IM_COL32(100, 149, 237, 255);
+
+        char text_address[24] = { 0 };
+        char data_address[24] = { 0 };
+        char vram_address[24] = { 0 };
+        int  written          = snprintf(text_address,
+                               sizeof(text_address),
+                               "0x%llx",
+                               (unsigned long long)context->gva_text_start);
+
+        const char *text_caption
+            = (written > 0 && written < (int)sizeof(text_address)) ? text_address : NULL;
+
+        written = snprintf(data_address,
+                           sizeof(data_address),
+                           "0x%llx",
+                           (unsigned long long)context->gva_data_start);
+
+        const char *data_caption
+            = (written > 0 && written < (int)sizeof(data_address)) ? data_address : NULL;
+
+        written = snprintf(vram_address,
+                           sizeof(vram_address),
+                           "0x%llx",
+                           (unsigned long long)context->gva_vram_framebuffer_start);
+
+        const char *vram_caption
+            = (written > 0 && written < (int)sizeof(vram_address)) ? vram_address : NULL;
+
+        gui_box_t text_box = { 0 };
+        gui_box_init(&text_box, origin, box_width, box_height, box_color, ".text", text_caption);
+        const ImVec2_c text_box_end = gui_box_render(draw_list, &text_box);
+
+        gui_box_t      data_box;
+        const ImVec2_c data_position = { .x = text_box_end.x + box_gap, .y = origin.y };
+        gui_box_init(
+            &data_box, data_position, box_width, box_height, box_color, ".data", data_caption);
+        const ImVec2_c data_box_end = gui_box_render(draw_list, &data_box);
+
+        gui_box_t      vram_box;
+        const ImVec2_c vram_position = { .x = data_box_end.x + box_gap, .y = origin.y };
+        gui_box_init(
+            &vram_box, vram_position, box_width, box_height, box_color, "VRAM", vram_caption);
+        gui_box_render(draw_list, &vram_box);
+
+        const ImVec2_c reserved
+            = { .x = 0.0f,
+                .y = box_height + GUI_BOX_LABEL_INSET + font_height + GUI_BOX_LABEL_INSET };
+        igDummy(reserved);
+
         // TODO (GloriousTaco): Add Windows Support.
         igText(".text: 0x%llx - 0x%llx",
                (unsigned long long)context->gva_text_start,
