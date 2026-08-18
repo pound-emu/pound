@@ -1,10 +1,13 @@
-
 #include "gui/gui.h"
 #include "log.h"
 
 #include "SDL3/SDL.h"
 
+// This is required to perform hot reloading using Windows DLLs.
+#if POUND_PLATFORM_WINDOWS
 #define IMGL3W_IMPL
+#endif // POUND_PLATFORM_WINDOWS
+
 #include "backends/imgui_impl_opengl3_loader.h"
 #include <stdlib.h>
 
