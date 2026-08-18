@@ -3,11 +3,10 @@
 #include "mimalloc-stats.h"
 #include "platform.h"
 #include <errno.h>
+#include <stdlib.h>
 
 #define CIMGUI_DEFINE_ENUMS_AND_STRUCTS
 #include "cimgui.h"
-
-#include <stdlib.h>
 
 #if POUND_PLATFORM_POSIX
 
