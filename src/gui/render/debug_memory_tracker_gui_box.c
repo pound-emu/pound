@@ -4,6 +4,11 @@
 #define GUI_BOX_LABEL_COLOR   IM_COL32(0, 0, 0, 255)
 #define GUI_BOX_CAPTION_COLOR IM_COL32(128, 128, 128, 255)
 
+/// How much brighter a box becomes while hovered (0.0 = unchanged, 1.0 = white).
+#define GUI_BOX_HOVER_LIGHTEN 0.25F
+
+static ImU32 gui_box_lighten(ImU32 color, float amount);
+
 void
 gui_box_init(gui_box_t     *box,
              const ImVec2_c position,
@@ -47,10 +52,17 @@ gui_box_render(ImDrawList *draw_list, const gui_box_t *box)
     const ImVec2_c min         = box->position;
     max_corner.x               = min.x + box->width;
     max_corner.y               = min.y + box->height;
+
+    ImU32 fill_color = box->fill_color;
+
+    if (igIsMouseHoveringRect(min, max_corner, true))
+    {
+        fill_color = gui_box_lighten(box->fill_color, GUI_BOX_HOVER_LIGHTEN);
+    }
+
     const float       rounding = 0.0F;
     const ImDrawFlags flags    = 0;
-
-    ImDrawList_AddRectFilled(draw_list, min, max_corner, box->fill_color, rounding, flags);
+    ImDrawList_AddRectFilled(draw_list, min, max_corner, fill_color, rounding, flags);
 
     if (NULL != box->label)
     {
@@ -86,6 +98,17 @@ gui_box_is_clicked(const gui_box_t *box)
 
     const bool is_mouse_clicked = igIsMouseClicked_Bool(ImGuiMouseButton_Left, false);
     return is_mouse_clicked;
+}
+
+static ImU32
+gui_box_lighten(ImU32 color, float amount)
+{
+    ImVec4_c rgba         = igColorConvertU32ToFloat4(color);
+    rgba.x                = rgba.x + (1.0f - rgba.x) * amount;
+    rgba.y                = rgba.y + (1.0f - rgba.y) * amount;
+    rgba.z                = rgba.z + (1.0f - rgba.z) * amount;
+    const ImU32 new_color = igColorConvertFloat4ToU32(rgba);
+    return new_color;
 }
 
 /*** end of file ***/
