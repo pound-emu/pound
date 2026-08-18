@@ -13,7 +13,7 @@ typedef struct
     int  selected_tab;
     bool show_demo;
     bool show_hot_reload_panel;
-    bool show_mimalloc_panel;
+    bool show_memory_tracker;
     char pad[1];
 } gui_state_t;
 
@@ -60,14 +60,14 @@ gui_create(const void *POUND_RESTRICT saved_state, size_t saved_size)
         return NULL;
     }
 
-    gui_state->show_mimalloc_panel   = false;
+    gui_state->show_memory_tracker   = false;
     gui_state->show_demo             = false;
     gui_state->show_hot_reload_panel = false;
 
     if (saved_state && saved_size >= sizeof(*gui_state))
     {
         const gui_state_t *POUND_RESTRICT saved = saved_state;
-        gui_state->show_mimalloc_panel          = saved->show_mimalloc_panel;
+        gui_state->show_memory_tracker          = saved->show_memory_tracker;
         gui_state->show_demo                    = saved->show_demo;
         gui_state->show_hot_reload_panel        = saved->show_hot_reload_panel;
         gui_state->selected_tab                 = saved->selected_tab;
@@ -119,16 +119,16 @@ gui_render_frame(void *gui_state)
 
     if (igBegin("Debug Menu", NULL, 0))
     {
-        igCheckbox("Show Mimalloc Tracker", &state->show_mimalloc_panel);
+        igCheckbox("Show Memory Tracker", &state->show_memory_tracker);
         igCheckbox("Show Hot Reloading Guide", &state->show_hot_reload_panel);
         igCheckbox("Show ImGui Demo", &state->show_demo);
     }
 
     igEnd();
 
-    if (state->show_mimalloc_panel)
+    if (state->show_memory_tracker)
     {
-        gui_render_mimalloc_tracker();
+        gui_render_debug_memory_tracker();
     }
 
     if (state->show_hot_reload_panel)

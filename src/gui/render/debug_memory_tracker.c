@@ -22,7 +22,7 @@
 static bool host_address_space_range(uint64_t *out_low, uint64_t *out_high);
 
 void
-gui_render_mimalloc_tracker(void)
+gui_render_debug_memory_tracker(void)
 {
     static uint64_t gva_low  = 0;
     static uint64_t gva_high = 0;
