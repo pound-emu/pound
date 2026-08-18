@@ -10,11 +10,12 @@
 
 typedef struct
 {
-    int  selected_tab;
-    bool show_demo;
-    bool show_hot_reload_panel;
-    bool show_memory_tracker;
-    char pad[1];
+    debug_memory_tracker_t debug_memory_tracker;
+    int                    selected_tab;
+    bool                   show_demo;
+    bool                   show_hot_reload_panel;
+    bool                   show_memory_tracker;
+    char                   pad[1];
 } gui_state_t;
 
 static void  *gui_create(const void *saved_data, size_t saved_size);
@@ -60,9 +61,10 @@ gui_create(const void *POUND_RESTRICT saved_state, size_t saved_size)
         return NULL;
     }
 
-    gui_state->show_memory_tracker   = false;
-    gui_state->show_demo             = false;
-    gui_state->show_hot_reload_panel = false;
+    gui_state->show_memory_tracker                 = false;
+    gui_state->show_demo                           = false;
+    gui_state->show_hot_reload_panel               = false;
+    gui_state->debug_memory_tracker.first_time_run = true;
 
     if (saved_state && saved_size >= sizeof(*gui_state))
     {
@@ -128,7 +130,7 @@ gui_render_frame(void *gui_state)
 
     if (state->show_memory_tracker)
     {
-        gui_render_debug_memory_tracker();
+        gui_render_debug_memory_tracker(&state->debug_memory_tracker);
     }
 
     if (state->show_hot_reload_panel)

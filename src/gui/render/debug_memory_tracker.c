@@ -21,29 +21,38 @@
 static bool get_host_address_space_range(uint64_t *out_low, uint64_t *out_high);
 
 void
-gui_render_debug_memory_tracker(void)
+gui_render_debug_memory_tracker(debug_memory_tracker_t *context)
 {
-    static uint64_t gva_low  = 0;
-    static uint64_t gva_high = 0;
-    static uint64_t frame    = 0;
-
-    if (0 == (++frame & 127))
+    if (POUND_UNLIKELY(NULL == context))
     {
-        get_host_address_space_range(&gva_low, &gva_high);
+        POUND_LOG_ERROR(&thread_logger, "Aborting function: context is NULL.");
+        return;
+    }
+
+    if (POUND_UNLIKELY(true == context->first_time_run))
+    {
+        get_host_address_space_range(&context->gva_low, &context->gva_high);
+        context->first_time_run = false;
+    }
+
+    if (0 == (++context->current_frame & 127))
+    {
+        get_host_address_space_range(&context->gva_low, &context->gva_high);
     }
 
     char title[160];
-    if (0 != gva_high)
+
+    if (POUND_LIKELY(0 != context->gva_high))
     {
         snprintf(title,
                  sizeof(title),
-                 "Guest Address Space - 0x%llx - 0x%llx (mapped view)",
-                 (unsigned long long)gva_low,
-                 (unsigned long long)gva_high);
+                 "Guest Address Space - 0x%llx - 0x%llx (mapped view)###GuestAddressSpace",
+                 (unsigned long long)context->gva_low,
+                 (unsigned long long)context->gva_high);
     }
     else
     {
-        snprintf(title, sizeof(title), "Guest Address Space - unknown");
+        snprintf(title, sizeof(title), "Guest Address Space - unknown###GuestAddressSpace");
     }
 
     mi_stats_t_decl(stats);
