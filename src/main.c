@@ -1,17 +1,17 @@
 #include "gui/gui.h"
 #include "log.h"
-
-#include "SDL3/SDL.h"
+#include <SDL3/SDL.h>
+#include <mimalloc.h>
+#include <stdlib.h>
 
 // This is required to perform hot reloading using Windows DLLs.
 #if POUND_PLATFORM_WINDOWS
+
 #define IMGL3W_IMPL
+
 #endif // POUND_PLATFORM_WINDOWS
 
-#include "backends/imgui_impl_opengl3_loader.h"
-#include <stdlib.h>
-
-#include "mimalloc-override.h"
+#include "imgui/backends/imgui_impl_opengl3_loader.h"
 
 #define CIMGUI_DEFINE_ENUMS_AND_STRUCTS
 #include "cimgui.h"
