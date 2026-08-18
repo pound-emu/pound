@@ -38,10 +38,13 @@ typedef struct
     char          pad[7];
 } gui_plugin_t;
 
+/// gui.c
+POUND_EXPORT bool gui_exports_get(gui_exports_t *out);
+
+/// gui_loader.c
 POUND_EXPORT bool     gui_plugin_load_module(gui_plugin_t *POUND_RESTRICT plugin,
                                              const char *POUND_RESTRICT   source_path);
 POUND_EXPORT void     gui_plugin_destroy(gui_plugin_t *plugin);
-POUND_EXPORT bool     gui_exports_get(gui_exports_t *out);
 POUND_EXPORT uint64_t file_modified_time(const char *path);
 POUND_EXPORT bool     copy_file(const char *POUND_RESTRICT source,
                                 const char *POUND_RESTRICT destination);
