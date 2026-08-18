@@ -19,7 +19,7 @@
 #define TRACKER_PATH_CAPACITY 4096
 #define TRACKER_LINE_CAPACITY 1024
 
-static bool host_address_space_range(uint64_t *out_low, uint64_t *out_high);
+static bool get_host_address_space_range(uint64_t *out_low, uint64_t *out_high);
 
 void
 gui_render_debug_memory_tracker(void)
@@ -30,7 +30,7 @@ gui_render_debug_memory_tracker(void)
 
     if (0 == (++frame & 127))
     {
-        host_address_space_range(&gva_low, &gva_high);
+        get_host_address_space_range(&gva_low, &gva_high);
     }
 
     char title[160];
@@ -67,7 +67,7 @@ gui_render_debug_memory_tracker(void)
 }
 
 static bool
-host_address_space_range(uint64_t *POUND_RESTRICT out_low, uint64_t *POUND_RESTRICT out_high)
+get_host_address_space_range(uint64_t *POUND_RESTRICT out_low, uint64_t *POUND_RESTRICT out_high)
 {
     if (NULL == out_low)
     {
