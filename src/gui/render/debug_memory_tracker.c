@@ -74,6 +74,11 @@ gui_render_debug_memory_tracker(debug_memory_tracker_t *context)
                (unsigned long long)context->gva_data_start,
                (unsigned long long)context->gva_data_end);
 
+        // TODO (GloriousTaco): Add Windows Support.
+        igText("VRAM Framebuffer: 0x%llx - 0x%llx",
+               (unsigned long long)context->gva_vram_framebuffer_start,
+               (unsigned long long)context->gva_vram_framebuffer_end);
+
         if (mi_stats_get(&stats))
         {
             const double memory_in_use
@@ -103,12 +108,14 @@ get_host_address_space_range(debug_memory_tracker_t *context)
         return false;
     }
 
-    uint64_t low        = UINT64_MAX;
-    uint64_t high       = 0;
-    uint64_t text_start = UINT64_MAX;
-    uint64_t text_end   = 0;
-    uint64_t data_start = UINT64_MAX;
-    uint64_t data_end   = 0;
+    uint64_t low                    = UINT64_MAX;
+    uint64_t high                   = 0;
+    uint64_t text_start             = UINT64_MAX;
+    uint64_t text_end               = 0;
+    uint64_t data_start             = UINT64_MAX;
+    uint64_t data_end               = 0;
+    uint64_t vram_framebuffer_start = UINT64_MAX;
+    uint64_t vram_framebuffer_end   = 0;
 
 #if POUND_PLATFORM_WINDOWS
 
@@ -457,6 +464,12 @@ get_host_address_space_range(debug_memory_tracker_t *context)
         else
         {
         }
+
+        if (true == is_device && 'w' == permissions[1])
+        {
+            vram_framebuffer_start = start_hex;
+            vram_framebuffer_end   = end_hex;
+        }
     }
 
     if (ferror(maps))
@@ -488,12 +501,14 @@ get_host_address_space_range(debug_memory_tracker_t *context)
 
 #endif // POUND_PLATFORM_WINDOWS
 
-    context->gva_low        = low;
-    context->gva_high       = high;
-    context->gva_text_start = text_start;
-    context->gva_text_end   = text_end;
-    context->gva_data_start = data_start;
-    context->gva_data_end   = data_end;
+    context->gva_low                    = low;
+    context->gva_high                   = high;
+    context->gva_text_start             = text_start;
+    context->gva_text_end               = text_end;
+    context->gva_data_start             = data_start;
+    context->gva_data_end               = data_end;
+    context->gva_vram_framebuffer_start = vram_framebuffer_start;
+    context->gva_vram_framebuffer_end   = vram_framebuffer_end;
     return true;
 }
 

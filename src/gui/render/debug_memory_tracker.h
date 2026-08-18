@@ -13,6 +13,8 @@ typedef struct
     uint64_t gva_text_end;
     uint64_t gva_data_start;
     uint64_t gva_data_end;
+    uint64_t gva_vram_framebuffer_start;
+    uint64_t gva_vram_framebuffer_end;
     bool     first_time_run;
     char     pad[7];
 } debug_memory_tracker_t;
