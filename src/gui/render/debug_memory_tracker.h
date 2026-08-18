@@ -15,8 +15,9 @@ typedef struct
     uint64_t gva_data_end;
     uint64_t gva_vram_framebuffer_start;
     uint64_t gva_vram_framebuffer_end;
+    uint8_t  selected_box_info_index;
     bool     first_time_run;
-    char     pad[7];
+    char     pad[6];
 } debug_memory_tracker_t;
 
 void gui_render_debug_memory_tracker(debug_memory_tracker_t *context);

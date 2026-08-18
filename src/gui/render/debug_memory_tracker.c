@@ -38,7 +38,8 @@ gui_render_debug_memory_tracker(debug_memory_tracker_t *context)
     if (POUND_UNLIKELY(true == context->first_time_run))
     {
         get_host_address_space_range(context);
-        context->first_time_run = false;
+        context->selected_box_info_index = 0;
+        context->first_time_run          = false;
     }
 
     if (0 == (++context->current_frame & 127))
@@ -73,10 +74,14 @@ gui_render_debug_memory_tracker(debug_memory_tracker_t *context)
         const float                font_height = igGetFontSize();
         const ImU32                box_color   = IM_COL32(100, 149, 237, 255);
 
-        char text_address[24] = { 0 };
-        char data_address[24] = { 0 };
-        char vram_address[24] = { 0 };
-        int  written          = snprintf(text_address,
+        const char *text_label_name  = ".text";
+        const char *data_label_name  = ".data";
+        const char *vram_label_name  = "VRAM";
+        char        text_address[24] = { 0 };
+        char        data_address[24] = { 0 };
+        char        vram_address[24] = { 0 };
+
+        int written = snprintf(text_address,
                                sizeof(text_address),
                                "0x%llx",
                                (unsigned long long)context->gva_text_start);
@@ -101,19 +106,30 @@ gui_render_debug_memory_tracker(debug_memory_tracker_t *context)
             = (written > 0 && written < (int)sizeof(vram_address)) ? vram_address : NULL;
 
         gui_box_t text_box = { 0 };
-        gui_box_init(&text_box, origin, box_width, box_height, box_color, ".text", text_caption);
+        gui_box_init(
+            &text_box, origin, box_width, box_height, box_color, text_label_name, text_caption);
         const ImVec2_c text_box_end = gui_box_render(draw_list, &text_box);
 
         gui_box_t      data_box;
         const ImVec2_c data_position = { .x = text_box_end.x + box_gap, .y = origin.y };
-        gui_box_init(
-            &data_box, data_position, box_width, box_height, box_color, ".data", data_caption);
+        gui_box_init(&data_box,
+                     data_position,
+                     box_width,
+                     box_height,
+                     box_color,
+                     data_label_name,
+                     data_caption);
         const ImVec2_c data_box_end = gui_box_render(draw_list, &data_box);
 
         gui_box_t      vram_box;
         const ImVec2_c vram_position = { .x = data_box_end.x + box_gap, .y = origin.y };
-        gui_box_init(
-            &vram_box, vram_position, box_width, box_height, box_color, "VRAM", vram_caption);
+        gui_box_init(&vram_box,
+                     vram_position,
+                     box_width,
+                     box_height,
+                     box_color,
+                     vram_label_name,
+                     vram_caption);
         gui_box_render(draw_list, &vram_box);
 
         const ImVec2_c reserved
@@ -121,20 +137,48 @@ gui_render_debug_memory_tracker(debug_memory_tracker_t *context)
                 .y = box_height + GUI_BOX_LABEL_INSET + font_height + GUI_BOX_LABEL_INSET };
         igDummy(reserved);
 
-        // TODO (GloriousTaco): Add Windows Support.
-        igText(".text: 0x%llx - 0x%llx",
-               (unsigned long long)context->gva_text_start,
-               (unsigned long long)context->gva_text_end);
+        if (gui_box_is_clicked(&text_box))
+        {
+            context->selected_box_info_index = 0;
+        }
+        else if (gui_box_is_clicked(&data_box))
+        {
+            context->selected_box_info_index = 1;
+        }
+        else if (gui_box_is_clicked(&vram_box))
+        {
+            context->selected_box_info_index = 2;
+        }
+        else
+        {
+        }
 
-        // TODO (GloriousTaco): Add Windows Support.
-        igText(".data: 0x%llx - 0x%llx",
-               (unsigned long long)context->gva_data_start,
-               (unsigned long long)context->gva_data_end);
+        const int32_t  selected_index    = context->selected_box_info_index;
+        gui_box_info_t selected_box_info = { 0 };
 
-        // TODO (GloriousTaco): Add Windows Support.
-        igText("VRAM Framebuffer: 0x%llx - 0x%llx",
-               (unsigned long long)context->gva_vram_framebuffer_start,
-               (unsigned long long)context->gva_vram_framebuffer_end);
+        switch (selected_index)
+        {
+            case 1: {
+                selected_box_info.name      = data_label_name;
+                selected_box_info.gva_start = context->gva_data_start;
+                selected_box_info.gva_end   = context->gva_data_end;
+                break;
+            }
+            case 2: {
+                selected_box_info.name      = vram_label_name;
+                selected_box_info.gva_start = context->gva_vram_framebuffer_start;
+                selected_box_info.gva_end   = context->gva_vram_framebuffer_end;
+                break;
+            }
+            default: {
+                selected_box_info.name      = text_label_name;
+                selected_box_info.gva_start = context->gva_text_start;
+                selected_box_info.gva_end   = context->gva_text_end;
+                break;
+            }
+        }
+
+        gui_box_info_render(&selected_box_info);
 
         if (mi_stats_get(&stats))
         {

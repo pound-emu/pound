@@ -100,8 +100,60 @@ gui_box_is_clicked(const gui_box_t *box)
     return is_mouse_clicked;
 }
 
+void
+gui_box_info_render(const gui_box_info_t *info)
+{
+    if (POUND_UNLIKELY(NULL == info))
+    {
+        POUND_LOG_ERROR(&thread_logger, "Aborting function: info is NULL.");
+        return;
+    }
+
+    if (POUND_UNLIKELY(NULL == info->name))
+    {
+        POUND_LOG_ERROR(&thread_logger, "Aborting function: info->name is NULL.");
+        return;
+    }
+
+    const ImVec4_c header_color
+        = { .x = 100.0f / 255.0f, .y = 149.0f / 255.0f, .z = 237.0f / 255.0f, .w = 1.0f };
+    const ImVec4_c label_color
+        = { .x = 128.0f / 255.0f, .y = 128.0f / 255.0f, .z = 128.0f / 255.0f, .w = 1.0f };
+
+    igTextColored(header_color, "Selected region");
+    igSeparator();
+
+    const ImVec2_c outer_size  = { .x = 0.0f, .y = 0.0f };
+    const int      columns     = 2;
+    const float    inner_width = 0.0F;
+
+    if (false
+        == igBeginTable("##gui_box_region_info",
+                        columns,
+                        ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_BordersInnerH,
+                        outer_size,
+                        inner_width))
+    {
+        return;
+    }
+
+    igTableNextRow(0, 0.0f);
+    igTableSetColumnIndex(0);
+    igTextColored(label_color, "name");
+    igTableSetColumnIndex(1);
+    igText("%s", info->name);
+
+    igTableNextRow(0, 0.0f);
+    igTableSetColumnIndex(0);
+    igTextColored(label_color, "range");
+    igTableSetColumnIndex(1);
+    igText(
+        "0x%llx - 0x%llx", (unsigned long long)info->gva_start, (unsigned long long)info->gva_end);
+    igEndTable();
+}
+
 static ImU32
-gui_box_lighten(ImU32 color, float amount)
+gui_box_lighten(const ImU32 color, const float amount)
 {
     ImVec4_c rgba         = igColorConvertU32ToFloat4(color);
     rgba.x                = rgba.x + (1.0f - rgba.x) * amount;
