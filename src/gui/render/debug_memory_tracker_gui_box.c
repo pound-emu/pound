@@ -67,4 +67,25 @@ gui_box_render(ImDrawList *draw_list, const gui_box_t *box)
     return max_corner;
 }
 
+bool
+gui_box_is_clicked(const gui_box_t *box)
+{
+    if (POUND_UNLIKELY(NULL == box))
+    {
+        POUND_LOG_ERROR(&thread_logger, "Aborting function: box is NULL.");
+        return false;
+    }
+
+    const ImVec2_c min = box->position;
+    const ImVec2_c max = { .x = min.x + box->width, .y = min.y + box->height };
+
+    if (false == igIsMouseHoveringRect(min, max, true))
+    {
+        return false;
+    }
+
+    const bool is_mouse_clicked = igIsMouseClicked_Bool(ImGuiMouseButton_Left, false);
+    return is_mouse_clicked;
+}
+
 /*** end of file ***/

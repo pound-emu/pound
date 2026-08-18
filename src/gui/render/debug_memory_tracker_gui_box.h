@@ -38,6 +38,8 @@ POUND_HOT void gui_box_init(gui_box_t *POUND_RESTRICT box,
 POUND_HOT ImVec2_c gui_box_render(ImDrawList *POUND_RESTRICT      draw_list,
                                   const gui_box_t *POUND_RESTRICT box);
 
+POUND_HOT bool gui_box_is_clicked(const gui_box_t *POUND_RESTRICT box);
+
 #endif // POUND_DEBUG_MEMORY_TRACKER_GUI_BOX_H
 
 /*** end of file ***/
