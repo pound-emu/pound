@@ -172,12 +172,18 @@ add_library(PoundGui SHARED
         src/gui/render/debug_memory_tracker.c
         src/gui/render/debug_memory_tracker_gui_box.c)
 target_include_directories(PoundGui PUBLIC src/gui)
-target_link_libraries(PoundGui PRIVATE PoundCore imgui mimalloc)
+# Windows loads PoundGui before the EXE finishes its own imports. Listing
+# mimalloc ahead of imgui keeps mimalloc-redirect ahead of ucrt in
+# PoundGui's import table.
+target_link_libraries(PoundGui PRIVATE mimalloc PoundCore imgui)
 set_target_properties(PoundGui PROPERTIES C_VISIBILITY_PRESET hidden)
 set_target_properties(PoundGui PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS ON)
 if (WIN32)
     # MSVC/clang-cl do not prefix DLLs with "lib"; the loader looks for libPoundGui.dll.
     set_target_properties(PoundGui PROPERTIES PREFIX "lib")
+endif ()
+if (MSVC)
+    target_link_options(PoundGui PRIVATE "/INCLUDE:mi_version")
 endif ()
 add_compiler_flags(PoundGui)
 add_linker_flags(PoundGui)
@@ -187,7 +193,11 @@ message(STATUS "[Pound] Configuring Pound Executable...")
 
 add_executable(${PROJECT_NAME} src/main.c)
 target_include_directories(${PROJECT_NAME} PRIVATE src/)
-target_link_libraries(${PROJECT_NAME} PRIVATE PoundCore PoundGui Ballistic::Engine mimalloc SDL3::SDL3 imgui)
+target_link_libraries(${PROJECT_NAME} PRIVATE mimalloc PoundCore PoundGui Ballistic::Engine SDL3::SDL3 imgui)
+if (MSVC)
+    # Keep mimalloc.dll mapped so redirect can override malloc for the whole process.
+    target_link_options(${PROJECT_NAME} PRIVATE "/INCLUDE:mi_version")
+endif ()
 target_compile_definitions(${PROJECT_NAME} PUBLIC -DCIMGUI_USE_OPENGL3 -DCIMGUI_USE_SDL3)
 add_compiler_flags(${PROJECT_NAME})
 add_linker_flags(${PROJECT_NAME})
