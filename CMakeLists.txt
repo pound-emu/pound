@@ -168,7 +168,7 @@ add_sanitizers(PoundCore)
 message(STATUS "[PoundGUI] Configuring Pound GUI Library...")
 add_library(PoundGui SHARED
         src/gui/gui.c
-        src/gui/loader.c
+        src/gui/hot_reload.c
         src/gui/debug/debug_memory_data.c
         src/gui/debug/debug_memory_render.c)
 target_include_directories(PoundGui PUBLIC src/gui)
