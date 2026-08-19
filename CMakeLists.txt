@@ -169,8 +169,8 @@ message(STATUS "[PoundGUI] Configuring Pound GUI Library...")
 add_library(PoundGui SHARED
         src/gui/gui.c
         src/gui/loader.c
-        src/gui/debug/memory_tracker.c
-        src/gui/debug/memory_tracker_gui_box.c)
+        src/gui/debug/debug_memory_data.c
+        src/gui/debug/debug_memory_render.c)
 target_include_directories(PoundGui PUBLIC src/gui)
 target_link_libraries(PoundGui PRIVATE PoundCore imgui mimalloc)
 set_target_properties(PoundGui PROPERTIES C_VISIBILITY_PRESET hidden)

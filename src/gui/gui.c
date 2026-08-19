@@ -1,5 +1,5 @@
 #include "gui.h"
-#include "debug/memory_tracker.h"
+#include "debug/debug_memory.h"
 #include "log.h"
 #include "mimalloc-override.h"
 #include <string.h>
@@ -129,7 +129,7 @@ gui_render_frame(void *gui_state)
 
     if (state->show_memory_tracker)
     {
-        gui_render_debug_memory_tracker(&state->debug_memory_tracker);
+        debug_memory_render(&state->debug_memory_tracker);
     }
 
     if (state->show_hot_reload_panel)

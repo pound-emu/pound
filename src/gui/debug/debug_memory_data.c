@@ -1,6 +1,6 @@
-#include "memory_tracker.h"
+#include "debug_memory.h"
 #include "log.h"
-#include "memory_tracker_gui_box.h"
+#include "memory_data_gui_box.h"
 #include "mimalloc-stats.h"
 #include "platform.h"
 #include <errno.h>
@@ -24,184 +24,8 @@
 #define TRACKER_PATH_CAPACITY 4096
 #define TRACKER_LINE_CAPACITY 1024
 
-static bool get_host_address_space_range(debug_memory_tracker_t *context);
-
-void
-gui_render_debug_memory_tracker(debug_memory_tracker_t *context)
-{
-    if (POUND_UNLIKELY(NULL == context))
-    {
-        POUND_LOG_ERROR(&thread_logger, "Aborting function: context is NULL.");
-        return;
-    }
-
-    if (POUND_UNLIKELY(true == context->first_time_run))
-    {
-        get_host_address_space_range(context);
-        context->selected_box_info_index = 0;
-        context->first_time_run          = false;
-    }
-
-    if (0 == (++context->current_frame & 127))
-    {
-        get_host_address_space_range(context);
-    }
-
-    char title[160];
-
-    if (POUND_LIKELY(0 != context->gva_high))
-    {
-        snprintf(title,
-                 sizeof(title),
-                 "Guest Address Space - 0x%llx - 0x%llx (mapped view)###GuestAddressSpace",
-                 (unsigned long long)context->gva_low,
-                 (unsigned long long)context->gva_high);
-    }
-    else
-    {
-        snprintf(title, sizeof(title), "Guest Address Space - unknown###GuestAddressSpace");
-    }
-
-    mi_stats_t_decl(stats);
-
-    if (true == igBegin(title, NULL, ImGuiWindowFlags_AlwaysAutoResize))
-    {
-        ImDrawList *POUND_RESTRICT draw_list   = igGetWindowDrawList();
-        const ImVec2_c             origin      = igGetCursorScreenPos();
-        const float                box_width   = 150.0f;
-        const float                box_height  = 60.0f;
-        const float                box_gap     = 4.0f;
-        const float                font_height = igGetFontSize();
-        const ImU32                box_color   = IM_COL32(100, 149, 237, 255);
-
-        const char *text_label_name  = ".text";
-        const char *data_label_name  = ".data";
-        const char *vram_label_name  = "VRAM";
-        char        text_address[24] = { 0 };
-        char        data_address[24] = { 0 };
-        char        vram_address[24] = { 0 };
-
-        int written = snprintf(text_address,
-                               sizeof(text_address),
-                               "0x%llx",
-                               (unsigned long long)context->gva_text_start);
-
-        const char *text_caption
-            = (written > 0 && written < (int)sizeof(text_address)) ? text_address : NULL;
-
-        written = snprintf(data_address,
-                           sizeof(data_address),
-                           "0x%llx",
-                           (unsigned long long)context->gva_data_start);
-
-        const char *data_caption
-            = (written > 0 && written < (int)sizeof(data_address)) ? data_address : NULL;
-
-        written = snprintf(vram_address,
-                           sizeof(vram_address),
-                           "0x%llx",
-                           (unsigned long long)context->gva_vram_framebuffer_start);
-
-        const char *vram_caption
-            = (written > 0 && written < (int)sizeof(vram_address)) ? vram_address : NULL;
-
-        gui_box_t text_box = { 0 };
-        gui_box_init(
-            &text_box, origin, box_width, box_height, box_color, text_label_name, text_caption);
-        const ImVec2_c text_box_end = gui_box_render(draw_list, &text_box);
-
-        gui_box_t      data_box;
-        const ImVec2_c data_position = { .x = text_box_end.x + box_gap, .y = origin.y };
-        gui_box_init(&data_box,
-                     data_position,
-                     box_width,
-                     box_height,
-                     box_color,
-                     data_label_name,
-                     data_caption);
-        const ImVec2_c data_box_end = gui_box_render(draw_list, &data_box);
-
-        gui_box_t      vram_box;
-        const ImVec2_c vram_position = { .x = data_box_end.x + box_gap, .y = origin.y };
-        gui_box_init(&vram_box,
-                     vram_position,
-                     box_width,
-                     box_height,
-                     box_color,
-                     vram_label_name,
-                     vram_caption);
-        gui_box_render(draw_list, &vram_box);
-
-        const ImVec2_c reserved
-            = { .x = 0.0f,
-                .y = box_height + GUI_BOX_LABEL_INSET + font_height + GUI_BOX_LABEL_INSET };
-        igDummy(reserved);
-
-        if (gui_box_is_clicked(&text_box))
-        {
-            context->selected_box_info_index = 0;
-        }
-        else if (gui_box_is_clicked(&data_box))
-        {
-            context->selected_box_info_index = 1;
-        }
-        else if (gui_box_is_clicked(&vram_box))
-        {
-            context->selected_box_info_index = 2;
-        }
-        else
-        {
-        }
-
-        const int32_t  selected_index    = context->selected_box_info_index;
-        gui_box_info_t selected_box_info = { 0 };
-
-        switch (selected_index)
-        {
-            case 1: {
-                selected_box_info.name      = data_label_name;
-                selected_box_info.gva_start = context->gva_data_start;
-                selected_box_info.gva_end   = context->gva_data_end;
-                break;
-            }
-            case 2: {
-                selected_box_info.name      = vram_label_name;
-                selected_box_info.gva_start = context->gva_vram_framebuffer_start;
-                selected_box_info.gva_end   = context->gva_vram_framebuffer_end;
-                break;
-            }
-            default: {
-                selected_box_info.name      = text_label_name;
-                selected_box_info.gva_start = context->gva_text_start;
-                selected_box_info.gva_end   = context->gva_text_end;
-                break;
-            }
-        }
-
-        gui_box_info_render(&selected_box_info);
-
-        if (mi_stats_get(&stats))
-        {
-            const double memory_in_use
-                = (double)(stats.malloc_normal.current + stats.malloc_huge.current)
-                  / (1024.0 * 1024.0);
-
-            igSeparator();
-            igText(
-                "reserved: %.1f MiB   committed: %.1f MiB   in use: %.1f MiB   malloc req: %.1f "
-                "MiB",
-                (double)stats.reserved.current / (1024.0 * 1024.0),
-                (double)stats.committed.current / (1024.0 * 1024.0),
-                memory_in_use,
-                (double)stats.malloc_requested.total / (1024.0 * 1024.0));
-        }
-    }
-
-    igEnd();
-}
-
-static bool
-get_host_address_space_range(debug_memory_tracker_t *context)
+bool
+debug_memory_get_host_address_space_range(debug_memory_tracker_t *context)
 {
     if (NULL == context)
     {
@@ -611,6 +435,39 @@ get_host_address_space_range(debug_memory_tracker_t *context)
     context->gva_vram_framebuffer_start = vram_framebuffer_start;
     context->gva_vram_framebuffer_end   = vram_framebuffer_end;
     return true;
+}
+
+void
+debug_memory_gui_box_init(debug_memory_gui_box_t *box,
+                          const ImVec2_c          position,
+                          const float             width,
+                          const float             height,
+                          const ImU32             fill_color,
+                          const char             *label,
+                          const char             *caption)
+{
+    if (POUND_UNLIKELY(NULL == box))
+    {
+        POUND_LOG_ERROR(&thread_logger, "Aborting function: box is NULL");
+    }
+
+    box->position   = position;
+    box->width      = width;
+    box->height     = height;
+    box->fill_color = fill_color;
+    box->label      = label;
+    box->caption    = caption;
+}
+
+ImU32
+debug_memory_gui_box_lighten(const ImU32 color, const float amount)
+{
+    ImVec4_c rgba         = igColorConvertU32ToFloat4(color);
+    rgba.x                = rgba.x + (1.0f - rgba.x) * amount;
+    rgba.y                = rgba.y + (1.0f - rgba.y) * amount;
+    rgba.z                = rgba.z + (1.0f - rgba.z) * amount;
+    const ImU32 new_color = igColorConvertFloat4ToU32(rgba);
+    return new_color;
 }
 
 /*** end of file ***/
