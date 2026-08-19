@@ -1,5 +1,5 @@
-#include "debug_memory_tracker_gui_box.h"
 #include "log.h"
+#include "memory_tracker_gui_box.h"
 
 #define GUI_BOX_LABEL_COLOR   IM_COL32(0, 0, 0, 255)
 #define GUI_BOX_CAPTION_COLOR IM_COL32(128, 128, 128, 255)

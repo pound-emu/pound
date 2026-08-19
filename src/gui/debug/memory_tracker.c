@@ -1,6 +1,6 @@
-#include "debug_memory_tracker.h"
-#include "debug_memory_tracker_gui_box.h"
+#include "memory_tracker.h"
 #include "log.h"
+#include "memory_tracker_gui_box.h"
 #include "mimalloc-stats.h"
 #include "platform.h"
 #include <errno.h>
