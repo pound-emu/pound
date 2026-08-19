@@ -1,6 +1,5 @@
 #include "debug_memory.h"
 #include "log.h"
-#include "memory_data_gui_box.h"
 #include "mimalloc-stats.h"
 #include "platform.h"
 #include <errno.h>

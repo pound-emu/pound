@@ -7,20 +7,46 @@
 #define CIMGUI_DEFINE_ENUMS_AND_STRUCTS
 #include <cimgui.h>
 
+#define GUI_PANEL_CAPACITY 16
+
+typedef void (*gui_panel_render_t)(void *context);
+
+typedef struct
+{
+    const char        *name;
+    void              *context;
+    gui_panel_render_t render;
+    bool               visible;
+    char               pad[7];
+} gui_panel_t;
+
 typedef struct
 {
     debug_memory_tracker_t debug_memory_tracker;
+    gui_panel_t            panels[GUI_PANEL_CAPACITY];
+    int                    panel_count;
     int                    selected_tab;
-    bool                   show_demo;
-    bool                   show_hot_reload_panel;
-    bool                   show_memory_tracker;
-    char                   pad[1];
 } gui_state_t;
+
+typedef struct
+{
+    int  panel_count;
+    int  selected_tab;
+    bool panel_visibility[GUI_PANEL_CAPACITY];
+} gui_save_state_t;
 
 static void  *gui_create(const void *saved_data, size_t saved_size);
 static void   gui_destroy(void *gui_state);
 static void   gui_render_frame(void *gui_state);
 static size_t gui_save(void *gui_state, void *out, size_t capacity);
+
+static void gui_panel_register(gui_state_t *POUND_RESTRICT state,
+                               const char *POUND_RESTRICT  name,
+                               gui_panel_render_t          render,
+                               void                       *context);
+static void gui_panel_render_memory_tracker(void *context);
+static void gui_panel_render_hot_reload_guide(void *context);
+static void gui_panel_render_imgui_demo(void *context);
 
 bool
 gui_exports_get(gui_exports_t *out)
@@ -39,15 +65,15 @@ gui_exports_get(gui_exports_t *out)
 }
 
 static void *
-gui_create(const void *POUND_RESTRICT saved_state, size_t saved_size)
+gui_create(const void *POUND_RESTRICT saved_data, size_t saved_size)
 {
-    if (saved_size > 0 && NULL == saved_state)
+    if (saved_size > 0 && NULL == saved_data)
     {
         POUND_LOG_WARN(&thread_logger,
                        "saved_size is %zu but saved_state is NULL, ignoring saved state.",
                        saved_size);
-        saved_state = NULL;
-        saved_size  = 0;
+        saved_data = NULL;
+        saved_size = 0;
     }
 
     gui_state_t *POUND_RESTRICT gui_state = calloc(1, sizeof(*gui_state));
@@ -60,26 +86,40 @@ gui_create(const void *POUND_RESTRICT saved_state, size_t saved_size)
         return NULL;
     }
 
-    gui_state->show_memory_tracker                 = false;
-    gui_state->show_demo                           = false;
-    gui_state->show_hot_reload_panel               = false;
     gui_state->debug_memory_tracker.first_time_run = true;
+    gui_panel_register(gui_state,
+                       "Memory Tracker",
+                       gui_panel_render_memory_tracker,
+                       &gui_state->debug_memory_tracker);
+    gui_panel_register(gui_state, "Hot Reload Guide", gui_panel_render_hot_reload_guide, NULL);
+    gui_panel_register(gui_state, "ImGui Demo", gui_panel_render_imgui_demo, NULL);
 
-    if (saved_state && saved_size >= sizeof(*gui_state))
+    if (saved_data != NULL && saved_size >= sizeof(gui_save_state_t))
     {
-        const gui_state_t *POUND_RESTRICT saved = saved_state;
-        gui_state->show_memory_tracker          = saved->show_memory_tracker;
-        gui_state->show_demo                    = saved->show_demo;
-        gui_state->show_hot_reload_panel        = saved->show_hot_reload_panel;
-        gui_state->selected_tab                 = saved->selected_tab;
+        const gui_save_state_t *POUND_RESTRICT saved         = saved_data;
+        const int                              restore_count = saved->panel_count;
+        const int                              clamped_count
+            = restore_count < gui_state->panel_count ? restore_count : gui_state->panel_count;
+
+        gui_panel_t *POUND_RESTRICT panel_cursor            = gui_state->panels;
+        const bool *POUND_RESTRICT  panel_visibility_cursor = saved->panel_visibility;
+
+        for (int i = 0; i < clamped_count; i++)
+        {
+            panel_cursor->visible = *panel_visibility_cursor;
+            ++panel_cursor;
+            ++panel_visibility_cursor;
+        }
+
+        gui_state->selected_tab = saved->selected_tab;
     }
-    else if (saved_state != NULL && saved_size < sizeof(*gui_state))
+    else if (saved_data != NULL && saved_size < sizeof(gui_save_state_t))
     {
         POUND_LOG_WARN(&thread_logger,
-                       "saved_size (%zu) < sizeof(gui_state_t) (%zu), "
+                       "saved_size (%zu) < sizeof(gui_save_state_t) (%zu), "
                        "using defaults.",
                        saved_size,
-                       sizeof(gui_state_t));
+                       sizeof(gui_save_state_t));
     }
     else
     {
@@ -117,30 +157,28 @@ gui_render_frame(void *gui_state)
     const ImVec2_c debug_menu_pivot    = { .x = 0, .y = 0 };
     igSetNextWindowPos(debug_menu_position, ImGuiCond_Always, debug_menu_pivot);
     igSetNextWindowSize(debug_menu_size, ImGuiCond_Always);
+    gui_panel_t *POUND_RESTRICT panel_cursor = state->panels;
 
-    if (igBegin("Debug Menu", NULL, 0))
+    if (igBegin("Debug Menu##DebugMenu", NULL, 0))
     {
-        igCheckbox("Show Memory Tracker", &state->show_memory_tracker);
-        igCheckbox("Show Hot Reloading Guide", &state->show_hot_reload_panel);
-        igCheckbox("Show ImGui Demo", &state->show_demo);
+        for (int i = 0; i < state->panel_count; ++i)
+        {
+            igCheckbox(panel_cursor->name, &panel_cursor->visible);
+            ++panel_cursor;
+        }
     }
 
     igEnd();
+    panel_cursor = state->panels;
 
-    if (state->show_memory_tracker)
+    for (int i = 0; i < state->panel_count; ++i)
     {
-        debug_memory_render(&state->debug_memory_tracker);
-    }
+        if (true == panel_cursor->visible)
+        {
+            panel_cursor->render(panel_cursor->context);
+        }
 
-    if (state->show_hot_reload_panel)
-    {
-        igText("Rebuild PoundGui to relaod GUI code.");
-        igText("Press F5 to force reload.");
-    }
-
-    if (state->show_demo)
-    {
-        igShowDemoWindow(NULL);
+        ++panel_cursor;
     }
 }
 
@@ -153,27 +191,107 @@ gui_save(void *gui_state, void *out, size_t capacity)
         return 0;
     }
 
-    const gui_state_t *state = gui_state;
-
     if (NULL == out)
     {
-        POUND_LOG_DEBUG(
-            &thread_logger, "out is NULL, returning required size (%zu).", sizeof(*state));
-        return sizeof(*state);
+        POUND_LOG_DEBUG(&thread_logger,
+                        "out is NULL, returning required size (%zu).",
+                        sizeof(gui_save_state_t));
+        return sizeof(gui_save_state_t);
     }
 
-    if (capacity < sizeof(*state))
+    if (capacity < sizeof(gui_save_state_t))
     {
         POUND_LOG_WARN(&thread_logger,
                        "capacity (%zu) < sizeof(gui_state_t) (%zu), "
                        "cannot save state.",
                        capacity,
-                       sizeof(*state));
-        return sizeof(*state);
+                       sizeof(gui_save_state_t));
+        return sizeof(gui_save_state_t);
     }
 
-    memcpy(out, state, sizeof(*state));
-    return sizeof(*state);
+    const gui_state_t *POUND_RESTRICT state           = gui_state;
+    gui_save_state_t *POUND_RESTRICT  saved_gui_state = out;
+    memset(saved_gui_state, 1, sizeof(gui_save_state_t));
+    saved_gui_state->selected_tab = state->selected_tab;
+    saved_gui_state->panel_count  = state->panel_count;
+
+    const gui_panel_t *POUND_RESTRICT panel_cursor     = state->panels;
+    const int                         panel_count      = state->panel_count;
+    bool *POUND_RESTRICT              panel_visibility = saved_gui_state->panel_visibility;
+
+    for (int i = 0; i < panel_count; ++i)
+    {
+        *panel_visibility = panel_cursor->visible;
+        ++panel_visibility;
+        ++panel_cursor;
+    }
+
+    return sizeof(gui_save_state_t);
+}
+
+void
+gui_panel_register(gui_state_t             *state,
+                   const char              *name,
+                   const gui_panel_render_t render,
+                   void                    *context)
+{
+    if (POUND_UNLIKELY(NULL == state))
+    {
+        POUND_LOG_ERROR(&thread_logger, "Aborting function: state is NULL.");
+        return;
+    }
+
+    if (POUND_UNLIKELY(state->panel_count >= GUI_PANEL_CAPACITY))
+    {
+        POUND_LOG_ERROR(
+            &thread_logger, "Aborting function: panel registry full (%d).", GUI_PANEL_CAPACITY);
+        return;
+    }
+
+    if (POUND_UNLIKELY(NULL == name))
+    {
+        POUND_LOG_ERROR(&thread_logger, "Aborting function: name is NULL.");
+        return;
+    }
+
+    if (POUND_UNLIKELY(NULL == render))
+    {
+        POUND_LOG_ERROR(&thread_logger, "Aborting function: render is NULL.");
+        return;
+    }
+
+    gui_panel_t *POUND_RESTRICT panel = &state->panels[state->panel_count];
+    panel->name                       = name;
+    panel->render                     = render;
+    panel->context                    = context;
+    panel->visible                    = false;
+    ++state->panel_count;
+}
+
+void
+gui_panel_render_memory_tracker(void *context)
+{
+    debug_memory_render(context);
+}
+
+void
+gui_panel_render_hot_reload_guide(void *context)
+{
+    (void)context;
+
+    if (igBegin("Hot Reloading Guide", NULL, 0))
+    {
+        igText("Rebuild PoundGui to reload GUI code.");
+        igText("Press F5 to force reload.");
+    }
+    igEnd();
+}
+
+void
+gui_panel_render_imgui_demo(void *context)
+{
+    (void)context;
+    igShowDemoWindow(NULL);
 }
 
 /*** end of file ***/
