@@ -28,4 +28,5 @@ Join the [**Pound Discord Server**](https://discord.gg/aMmTmKsVC7)!
 
 ## Development
 
-Pound actively supports Linux and Windows with the Clang compiler only.
+Pound actively supports Linux and Windows with the Clang compiler only. I cannot run Pound on Windows, so the Windows
+builds will fall behind Linux builds. I would appreciate any Windows specific contributions greatly.
