@@ -376,14 +376,28 @@ debug_memory_get_host_address_space_range(debug_memory_tracker_t *context)
         if (true == is_self && 'r' == permissions[0] && '-' == permissions[1]
             && 'x' == permissions[2])
         {
-            text_start = start_hex;
-            text_end   = end_hex;
+            if (start_hex < text_start)
+            {
+                text_start = start_hex;
+            }
+
+            if (end_hex > text_end)
+            {
+                text_end = end_hex;
+            }
         }
         else if (true == is_self && 'r' == permissions[0] && 'w' == permissions[1]
                  && '-' == permissions[2])
         {
-            data_start = start_hex;
-            data_end   = end_hex;
+            if (start_hex < data_start)
+            {
+                data_start = start_hex;
+            }
+
+            if (end_hex > data_end)
+            {
+                data_end = end_hex;
+            }
         }
         else
         {
@@ -391,8 +405,15 @@ debug_memory_get_host_address_space_range(debug_memory_tracker_t *context)
 
         if (true == is_device && 'w' == permissions[1])
         {
-            vram_framebuffer_start = start_hex;
-            vram_framebuffer_end   = end_hex;
+            if (start_hex < vram_framebuffer_start)
+            {
+                vram_framebuffer_start = start_hex;
+            }
+
+            if (end_hex > vram_framebuffer_end)
+            {
+                vram_framebuffer_end = end_hex;
+            }
         }
     }
 
