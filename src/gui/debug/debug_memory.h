@@ -43,6 +43,7 @@ typedef struct
 typedef struct
 {
     const char *name;
+    const char *permissions;
     uint64_t    gva_start;
     uint64_t    gva_end;
 } debug_memory_gui_box_info_t;

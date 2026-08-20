@@ -144,21 +144,24 @@ debug_memory_render(debug_memory_tracker_t *context)
         switch (selected_index)
         {
             case 1: {
-                selected_box_info.name      = data_label_name;
-                selected_box_info.gva_start = context->gva_data_start;
-                selected_box_info.gva_end   = context->gva_data_end;
+                selected_box_info.name        = data_label_name;
+                selected_box_info.permissions = "R W";
+                selected_box_info.gva_start   = context->gva_data_start;
+                selected_box_info.gva_end     = context->gva_data_end;
                 break;
             }
             case 2: {
-                selected_box_info.name      = vram_label_name;
-                selected_box_info.gva_start = context->gva_vram_framebuffer_start;
-                selected_box_info.gva_end   = context->gva_vram_framebuffer_end;
+                selected_box_info.name        = vram_label_name;
+                selected_box_info.permissions = "R W";
+                selected_box_info.gva_start   = context->gva_vram_framebuffer_start;
+                selected_box_info.gva_end     = context->gva_vram_framebuffer_end;
                 break;
             }
             default: {
-                selected_box_info.name      = text_label_name;
-                selected_box_info.gva_start = context->gva_text_start;
-                selected_box_info.gva_end   = context->gva_text_end;
+                selected_box_info.name        = text_label_name;
+                selected_box_info.permissions = "R X";
+                selected_box_info.gva_start   = context->gva_text_start;
+                selected_box_info.gva_end     = context->gva_text_end;
                 break;
             }
         }
@@ -328,6 +331,12 @@ debug_memory_gui_box_info_render(const debug_memory_gui_box_info_t *info)
     {
         igText("Unknown");
     }
+
+    igTableNextRow(0, 0.0f);
+    igTableSetColumnIndex(0);
+    igTextColored(label_color, "perms");
+    igTableSetColumnIndex(1);
+    igText("%s", info->permissions);
 
     igEndTable();
 }
