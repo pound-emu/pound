@@ -9,6 +9,8 @@
 #define GUI_BOX_LABEL_COLOR   IM_COL32(0, 0, 0, 255)
 #define GUI_BOX_CAPTION_COLOR IM_COL32(128, 128, 128, 255)
 
+#define GUI_BOX_INFO_MEMORY_PAGE_SIZE 4096ULL
+
 void
 debug_memory_render(debug_memory_tracker_t *context)
 {
@@ -301,6 +303,32 @@ debug_memory_gui_box_info_render(const debug_memory_gui_box_info_t *info)
     igTableSetColumnIndex(1);
     igText(
         "0x%llx - 0x%llx", (unsigned long long)info->gva_start, (unsigned long long)info->gva_end);
+
+    igTableNextRow(0, 0.0f);
+    igTableSetColumnIndex(0);
+    igTextColored(label_color, "size");
+    igTableSetColumnIndex(1);
+
+    uint64_t size_bytes = 0;
+
+    if (info->gva_start != UINT64_MAX && info->gva_end != 0 && info->gva_start < info->gva_end)
+    {
+        size_bytes = info->gva_end - info->gva_start;
+    }
+
+    if (size_bytes != 0)
+    {
+        const double   size_mib = (double)size_bytes / (1024.0F * 1024.0F);
+        const uint64_t pages
+            = (size_bytes / GUI_BOX_INFO_MEMORY_PAGE_SIZE)
+              + ((size_bytes % GUI_BOX_INFO_MEMORY_PAGE_SIZE) != 0ULL ? 1ULL : 0ULL);
+        igText("%.2f MiB · %llu pages", size_mib, (unsigned long long)pages);
+    }
+    else
+    {
+        igText("Unknown");
+    }
+
     igEndTable();
 }
 
