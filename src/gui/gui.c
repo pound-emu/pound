@@ -26,14 +26,9 @@ typedef struct
     gui_panel_t            panels[GUI_PANEL_CAPACITY];
     int                    panel_count;
     int                    selected_tab;
+    bool                   first_time_run;
+    char                   pad[7];
 } gui_state_t;
-
-typedef struct
-{
-    int  panel_count;
-    int  selected_tab;
-    bool panel_visibility[GUI_PANEL_CAPACITY];
-} gui_save_state_t;
 
 static void  *gui_create(const void *saved_data, size_t saved_size);
 static void   gui_destroy(void *gui_state);
@@ -94,32 +89,33 @@ gui_create(const void *POUND_RESTRICT saved_data, size_t saved_size)
     gui_panel_register(gui_state, "Hot Reload Guide", gui_panel_render_hot_reload_guide, NULL);
     gui_panel_register(gui_state, "ImGui Demo", gui_panel_render_imgui_demo, NULL);
 
-    if (saved_data != NULL && saved_size >= sizeof(gui_save_state_t))
+    if (saved_data != NULL && saved_size >= sizeof(gui_state_t))
     {
-        const gui_save_state_t *POUND_RESTRICT saved         = saved_data;
-        const int                              restore_count = saved->panel_count;
-        const int                              clamped_count
+        const gui_state_t *POUND_RESTRICT saved         = saved_data;
+        const int                         restore_count = saved->panel_count;
+        const int                         clamped_count
             = restore_count < gui_state->panel_count ? restore_count : gui_state->panel_count;
 
-        gui_panel_t *POUND_RESTRICT panel_cursor            = gui_state->panels;
-        const bool *POUND_RESTRICT  panel_visibility_cursor = saved->panel_visibility;
+        gui_panel_t *POUND_RESTRICT       panel_cursor = gui_state->panels;
+        const gui_panel_t *POUND_RESTRICT saved_cursor = saved->panels;
 
         for (int i = 0; i < clamped_count; i++)
         {
-            panel_cursor->visible = *panel_visibility_cursor;
+            panel_cursor->visible = saved_cursor->visible;
             ++panel_cursor;
-            ++panel_visibility_cursor;
+            ++saved_cursor;
         }
 
-        gui_state->selected_tab = saved->selected_tab;
+        gui_state->selected_tab         = saved->selected_tab;
+        gui_state->debug_memory_tracker = saved->debug_memory_tracker;
     }
-    else if (saved_data != NULL && saved_size < sizeof(gui_save_state_t))
+    else if (saved_data != NULL && saved_size < sizeof(gui_state_t))
     {
         POUND_LOG_WARN(&thread_logger,
-                       "saved_size (%zu) < sizeof(gui_save_state_t) (%zu), "
+                       "saved_size (%zu) < sizeof(gui_state_t) (%zu), "
                        "using defaults.",
                        saved_size,
-                       sizeof(gui_save_state_t));
+                       sizeof(gui_state_t));
     }
     else
     {
@@ -193,40 +189,40 @@ gui_save(void *gui_state, void *out, size_t capacity)
 
     if (NULL == out)
     {
-        POUND_LOG_DEBUG(&thread_logger,
-                        "out is NULL, returning required size (%zu).",
-                        sizeof(gui_save_state_t));
-        return sizeof(gui_save_state_t);
+        POUND_LOG_DEBUG(
+            &thread_logger, "out is NULL, returning required size (%zu).", sizeof(gui_state_t));
+        return sizeof(gui_state_t);
     }
 
-    if (capacity < sizeof(gui_save_state_t))
+    if (capacity < sizeof(gui_state_t))
     {
         POUND_LOG_WARN(&thread_logger,
                        "capacity (%zu) < sizeof(gui_state_t) (%zu), "
                        "cannot save state.",
                        capacity,
-                       sizeof(gui_save_state_t));
-        return sizeof(gui_save_state_t);
+                       sizeof(gui_state_t));
+        return sizeof(gui_state_t);
     }
 
     const gui_state_t *POUND_RESTRICT state           = gui_state;
-    gui_save_state_t *POUND_RESTRICT  saved_gui_state = out;
-    memset(saved_gui_state, 1, sizeof(gui_save_state_t));
-    saved_gui_state->selected_tab = state->selected_tab;
-    saved_gui_state->panel_count  = state->panel_count;
+    gui_state_t *POUND_RESTRICT       saved_gui_state = out;
+    memset(saved_gui_state, 1, sizeof(gui_state_t));
+    saved_gui_state->selected_tab         = state->selected_tab;
+    saved_gui_state->panel_count          = state->panel_count;
+    saved_gui_state->debug_memory_tracker = state->debug_memory_tracker;
 
-    const gui_panel_t *POUND_RESTRICT panel_cursor     = state->panels;
-    const int                         panel_count      = state->panel_count;
-    bool *POUND_RESTRICT              panel_visibility = saved_gui_state->panel_visibility;
+    const gui_panel_t *POUND_RESTRICT current_panel_cursor = state->panels;
+    const int                         panel_count          = state->panel_count;
+    gui_panel_t *POUND_RESTRICT       saved_panel_cursor   = saved_gui_state->panels;
 
     for (int i = 0; i < panel_count; ++i)
     {
-        *panel_visibility = panel_cursor->visible;
-        ++panel_visibility;
-        ++panel_cursor;
+        saved_panel_cursor->visible = current_panel_cursor->visible;
+        ++current_panel_cursor;
+        ++saved_panel_cursor;
     }
 
-    return sizeof(gui_save_state_t);
+    return sizeof(gui_state_t);
 }
 
 void
