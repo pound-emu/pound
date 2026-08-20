@@ -146,7 +146,32 @@ gui_render_frame(void *gui_state)
         return;
     }
 
-    gui_state_t *state = gui_state;
+    gui_state_t         *state         = gui_state;
+    const ImGuiViewport *main_viewport = igGetMainViewport();
+    const ImVec2         zero_pivot    = { 0 };
+    igSetNextWindowPos(main_viewport->Pos, ImGuiCond_Always, zero_pivot);
+    igSetNextWindowSize(main_viewport->Size, ImGuiCond_Always);
+    const ImGuiWindowFlags main_viewport_flags
+        = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove
+          | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoSavedSettings
+          | ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoDecoration
+          | ImGuiWindowFlags_NoBringToFrontOnFocus;
+
+    if (igBegin("##MainViewportText", NULL, main_viewport_flags))
+    {
+        ImDrawList  *draw_list = igGetWindowDrawList();
+        const char  *text      = "MAIN VIEWPORT";
+        const ImVec2 text_size = igCalcTextSize(text, NULL, false, 0.0f);
+
+        const ImVec2 center
+            = { .x = main_viewport->Size.x * 0.5f, .y = main_viewport->Size.y * 0.5f };
+        const ImVec2 text_pos
+            = { .x = center.x - text_size.x * 0.5f, .y = center.y - text_size.y * 0.5f };
+
+        // Draw semi-transparent white text.
+        ImDrawList_AddText_Vec2(draw_list, text_pos, IM_COL32(255, 255, 255, 200), text, NULL);
+    }
+    igEnd();
 
     const ImVec2_c debug_menu_size     = { .x = 270, .y = 150 };
     const ImVec2_c debug_menu_position = { .x = 1, .y = 1 };
