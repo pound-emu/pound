@@ -113,6 +113,46 @@ debug_memory_get_host_address_space_range(debug_memory_tracker_t *context)
             }
 
             ++matched_regions;
+
+            if (true == is_self && MEM_COMMIT == info.State)
+            {
+                const DWORD protect_type = info.Protect & 0xFF;
+
+                if (PAGE_EXECUTE_READ == protect_type || PAGE_EXECUTE == protect_type
+                    || PAGE_EXECUTE_WRITECOPY == protect_type)
+                {
+                    if (UINT64_MAX == text_start)
+                    {
+                        text_start = start_hex;
+                        text_end   = end_hex;
+                    }
+                    else if (start_hex == text_end)
+                    {
+                        text_end = end_hex;
+                    }
+                    else
+                    {
+                    }
+                }
+                else if (PAGE_READWRITE == protect_type || PAGE_WRITECOPY == protect_type)
+                {
+                    if (UINT64_MAX == data_start)
+                    {
+                        data_start = start_hex;
+                        data_end   = end_hex;
+                    }
+                    else if (start_hex == data_end)
+                    {
+                        data_end = end_hex;
+                    }
+                    else
+                    {
+                    }
+                }
+                else
+                {
+                }
+            }
         }
 
         if (region_end <= address)
