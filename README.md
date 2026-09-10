@@ -17,8 +17,6 @@
 CREATING A [NEW ARM RECOMPILER](https://github.com/pound-emu/ballistic) FROM THE GROUND UP. IF YOU ARE A COMPILER
 DEVELOPER PLEASE GIVE US YOUR SUPPORT**
 
-Join the [**Pound Discord Server**](https://discord.gg/aMmTmKsVC7)!
-
 - [ ] Translate SM86 to SPIR-V to Vulkan.
 - [X] Add `mimalloc` for host allocator.
 - [ ] Create a custom pool / slab allocator for Horizon OS.
