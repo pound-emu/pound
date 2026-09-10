@@ -1,6 +1,9 @@
 #ifndef POUND_MEMORY_H
 #define POUND_MEMORY_H
 
+#include "attributes.h"
+#include <stddef.h>
+
 typedef enum
 {
     MEMORY_ALLOCATOR_MIMALLOC,
@@ -10,7 +13,7 @@ typedef enum
 {
     MEMORY_HEAP_TYPE_HOST,
     MEMORY_HEAP_TYPE_JIT_EXECUTABLE,
-    MEMORY_TYPE_COUNT,
+    MEMORY_HEAP_TYPE_COUNT,
 } memory_heap_type_t;
 
 typedef enum
@@ -22,10 +25,18 @@ typedef enum
     MEMORY_BUCKET_COUNT,
 } memory_bucket_type_t;
 
+typedef struct memory_allocator memory_allocator_t;
+
+struct memory_allocator
+{
+    void *(*allocate)(memory_allocator_t *POUND_RESTRICT allocator, size_t size);
+    void (*free)(memory_allocator_t *POUND_RESTRICT allocator, void *pointer);
+};
+
 /// Controls all of Pound's memory.
 typedef struct
 {
-    // TODO
+    memory_allocator_t *current_allocator;
 } memory_subsystem_t;
 
 #endif // POUND_MEMORY_H
