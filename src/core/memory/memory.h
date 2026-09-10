@@ -8,6 +8,13 @@ typedef enum
 
 typedef enum
 {
+    MEMORY_HEAP_TYPE_HOST,
+    MEMORY_HEAP_TYPE_JIT_EXECUTABLE,
+    MEMORY_TYPE_COUNT,
+} memory_heap_type_t;
+
+typedef enum
+{
     MEMORY_BUCKET_UI,
     MEMORY_BUCKET_GUEST_MEMORY,
     MEMORY_BUCKET_JIT_RECOMPILER,
