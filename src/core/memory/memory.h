@@ -6,11 +6,6 @@
 
 typedef enum
 {
-    MEMORY_ALLOCATOR_MIMALLOC,
-} memory_allocator_type_t;
-
-typedef enum
-{
     MEMORY_HEAP_TYPE_HOST,
     MEMORY_HEAP_TYPE_JIT_EXECUTABLE,
     MEMORY_HEAP_TYPE_COUNT,
