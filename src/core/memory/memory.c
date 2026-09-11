@@ -2,12 +2,14 @@
 #include "mimalloc.h"
 #include <stdlib.h>
 
-static void *host_allocate(memory_allocator_t *POUND_RESTRICT allocator,
-                           size_t                             alignment,
-                           size_t                             bytes);
-static void  host_free(memory_allocator_t *POUND_RESTRICT allocator, void *pointer);
+static void  *host_allocate(memory_allocator_t *POUND_RESTRICT allocator,
+                            size_t                             alignment,
+                            size_t                             bytes);
+static void   host_free(memory_allocator_t *POUND_RESTRICT allocator, void *pointer);
+static size_t host_get_usable_size(const void *POUND_RESTRICT pointer);
 
-memory_allocator_t g_host_allocator = { .allocate = host_allocate, .free = host_free };
+memory_allocator_t g_host_allocator
+    = { .allocate = host_allocate, .free = host_free, .get_usable_size = host_get_usable_size };
 POUND_THREAD_LOCAL memory_allocator_t  *tls_current_allocator    = &g_host_allocator;
 POUND_THREAD_LOCAL memory_bucket_type_t tls_current_bucket_index = MEMORY_BUCKET_NONE;
 
@@ -59,6 +61,13 @@ memory_subsystem_set_bucket(const memory_bucket_type_t bucket)
     return old_bucket_index;
 }
 
+size_t
+memory_subsystem_get_usable_size(const void *POUND_RESTRICT pointer)
+{
+    const size_t usable_size = tls_current_allocator->get_usable_size(pointer);
+    return usable_size;
+}
+
 static void *
 host_allocate(memory_allocator_t *POUND_RESTRICT allocator,
               const size_t                       alignment,
@@ -88,4 +97,16 @@ host_free(memory_allocator_t *POUND_RESTRICT allocator, void *pointer)
 
     allocator->memory_used_by_bucket[tls_current_bucket_index] -= mi_malloc_usable_size(pointer);
     mi_free(pointer);
+}
+
+size_t
+host_get_usable_size(const void *pointer)
+{
+    if (POUND_UNLIKELY(NULL == pointer))
+    {
+        return 0U;
+    }
+
+    const size_t usable_size = mi_usable_size(pointer);
+    return usable_size;
 }
