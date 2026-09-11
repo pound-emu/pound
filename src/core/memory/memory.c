@@ -20,7 +20,7 @@ memory_subsystem_destroy(void)
 }
 
 static void *
-host_allocate(memory_allocator_t *allocator, const size_t size)
+host_allocate(memory_allocator_t *POUND_RESTRICT allocator, const size_t size)
 {
     (void)allocator;
     void *POUND_RESTRICT pointer = malloc(size);
