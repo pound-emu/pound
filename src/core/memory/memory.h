@@ -24,7 +24,7 @@ typedef struct memory_allocator memory_allocator_t;
 
 struct memory_allocator
 {
-    void *(*allocate)(memory_allocator_t *POUND_RESTRICT allocator, size_t size);
+    void *(*allocate)(memory_allocator_t *POUND_RESTRICT allocator, size_t alignment, size_t size);
     void (*free)(memory_allocator_t *POUND_RESTRICT allocator, void *pointer);
 };
 

@@ -1,7 +1,9 @@
 #include "memory.h"
 #include <stdlib.h>
 
-static void *host_allocate(memory_allocator_t *POUND_RESTRICT allocator, size_t size);
+static void *host_allocate(memory_allocator_t *POUND_RESTRICT allocator,
+                           size_t                             alignment,
+                           size_t                             size);
 static void  host_free(memory_allocator_t *POUND_RESTRICT allocator, void *pointer);
 
 memory_allocator_t g_host_allocator = { .allocate = host_allocate, .free = host_free };
@@ -28,9 +30,12 @@ memory_subsystem_set_allocator(memory_allocator_t *POUND_RESTRICT allocator)
 }
 
 static void *
-host_allocate(memory_allocator_t *POUND_RESTRICT allocator, const size_t size)
+host_allocate(memory_allocator_t *POUND_RESTRICT allocator,
+              const size_t                       alignment,
+              const size_t                       size)
 {
     (void)allocator;
+    (void)alignment;
     void *POUND_RESTRICT pointer = malloc(size);
     return pointer;
 }
