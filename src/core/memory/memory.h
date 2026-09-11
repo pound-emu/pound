@@ -33,8 +33,9 @@ typedef struct
 {
 } memory_subsystem_t;
 
-void memory_subsystem_init(void);
-void memory_subsystem_destroy(void);
+void                memory_subsystem_init(void);
+void                memory_subsystem_destroy(void);
+memory_allocator_t *memory_subsystem_set_allocator(memory_allocator_t *POUND_RESTRICT allocator);
 
 extern memory_allocator_t g_host_allocator;
 

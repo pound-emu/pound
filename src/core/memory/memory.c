@@ -19,6 +19,14 @@ memory_subsystem_destroy(void)
     tls_current_allocator = NULL;
 }
 
+memory_allocator_t *
+memory_subsystem_set_allocator(memory_allocator_t *POUND_RESTRICT allocator)
+{
+    memory_allocator_t *POUND_RESTRICT previous_allocator = tls_current_allocator;
+    tls_current_allocator                                 = allocator;
+    return previous_allocator;
+}
+
 static void *
 host_allocate(memory_allocator_t *POUND_RESTRICT allocator, const size_t size)
 {
