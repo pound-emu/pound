@@ -14,6 +14,7 @@ typedef enum
 
 typedef enum
 {
+    MEMORY_BUCKET_NONE,
     MEMORY_BUCKET_UI,
     MEMORY_BUCKET_GUEST_MEMORY,
     MEMORY_BUCKET_JIT_RECOMPILER,
@@ -27,6 +28,7 @@ struct memory_allocator
 {
     void *(*allocate)(memory_allocator_t *POUND_RESTRICT allocator, size_t alignment, size_t bytes);
     void (*free)(memory_allocator_t *POUND_RESTRICT allocator, void *pointer);
+    size_t memory_used_by_bucket[MEMORY_BUCKET_COUNT];
 };
 
 /// Controls all of Pound's memory.
@@ -39,7 +41,9 @@ void                memory_subsystem_destroy(void);
 memory_allocator_t *memory_subsystem_set_allocator(memory_allocator_t *POUND_RESTRICT allocator);
 void               *memory_subsystem_allocate(size_t alignment, size_t bytes);
 void                memory_subsystem_free(void *POUND_RESTRICT pointer);
+int                 memory_subsystem_set_bucket(int bucket);
 
+memory_bucket_type_t memory_subsystem_set_bucket(memory_bucket_type_t bucket);
 extern memory_allocator_t g_host_allocator;
 
 #endif // POUND_MEMORY_H
