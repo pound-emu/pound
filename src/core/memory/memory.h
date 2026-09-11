@@ -31,8 +31,12 @@ struct memory_allocator
 /// Controls all of Pound's memory.
 typedef struct
 {
-    memory_allocator_t *current_allocator;
 } memory_subsystem_t;
+
+void memory_subsystem_init(void);
+void memory_subsystem_destroy(void);
+
+extern memory_allocator_t g_host_allocator;
 
 #endif // POUND_MEMORY_H
 
