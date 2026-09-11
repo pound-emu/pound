@@ -1,5 +1,7 @@
 #include "gui/gui.h"
 #include "log.h"
+#include "memory/memory.h"
+
 #include <SDL3/SDL.h>
 #include <mimalloc-override.h>
 #include <stdlib.h>
@@ -57,6 +59,7 @@ main(void)
 {
     mi_option_set(mi_option_arena_reserve, 128 * 1024);
     pound_logger_init_default();
+    memory_subsystem_init();
 
     if (!SDL_Init(SDL_INIT_VIDEO))
     {
@@ -127,6 +130,7 @@ main(void)
 
     app_gui_shutdown(&app);
     app_video_shutdown(&app);
+    memory_subsystem_destroy();
     SDL_Quit();
 
     return EXIT_SUCCESS;
@@ -434,7 +438,8 @@ app_gui_update(app_t *app, const bool force)
 
         if (GUI_PLUGIN_SUCCESS == error && hot_reloaded_code_size > 0)
         {
-            hot_reloaded_code = malloc(hot_reloaded_code_size);
+            const size_t memory_alignment = 8U;
+            hot_reloaded_code = memory_subsystem_allocate(memory_alignment, hot_reloaded_code_size);
 
             if (hot_reloaded_code != NULL)
             {
@@ -479,8 +484,9 @@ app_gui_update(app_t *app, const bool force)
 
     if (ini != NULL)
     {
-        const size_t ini_length = strlen(ini);
-        ini_copy                = malloc(ini_length + 1);
+        const size_t ini_length       = strlen(ini);
+        const size_t memory_alignment = 8U;
+        ini_copy                      = memory_subsystem_allocate(memory_alignment, ini_length + 1);
 
         if (ini_copy != NULL)
         {
@@ -884,7 +890,8 @@ app_memory_churn(void)
 
     while (count < target && step < max_step)
     {
-        void *p = malloc(block_size);
+        const size_t memory_alignment = 8U;
+        void        *p                = memory_subsystem_allocate(memory_alignment, block_size);
 
         if (NULL == p)
         {
@@ -898,7 +905,7 @@ app_memory_churn(void)
 
     while (count > target && step < max_step)
     {
-        free(blocks[--count]);
+        memory_subsystem_free(blocks[--count]);
         blocks[count] = NULL;
         ++step;
     }
