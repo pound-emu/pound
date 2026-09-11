@@ -154,7 +154,7 @@ set_target_properties(SDL3-shared PROPERTIES
 )
 
 message(STATUS "[PoundCore] Configuring Pound Core Library...")
-add_library(PoundCore STATIC
+add_library(PoundCore OBJECT
         src/core/memory/memory.c
         src/core/memory/guest_memory.c
         src/core/guest_state.c
@@ -174,11 +174,11 @@ add_library(PoundGui SHARED
         src/gui/gui_layout.c
         src/gui/debug/debug_memory_data.c
         src/gui/debug/debug_memory_render.c)
-target_include_directories(PoundGui PUBLIC src/gui)
+target_include_directories(PoundGui PUBLIC src/gui src/core)
 # Windows loads PoundGui before the EXE finishes its own imports. Listing
 # mimalloc ahead of imgui keeps mimalloc-redirect ahead of ucrt in
 # PoundGui's import table.
-target_link_libraries(PoundGui PRIVATE mimalloc PoundCore imgui)
+target_link_libraries(PoundGui PRIVATE mimalloc imgui)
 set_target_properties(PoundGui PROPERTIES C_VISIBILITY_PRESET hidden)
 set_target_properties(PoundGui PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS ON)
 if (WIN32)
