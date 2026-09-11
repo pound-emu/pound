@@ -68,6 +68,13 @@ memory_subsystem_get_usable_size(const void *POUND_RESTRICT pointer)
     return usable_size;
 }
 
+size_t
+memory_subsystem_get_memory_used_by_bucket(const memory_bucket_type_t bucket)
+{
+    const size_t memory_used_by_bucket = tls_current_allocator->memory_used_by_bucket[bucket];
+    return memory_used_by_bucket;
+}
+
 static void *
 host_allocate(memory_allocator_t *POUND_RESTRICT allocator,
               const size_t                       alignment,

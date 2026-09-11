@@ -40,6 +40,7 @@ void                *memory_subsystem_allocate(size_t alignment, size_t bytes);
 void                 memory_subsystem_free(void *POUND_RESTRICT pointer);
 memory_bucket_type_t memory_subsystem_set_bucket(memory_bucket_type_t bucket);
 size_t               memory_subsystem_get_usable_size(const void *POUND_RESTRICT pointer);
+size_t               memory_subsystem_get_memory_used_by_bucket(memory_bucket_type_t bucket);
 extern memory_allocator_t g_host_allocator;
 
 #endif // POUND_MEMORY_H
