@@ -453,7 +453,7 @@ app_gui_update(app_t *app, const bool force)
                     POUND_LOG_ERROR(&thread_logger,
                                     "Failed to save GUI state because %s.",
                                     gui_plugin_error_to_string(error));
-                    free(hot_reloaded_code);
+                    memory_subsystem_free(hot_reloaded_code);
                     hot_reloaded_code      = NULL;
                     hot_reloaded_code_size = 0;
                 }
@@ -517,7 +517,7 @@ app_gui_update(app_t *app, const bool force)
             {
                 const size_t ini_size = strlen(ini_copy);
                 igLoadIniSettingsFromMemory(ini_copy, ini_size);
-                free(ini_copy);
+                memory_subsystem_free(ini_copy);
                 ini_copy = NULL;
             }
 
@@ -540,8 +540,8 @@ app_gui_update(app_t *app, const bool force)
         POUND_LOG_ERROR(&thread_logger, "Failed to load GUI plugin at %s.", app->gui_source_path);
     }
 
-    free(hot_reloaded_code);
-    free(ini_copy);
+    memory_subsystem_free(hot_reloaded_code);
+    memory_subsystem_free(ini_copy);
     app->gui_source_time = source_time;
     return ok;
 }
