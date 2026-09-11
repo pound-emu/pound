@@ -5,6 +5,7 @@
 
 /// How much brighter a box becomes while hovered (0.0 = unchanged, 1.0 = white).
 #define GUI_BOX_HOVER_LIGHTEN 0.25F
+#define GUI_BOX_MINIMUM_WIDTH 64.0F
 
 #define GUI_BOX_LABEL_INSET           4.0F
 #define GUI_BOX_LABEL_COLOR           IM_COL32(0, 0, 0, 255)
@@ -55,11 +56,19 @@ debug_memory_render(debug_memory_tracker_t *context)
     {
         ImDrawList *POUND_RESTRICT draw_list   = igGetWindowDrawList();
         const ImVec2_c             origin      = igGetCursorScreenPos();
-        const float                box_width   = 150.0f;
         const float                box_height  = 60.0f;
         const float                box_gap     = 4.0f;
         const float                font_height = igGetFontSize();
         const ImU32                box_color   = IM_COL32(100, 149, 237, 255);
+
+        const int   box_count   = 3;
+        const float avail_width = igGetContentRegionAvail().x;
+        float box_width = (avail_width - (box_gap * (float)(box_count - 1))) / (float)box_count;
+
+        if (box_width < GUI_BOX_MINIMUM_WIDTH)
+        {
+            box_width = GUI_BOX_MINIMUM_WIDTH;
+        }
 
         const char *text_label_name  = ".text";
         const char *data_label_name  = ".data";
@@ -92,13 +101,22 @@ debug_memory_render(debug_memory_tracker_t *context)
         const char *vram_caption
             = (written > 0 && written < (int)sizeof(vram_address)) ? vram_address : NULL;
 
-        debug_memory_gui_box_t text_box = { 0 };
-        debug_memory_gui_box_init(
-            &text_box, origin, box_width, box_height, box_color, text_label_name, text_caption);
-        const ImVec2_c text_box_end = debug_memory_gui_box_render(draw_list, &text_box);
+        const ImVec2_c text_position = origin;
+        const ImVec2_c data_position = { .x = origin.x + box_width + box_gap, .y = origin.y };
+        const ImVec2_c vram_position
+            = { .x = origin.x + 2.0f * (box_width + box_gap), .y = origin.y };
 
-        debug_memory_gui_box_t data_box;
-        const ImVec2_c         data_position = { .x = text_box_end.x + box_gap, .y = origin.y };
+        debug_memory_gui_box_t text_box = { 0 };
+        debug_memory_gui_box_init(&text_box,
+                                  text_position,
+                                  box_width,
+                                  box_height,
+                                  box_color,
+                                  text_label_name,
+                                  text_caption);
+        debug_memory_gui_box_render(draw_list, &text_box);
+
+        debug_memory_gui_box_t data_box = { 0 };
         debug_memory_gui_box_init(&data_box,
                                   data_position,
                                   box_width,
@@ -106,10 +124,9 @@ debug_memory_render(debug_memory_tracker_t *context)
                                   box_color,
                                   data_label_name,
                                   data_caption);
-        const ImVec2_c data_box_end = debug_memory_gui_box_render(draw_list, &data_box);
+        debug_memory_gui_box_render(draw_list, &data_box);
 
-        debug_memory_gui_box_t vram_box;
-        const ImVec2_c         vram_position = { .x = data_box_end.x + box_gap, .y = origin.y };
+        debug_memory_gui_box_t vram_box = { 0 };
         debug_memory_gui_box_init(&vram_box,
                                   vram_position,
                                   box_width,
