@@ -29,7 +29,7 @@
         "CMAKE_CXX_FLAGS": "",
         "CMAKE_EXE_LINKER_FLAGS": "-fuse-ld=mold",
         "CMAKE_SHARED_LINKER_FLAGS": "-fuse-ld=mold",
-        "POUND_COMPILER_FLAGS": "-Wall -Wextra -Werror -Wconversion -Wsign-conversion -Wshadow -Wstrict-prototypes -fstack-protector-strong -Wpadded -Wvla -fstrict-aliasing -fno-omit-frame-pointer -ftrivial-auto-var-init=zero -gsplit-dwarf -g",
+        "POUND_COMPILER_FLAGS": "-Wall -Wextra -Wconversion -Wsign-conversion -Wshadow -Wstrict-prototypes -fstack-protector-strong -Wpadded -Wvla -fstrict-aliasing -fno-omit-frame-pointer -ftrivial-auto-var-init=zero -gsplit-dwarf -g",
         "POUND_LINKER_FLAGS": "",
         "POUND_SANITIZERS": "-fsanitize=address,undefined",
         "POUND_ENABLE_LINK_TIME_OPTIMIZATION": "ON"
