@@ -39,6 +39,7 @@ typedef struct
 void                memory_subsystem_init(void);
 void                memory_subsystem_destroy(void);
 memory_allocator_t *memory_subsystem_set_allocator(memory_allocator_t *POUND_RESTRICT allocator);
+memory_allocator_t *memory_subsystem_get_allocator(void);
 void               *memory_subsystem_allocate(size_t alignment, size_t bytes);
 void                memory_subsystem_free(void *POUND_RESTRICT pointer);
 int                 memory_subsystem_set_bucket(int bucket);

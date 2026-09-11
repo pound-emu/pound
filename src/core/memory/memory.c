@@ -31,6 +31,12 @@ memory_subsystem_set_allocator(memory_allocator_t *POUND_RESTRICT allocator)
     return previous_allocator;
 }
 
+memory_allocator_t *
+memory_subsystem_get_allocator(void)
+{
+    return tls_current_allocator;
+}
+
 void *
 memory_subsystem_allocate(const size_t alignment, const size_t bytes)
 {
