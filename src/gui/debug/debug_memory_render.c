@@ -1,5 +1,6 @@
 #include "debug_memory.h"
 #include "log.h"
+#include "memory/memory.h"
 #include "mimalloc-stats.h"
 
 /// How much brighter a box becomes while hovered (0.0 = unchanged, 1.0 = white).
@@ -48,7 +49,6 @@ debug_memory_render(debug_memory_tracker_t *context)
         snprintf(title, sizeof(title), "Guest Address Space - unknown###GuestAddressSpace");
     }
 
-    mi_stats_t_decl(stats);
     const ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoCollapse;
 
     if (true == igBegin(title, NULL, window_flags))
@@ -170,26 +170,19 @@ debug_memory_render(debug_memory_tracker_t *context)
 
         debug_memory_gui_box_info_render(&selected_box_info);
 
-        if (mi_stats_get(&stats))
-        {
-            const ImVec4_c header_color
-                = { .x = 100.0f / 255.0f, .y = 149.0f / 255.0f, .z = 237.0f / 255.0f, .w = 1.0f };
-            igTextColored(header_color, "Memory Utilization");
+        const ImVec4_c header_color
+            = { .x = 100.0f / 255.0f, .y = 149.0f / 255.0f, .z = 237.0f / 255.0f, .w = 1.0f };
+        igTextColored(header_color, "Memory Utilization");
 
-            const double reserved_mib  = (double)stats.reserved.current / (1024.0F * 1024.0F);
-            const double committed_mib = (double)stats.committed.current / (1024.0F * 1024.0F);
-            const double memory_in_use
-                = (double)(stats.malloc_normal.current + stats.malloc_huge.current)
-                  / (1024.0F * 1024.0F);
+        const int    all_buckets       = -1;
+        const size_t memory_in_use     = memory_subsystem_get_memory_used_by_bucket(all_buckets);
+        const size_t heap_size         = memory_subsystem_get_heap_size();
+        const double heap_size_mib     = (double)heap_size / (1024.0F * 1024.0F);
+        const double memory_in_use_mib = (double)memory_in_use / (1024.0F * 1024.0F);
 
-            igSeparator();
-            igText("Committed vs reserved");
-            progress_bar_render(committed_mib, reserved_mib);
-            igSeparator();
-
-            igText("In Use vs committed");
-            progress_bar_render(memory_in_use, committed_mib);
-        }
+        igSeparator();
+        igText("In Use vs Reserved");
+        progress_bar_render(memory_in_use_mib, heap_size_mib);
     }
 
     igEnd();
