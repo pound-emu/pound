@@ -32,11 +32,6 @@ struct memory_allocator
     size_t memory_used_by_bucket[MEMORY_BUCKET_COUNT];
 };
 
-/// Controls all of Pound's memory.
-typedef struct
-{
-} memory_subsystem_t;
-
 void                 memory_subsystem_init(void);
 void                 memory_subsystem_destroy(void);
 memory_allocator_t  *memory_subsystem_set_allocator(memory_allocator_t *POUND_RESTRICT allocator);
