@@ -60,6 +60,7 @@ main(void)
     mi_option_set(mi_option_arena_reserve, 128 * 1024);
     pound_logger_init_default();
     memory_subsystem_init();
+    (void)memory_subsystem_set_bucket(MEMORY_BUCKET_UI);
 
     if (!SDL_Init(SDL_INIT_VIDEO))
     {
