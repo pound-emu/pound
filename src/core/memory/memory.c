@@ -1,4 +1,5 @@
 #include "memory.h"
+#include "mimalloc.h"
 #include <stdlib.h>
 
 static void *host_allocate(memory_allocator_t *POUND_RESTRICT allocator,
@@ -49,8 +50,7 @@ host_allocate(memory_allocator_t *POUND_RESTRICT allocator,
               const size_t                       bytes)
 {
     (void)allocator;
-    (void)alignment;
-    void *POUND_RESTRICT pointer = malloc(bytes);
+    void *POUND_RESTRICT pointer = mi_malloc_aligned(bytes, alignment);
     return pointer;
 }
 
@@ -58,5 +58,5 @@ static void
 host_free(memory_allocator_t *POUND_RESTRICT allocator, void *pointer)
 {
     (void)allocator;
-    free(pointer);
+    mi_free(pointer);
 }

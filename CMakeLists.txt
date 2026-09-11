@@ -162,6 +162,7 @@ add_library(PoundCore OBJECT
         src/core/safe_math.c
 )
 target_include_directories(PoundCore PUBLIC src/core)
+target_link_libraries(PoundCore PRIVATE mimalloc)
 set_target_properties(PoundCore PROPERTIES POSITION_INDEPENDENT_CODE ON)
 add_compiler_flags(PoundCore)
 add_linker_flags(PoundCore)
