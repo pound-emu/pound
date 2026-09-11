@@ -2,6 +2,14 @@
 #include "mimalloc.h"
 #include <stdlib.h>
 
+struct memory_allocator
+{
+    void *(*allocate)(memory_allocator_t *POUND_RESTRICT allocator, size_t alignment, size_t bytes);
+    void (*free)(memory_allocator_t *POUND_RESTRICT allocator, void *pointer);
+    size_t (*get_usable_size)(const void *POUND_RESTRICT pointer);
+    size_t memory_used_by_bucket[MEMORY_BUCKET_COUNT];
+};
+
 static void  *host_allocate(memory_allocator_t *POUND_RESTRICT allocator,
                             size_t                             alignment,
                             size_t                             bytes);

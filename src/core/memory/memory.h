@@ -24,14 +24,6 @@ typedef enum
 
 typedef struct memory_allocator memory_allocator_t;
 
-struct memory_allocator
-{
-    void *(*allocate)(memory_allocator_t *POUND_RESTRICT allocator, size_t alignment, size_t bytes);
-    void (*free)(memory_allocator_t *POUND_RESTRICT allocator, void *pointer);
-    size_t (*get_usable_size)(const void *POUND_RESTRICT pointer);
-    size_t memory_used_by_bucket[MEMORY_BUCKET_COUNT];
-};
-
 void                 memory_subsystem_init(void);
 void                 memory_subsystem_destroy(void);
 memory_allocator_t  *memory_subsystem_set_allocator(memory_allocator_t *POUND_RESTRICT allocator);
