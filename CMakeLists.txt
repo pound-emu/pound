@@ -179,7 +179,7 @@ target_include_directories(PoundGui PUBLIC src/gui src/core)
 # Windows loads PoundGui before the EXE finishes its own imports. Listing
 # mimalloc ahead of imgui keeps mimalloc-redirect ahead of ucrt in
 # PoundGui's import table.
-target_link_libraries(PoundGui PRIVATE mimalloc imgui)
+target_link_libraries(PoundGui PRIVATE mimalloc imgui PoundCore)
 set_target_properties(PoundGui PROPERTIES C_VISIBILITY_PRESET hidden)
 set_target_properties(PoundGui PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS ON)
 if (WIN32)
