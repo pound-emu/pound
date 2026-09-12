@@ -1,8 +1,14 @@
 #include "memory.h"
+#include "platform.h"
 
 #include "mimalloc-stats.h"
 #include "mimalloc.h"
 #include <stdlib.h>
+
+#if POUND_PLATFORM_WINDOWS
+    // mi_malloc_usable_size symbol it's not found on windows build so we remap to the mi_usable_size function
+    #define mi_malloc_usable_size mi_usable_size
+#endif
 
 struct memory_allocator
 {
