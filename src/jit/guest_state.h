@@ -1,8 +1,8 @@
 #ifndef POUND_GUEST_STATE_H
 #define POUND_GUEST_STATE_H
 
-#include "attributes.h"
-#include "errors.h"
+#include "../core/attributes.h"
+#include "../core/errors.h"
 #include "stdint.h"
 
 #define GUEST_STATE_REGISTER_COUNT 32

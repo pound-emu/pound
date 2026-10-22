@@ -156,8 +156,6 @@ set_target_properties(SDL3-shared PROPERTIES
 message(STATUS "[PoundCore] Configuring Pound Core Library...")
 add_library(PoundCore OBJECT
         src/core/memory/memory.c
-        src/core/memory/guest_memory.c
-        src/core/guest_state.c
         src/core/log.c
         src/core/safe_math.c
 )
@@ -166,6 +164,17 @@ target_link_libraries(PoundCore PRIVATE mimalloc)
 set_target_properties(PoundCore PROPERTIES POSITION_INDEPENDENT_CODE ON)
 add_compiler_flags(PoundCore)
 add_linker_flags(PoundCore)
+add_sanitizers(PoundCore)
+
+message(STATUS "[PoundJIT] Configuring Pound JIT Library...")
+add_library(PoundJit STATIC
+        src/jit/guest_state.c
+        src/jit/guest_memory.c
+)
+target_include_directories(PoundJit PUBLIC src/core)
+target_link_libraries(PoundJit PRIVATE PoundCore Ballistic::Engine)
+add_compiler_flags(PoundJit)
+add_linker_flags(PoundJit)
 add_sanitizers(PoundCore)
 
 message(STATUS "[PoundGUI] Configuring Pound GUI Library...")
