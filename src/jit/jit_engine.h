@@ -26,8 +26,14 @@ POUND_ALIGNED(64) typedef struct
     uint32_t               engine_flags;
     volatile bool          stop_requested;
     bool                   initialized;
-    char                   pad[2];
+    char                   pad0[2];
+    error_t                status;
+    char                   pad1[36];
     jit_dual_stats_t       stats;
-} jit_dual_state_t;
+} jit_engine_t;
+
+POUND_COLD error_t jit_engine_init(jit_engine_t *POUND_RESTRICT   context,
+                                   guest_memory_t *POUND_RESTRICT guest_memory,
+                                   uint32_t                       flags);
 
 #endif // POUND_JIT_DUAL_H

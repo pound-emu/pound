@@ -170,6 +170,7 @@ message(STATUS "[PoundJIT] Configuring Pound JIT Library...")
 add_library(PoundJit STATIC
         src/jit/guest_state.c
         src/jit/guest_memory.c
+        src/jit/jit_engine.c
 )
 target_include_directories(PoundJit PUBLIC src/core)
 target_link_libraries(PoundJit PRIVATE PoundCore Ballistic::Engine)
