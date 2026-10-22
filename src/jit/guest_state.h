@@ -18,7 +18,7 @@ POUND_ALIGNED(64) typedef struct
     uint8_t  flag_z;
     uint8_t  flag_c;
     uint8_t  flag_v;
-    uint32_t pad;
+    char     pad[52];
 } guest_state_t;
 
 static_assert(offsetof(guest_state_t, x) == offsetof(bal_cpu_t, x),
