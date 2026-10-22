@@ -74,6 +74,9 @@ extern "C"
 
         /// The provided buffer capacity is too large and would cause an integer overflow.
         BAL_ERROR_CAPACITY_TOO_BIG = -203,
+
+        /// The register allocator's internal state is corrupted.
+        BAL_ERROR_REGISTER_ALLOCATOR_CORRUPTED = -204,
     } bal_error_t;
 
     /// Converts the enum into a readable string for error handling.

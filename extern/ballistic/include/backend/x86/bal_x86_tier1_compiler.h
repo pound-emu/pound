@@ -20,7 +20,8 @@ extern "C"
         int8_t                   arm_to_x86[32];
         int8_t                   x86_to_arm[16];
         uint32_t                 is_dirty;
-        uint32_t                 pad0;
+        uint8_t                  eviction_cursor;
+        char                     pad[3];
         bal_jit_debug_context_t *debug_context;
         bal_error_t              status;
         uint32_t                 pad1;

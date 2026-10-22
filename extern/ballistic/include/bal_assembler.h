@@ -9,9 +9,8 @@
 //!
 //! uint32_t code[128];
 //! bal_assembler_t assembler;
-//! bal_logger_t logger = {0};
-//!
-//! bal_error_t error = bal_assembler_init(&assembler, code, 128, logger);
+//! bal_logger_init_default();
+//! bal_error_t error = bal_assembler_init(&assembler, code, 64);
 //! if (error == BAL_SUCCESS)
 //! {
 //!     // MOV X0, #42
@@ -54,9 +53,6 @@ extern "C"
         /// The current write index within the buffer.
         size_t offset;
 
-        /// The logging context used to report details and errors.
-        bal_logger_t logger;
-
         /// The current error state of the assembler.
         ///
         /// Once this is set to anything other than [`BAL_SUCCESS`], all subsequent emit calls will
@@ -87,16 +83,13 @@ extern "C"
     /// // ---
     /// uint32_t code[64];
     /// bal_assembler_t assembler;
-    /// bal_logger_t logger = {0};
-    /// bal_error_t error = bal_assembler_init(&assembler, code, 64, logger);
+    /// bal_logger_init_default();
+    /// bal_error_t error = bal_assembler_init(&assembler, code, 64);
     /// assert(error == BAL_SUCCESS);
     /// assert(assembler.capacity == 64);
     /// assert(assembler.offset == 0);
     /// ```
-    bal_error_t bal_assembler_init(bal_assembler_t *assembler,
-                                   void            *buffer,
-                                   size_t           size,
-                                   bal_logger_t     logger);
+    bal_error_t bal_assembler_init(bal_assembler_t *assembler, void *buffer, size_t size);
 
     /// Resets the assembler back to its initial state.
     ///
@@ -122,8 +115,8 @@ extern "C"
     /// // ---
     /// uint32_t code[64];
     /// bal_assembler_t assembler;
-    /// bal_logger_t logger = {0};
-    /// bal_assembler_init(&assembler, code, 64, logger);
+    /// bal_logger_init_default();
+    /// bal_assembler_init(&assembler, code, 64);
     /// bal_emit_movz(&assembler,BAL_REGISTER_X0, 42, 0);
     /// assert(assembler.offset == 1);
     ///
@@ -151,8 +144,8 @@ extern "C"
     /// // ---
     /// uint32_t code[64];
     /// bal_assembler_t assembler;
-    /// bal_logger_t logger = {0};
-    /// bal_assembler_init(&assembler, code, 64, logger);
+    /// bal_logger_init_default();
+    /// bal_assembler_init(&assembler, code, 64);
     /// bal_assembler_destroy(&assembler);
     ///
     /// // Emitting after a destroy is a no-op. You must call bal_assembler_init() again.
@@ -171,6 +164,7 @@ extern "C"
     /// * `rd` and `rn` must be valid registers (0-31).
     /// * `imm12` must not exceed 12 bits (0-4095).
     /// * `shift` must be the bit value `0` (LSL #0) or `1` (LSL #12).
+    /// * `assembler->buffer` must not be NULL.
     /// * Function does not emit instructions if `assembler->status != BALL_SUCCESS`.
     ///
     /// # Errors
@@ -190,8 +184,8 @@ extern "C"
     /// // ---
     /// uint32_t code[64];
     /// bal_assembler_t assembler;
-    /// bal_logger_t logger = {0};
-    /// bal_assembler_init(&assembler, code, 64, logger);
+    /// bal_logger_init_default();
+    /// bal_assembler_init(&assembler, code, 64);
     ///
     /// bal_emit_add_immediate(&assembler, BAL_REGISTER_X0, BAL_REGISTER_X1, 42, 0);
     /// assert(assembler.offset == 1);
@@ -232,8 +226,8 @@ extern "C"
     /// // ---
     /// uint32_t code[64];
     /// bal_assembler_t assembler;
-    /// bal_logger_t logger = {0};
-    /// bal_assembler_init(&assembler, code, 64, logger);
+    /// bal_logger_init_default();
+    /// bal_assembler_init(&assembler, code, 64);
     ///
     /// bal_emit_add_shifted_register(&assembler, BAL_REGISTER_X0, BAL_REGISTER_X1, BAL_REGISTER_X2,
     ///                               0, 0);
@@ -277,8 +271,8 @@ extern "C"
     /// //---
     /// uint32_t code[64];
     /// bal_assembler_t assembler;
-    /// bal_logger_t logger = {0};
-    /// bal_assembler_init(&assembler, code, 64, logger);
+    /// bal_logger_init_default();
+    /// bal_assembler_init(&assembler, code, 64);
     ///
     /// bal_emit_b(&assembler, 16);
     /// assert(assembler.offset == 1);
@@ -313,8 +307,8 @@ extern "C"
     /// // ---
     /// uint32_t code[64];
     /// bal_assembler_t assembler;
-    /// bal_logger_t logger = {0};
-    /// bal_assembler_init(&assembler, code, 64, logger);
+    /// bal_logger_init_default();
+    /// bal_assembler_init(&assembler, code, 64);
     ///
     /// bal_emit_br(&assembler, BAL_REGISTER_X30);
     /// assert(assembler.offset == 1);
@@ -352,8 +346,8 @@ extern "C"
     /// // ---
     /// uint32_t code[64];
     /// bal_assembler_t assembler;
-    /// bal_logger_t logger = {0};
-    /// bal_assembler_init(&assembler, code, 64, logger);
+    /// bal_logger_init_default();
+    /// bal_assembler_init(&assembler, code, 64);
     ///
     /// bal_emit_sub_immediate(&assembler, BAL_REGISTER_X0, BAL_REGISTER_X1, 10, 0);
     /// assert(assembler.offset == 1);
@@ -393,8 +387,8 @@ extern "C"
     /// // ---
     /// uint32_t code[64];
     /// bal_assembler_t assembler;
-    /// bal_logger_t logger = {0};
-    /// bal_assembler_init(&assembler, code, 64, logger);
+    /// bal_logger_init_default();
+    /// bal_assembler_init(&assembler, code, 64);
     ///
     /// bal_emit_movz(&assembler, BAL_REGISTER_X0, 42, 0);
     /// assert(assembler.offset == 1);
@@ -433,8 +427,8 @@ extern "C"
     /// // ---
     /// uint32_t code[64];
     /// bal_assembler_t assembler;
-    /// bal_logger_t logger = {0};
-    /// bal_assembler_init(&assembler, code, 64, logger);
+    /// bal_logger_init_default();
+    /// bal_assembler_init(&assembler, code, 64);
     /// bal_emit_movk(&assembler, BAL_REGISTER_X0, 0x1234, 16);
     /// assert(assembler.offset == 1);
     /// assert(code[0] == 0xF2A24680);
@@ -472,8 +466,8 @@ extern "C"
     /// // ---
     /// uint32_t code[64];
     /// bal_assembler_t assembler;
-    /// bal_logger_t logger = {0};
-    /// bal_assembler_init(&assembler, code, 64, logger);
+    /// bal_logger_init_default();
+    /// bal_assembler_init(&assembler, code, 64);
     ///
     /// bal_emit_movn(&assembler, BAL_REGISTER_X0, 0xFFFF, 0);
     /// assert(assembler.offset == 1);
@@ -511,14 +505,25 @@ extern "C"
     /// // ---
     /// uint32_t code[64];
     /// bal_assembler_t assembler;
-    /// bal_logger_t logger = {0};
-    /// bal_assembler_init(&assembler, code, 64, logger);
+    /// bal_logger_init_default();
+    /// bal_assembler_init(&assembler, code, 64);
     ///
     /// bal_emit_ret(&assembler, BAL_REGISTER_X30);
     /// assert(assembler.offset == 1);
     /// assert(code[0] == 0xD65F03C0);
     /// ```
     void bal_emit_ret(bal_assembler_t *assembler, bal_register_index_t rn);
+
+#ifdef BALLISTIC_BUILD_TESTS
+
+    void emit_mov(bal_assembler_t *BAL_RESTRICT assembler,
+                  const char *BAL_RESTRICT      mnemonic,
+                  bal_register_index_t          rd,
+                  uint16_t                      imm,
+                  uint8_t                       shift,
+                  uint32_t                      opcode);
+
+#endif // BALLISTIC_BUILD_TESTS
 
 #ifdef __cplusplus
 }

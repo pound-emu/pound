@@ -6,6 +6,9 @@
 #ifdef __cplusplus
 extern "C"
 {
+
+
+
 #endif // __cplusplus
 
 /// BAL_HOT()/BAL_COLD()
@@ -21,8 +24,8 @@ extern "C"
 /// Hints to the CPU branch predictor. Should only be used in hot functions.
 ///
 /// Usage: if (BAL_UNLIKELY(ptr == NULL)) { ... }
-#define BAL_LIKELY(x)   __builtin_expect(!!(x), 1)
-#define BAL_UNLIKELY(x) __builtin_expect(!!(x), 0)
+#define BAL_LIKELY(x)   (__builtin_expect(!!(x), 1) != 0)
+#define BAL_UNLIKELY(x) (__builtin_expect(!!(x), 0) != 0)
 
 /// BAL_ALIGNED(x)
 /// Aligns a variable or a structure to x bytes.
@@ -57,6 +60,14 @@ extern "C"
 ///
 /// Usage: BAL_NOINLINE void my_function();
 #define BAL_NOINLINE __attribute__((noinline))
+
+// Allows static_assert() on C99.
+#if defined(__STDC_VERSION__) && (__STDC_VERSION__ < 201112L)
+#define BAL_SA_CONCAT_IMPL_(a, b) a##b
+#define BAL_SA_CONCAT_(a, b) BAL_SA_CONCAT_IMPL_(a, b)
+#define static_assert(expr, msg) \
+    typedef char BAL_SA_CONCAT_(bal_static_assert_, __COUNTER__)[(expr) ? 1 : -1]
+#endif
 
 #ifdef __cplusplus
 }

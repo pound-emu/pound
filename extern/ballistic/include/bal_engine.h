@@ -21,6 +21,7 @@
 //! #include "bal_engine.h"
 //! #include "bal_memory.h"
 //! #include "bal_log.h"
+//! #include <assert.h>
 //! #include <stdlib.h>
 //! #include <string.h>
 //!
@@ -43,7 +44,7 @@
 //! bal_engine_t engine = {0};
 //! bal_engine_init(&engine, &cpu, &allocator, &memory_interface);
 //!
-//! guest_memory[0] = 0xD2800054; // MOVZ X0, #42
+//! guest_memory[0] = 0xD2800540; // MOVZ X0, #42
 //! guest_memory[1] = 0xD65F03C0; // RET
 //!
 //! cpu.pc = 0;
@@ -52,7 +53,7 @@
 //! // Execute the JIT compiled block.
 //! bal_engine_run_thread(&engine);
 //!
-//! // cpu.x[0] now contains 42.
+//! assert(cpu.x[0] == 42);
 //!
 //! // Cleanup.
 //! bal_engine_destroy(&engine);

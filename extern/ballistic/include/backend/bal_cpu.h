@@ -12,6 +12,8 @@ extern "C"
 {
 #endif // __cplusplus
 
+    typedef uint64_t (*bal_cpu_guest_read_function_t)(void *context, uint64_t guest_address);
+
     BAL_ALIGNED(64) typedef struct
     {
         uint64_t                 x[32];
@@ -30,7 +32,13 @@ extern "C"
         ///
         /// This only increments if the engine flag [`BAL_ENGINE_FLAG_INSTRUCTION_COUNTING`] is set.
         uint64_t instruction_count;
-        char     pad[32];
+
+        /// Reads 8 bytes from guest memory.
+        bal_cpu_guest_read_function_t guest_read;
+
+        /// Opaque context passed as the first context to [`bal_cpu_guest_read_function_t`].
+        uint64_t guest_read_context;
+        char     pad[16];
     } bal_cpu_t;
 
     /// The function signature of a JIT-compiled basic block.

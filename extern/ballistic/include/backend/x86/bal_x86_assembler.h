@@ -169,6 +169,22 @@ extern "C"
                                     bal_x86_register_t   destination,
                                     int32_t              immediate);
 
+    /// Emits an add 32-bit immediate value to a 32-bit register. The result is zero extended into
+    /// the full 64-bit register.
+    ///
+    /// Assembly equivalent: `add destination32, immediate`
+    ///
+    /// # Warning
+    ///
+    /// This function fails if:
+    ///
+    /// - `assembler` is `NULL`
+    /// - `assembler->status` != [`BAL_SUCCESS`]
+    /// - `assembler->buffer` is full.
+    void bal_x86_emit_add_r32_imm32(bal_x86_assembler_t *assembler,
+                                    bal_x86_register_t   destination,
+                                    int32_t              immediate);
+
     /// Emits an add 64-bit register to another 64-bit register.
     ///
     /// Assembly equivalent: `add destination, source`
@@ -181,6 +197,22 @@ extern "C"
     /// - `assembler->status` != [`BAL_SUCCESS`]
     /// - `assembler->buffer` is full.
     void bal_x86_emit_add_r64_r64(bal_x86_assembler_t *assembler,
+                                  bal_x86_register_t   destination,
+                                  bal_x86_register_t   source);
+
+    /// Emits an add 32-bit register to another 32-bit register. The result is zero extended
+    /// into the full 64-bit register.
+    ///
+    /// Assembly equivalent: `add destination32, source32`
+    ///
+    /// # Warning
+    ///
+    /// This function fails if:
+    ///
+    /// - `assembler` is `NULL`
+    /// - `assembler->status` != [`BAL_SUCCESS`]
+    /// - `assembler->buffer` is full.
+    void bal_x86_emit_add_r32_r32(bal_x86_assembler_t *assembler,
                                   bal_x86_register_t   destination,
                                   bal_x86_register_t   source);
 
@@ -211,9 +243,25 @@ extern "C"
     /// - `assembler` is `NULL`
     /// - `assembler->status` != [`BAL_SUCCESS`]
     /// - `assembler->buffer` is full.
-    void bal_x86_emit_sub_r64_imm32(bal_x86_assembler_t     *assembler,
-                                    const bal_x86_register_t destination,
-                                    const int32_t            immediate);
+    void bal_x86_emit_sub_r64_imm32(bal_x86_assembler_t *assembler,
+                                    bal_x86_register_t   destination,
+                                    int32_t              immediate);
+
+    /// Emits a subtract 32-bit immediate from a 32-bit register. The result is zero extended
+    /// into the full 64-bit register.
+    ///
+    /// Assembly equivalent: `sub destination32, immediate`
+    ///
+    /// # Warning
+    ///
+    /// This function fails if:
+    ///
+    /// - `assembler` is `NULL`
+    /// - `assembler->status` != [`BAL_SUCCESS`]
+    /// - `assembler->buffer` is full.
+    void bal_x86_emit_sub_r32_imm32(bal_x86_assembler_t *assembler,
+                                    bal_x86_register_t   destination,
+                                    int32_t              immediate);
 
     /// Emits a subtract 64-bit register from another 64-bit register.
     ///
@@ -227,6 +275,22 @@ extern "C"
     /// - `assembler->status` != [`BAL_SUCCESS`]
     /// - `assembler->buffer` is full.
     void bal_x86_emit_sub_r64_r64(bal_x86_assembler_t *assembler,
+                                  bal_x86_register_t   destination,
+                                  bal_x86_register_t   source);
+
+    /// Emits a subtract 32-bit register from another 32-bit register. The result is zero extended
+    /// into the full 64-bit register.
+    ///
+    /// Assembler equivalent: `sub destination32, source32`
+    ///
+    /// # Warning
+    ///
+    /// This function fails if:
+    ///
+    /// - `assembler` is `NULL`
+    /// - `assembler->status` != [`BAL_SUCCESS`]
+    /// - `assembler->buffer` is full.
+    void bal_x86_emit_sub_r32_r32(bal_x86_assembler_t *assembler,
                                   bal_x86_register_t   destination,
                                   bal_x86_register_t   source);
 
@@ -244,6 +308,19 @@ extern "C"
     void bal_x86_emit_and_r64_r64(bal_x86_assembler_t *assembler,
                                   bal_x86_register_t   destination,
                                   bal_x86_register_t   source);
+
+    /// Emits an indirect call to the address in a 64-bit register.
+    ///
+    /// Assembly equivalent: `call reg64`
+    ///
+    /// # Warning
+    ///
+    /// This function fails if:
+    ///
+    /// - `assembler` is `NULL`.
+    /// - `assembler->status` != [`BAL_SUCCESS`]
+    /// - `assembler->buffer` is full.
+    void bal_x86_emit_call_r64(bal_x86_assembler_t *assembler, bal_x86_register_t reg);
 
     /// Emits a conditional jump to a relative 32-bit offset.
     ///
@@ -301,6 +378,23 @@ extern "C"
                                           bal_x86_register_t   destination,
                                           int32_t              offset);
 
+    /// Emits a memory load from the address in a 64-bit register.
+    ///
+    /// Assembly equivalent: `mov destination, [base]`
+    ///
+    /// Handles all 16 x86-64 registers including RSP and RBP.
+    ///
+    /// # Warning
+    ///
+    /// This function fails if:
+    ///
+    /// - `assembler` is `NULL`.
+    /// - `assembler->status` != [`BAL_SUCCESS`]
+    /// - `assembler->buffer` is full.
+    void bal_x86_emit_load_r64_from_r64(bal_x86_assembler_t *assembler,
+                                        bal_x86_register_t   destination,
+                                        bal_x86_register_t   base);
+
     /// Emits an instruction to move a 64-bit immediate value into a 64-bit register.
     ///
     /// Assembly equivalent: `mov destination, immediate`
@@ -331,6 +425,21 @@ extern "C"
                                   bal_x86_register_t   destination,
                                   bal_x86_register_t   source);
 
+    /// Emits an instruction to move a 32-bit register `source` into `destination`.
+    ///
+    /// Assembly equivalent: `mov reg32, reg32`
+    ///
+    /// # Warning
+    ///
+    /// This function fails if:
+    ///
+    /// - `assembler` is `NULL`.
+    /// - `assembler->status` != [`BAL_SUCCESS`]
+    /// - `assembler->buffer` is full.
+    void bal_x86_emit_mov_r32_r32(bal_x86_assembler_t *assembler,
+                                  bal_x86_register_t   destination,
+                                  bal_x86_register_t   source);
+
     /// Emits a bitwise OR instruction between two 64-bit registers.
     ///
     /// Assembly equivalent: `or destination, source`.
@@ -345,6 +454,70 @@ extern "C"
     void bal_x86_emit_or_r64_r64(bal_x86_assembler_t *assembler,
                                  bal_x86_register_t   destination,
                                  bal_x86_register_t   source);
+
+    /// Emits a 64-bit rotate-right by an 8-bit immediate.
+    ///
+    /// Assembly equivalent: `ror destination, immediate`
+    ///
+    /// # Warning
+    ///
+    /// This function fails if:
+    ///
+    /// - `assembler` is `NULL`.
+    /// - `assembler->status` != [`BAL_SUCCESS`]
+    /// - `assembler->buffer` is full.
+    /// - `immediate` is greater than 63.
+    void bal_x86_emit_ror_r64_imm8(bal_x86_assembler_t *assembler,
+                                   bal_x86_register_t   destination,
+                                   uint8_t              immediate);
+
+    /// Emits a 64-bit arithmetic shift-right by an 8-bit immediate.
+    ///
+    /// Assembly equivalent: `sar destination, immediate`
+    ///
+    /// # Warning
+    ///
+    /// This function fails if:
+    ///
+    /// - `assembler` is `NULL`.
+    /// - `assembler->status` != [`BAL_SUCCESS`]
+    /// - `assembler->buffer` is full.
+    /// - `immediate` is greater than 63.
+    void bal_x86_emit_sar_r64_imm8(bal_x86_assembler_t *assembler,
+                                   bal_x86_register_t   destination,
+                                   uint8_t              immediate);
+
+    /// Emits a 64-bit logical shift-left by an 8-bit immediate.
+    ///
+    /// Assembly equivalent: `shl destination, immediate`
+    ///
+    /// # Warning
+    ///
+    /// This function fails if:
+    ///
+    /// - `assembler` is `NULL`.
+    /// - `assembler->status` != [`BAL_SUCCESS`]
+    /// - `assembler->buffer` is full.
+    /// - `immediate` is greater than 63.
+    void bal_x86_emit_shl_r64_imm8(bal_x86_assembler_t *assembler,
+                                   bal_x86_register_t   destination,
+                                   uint8_t              immediate);
+
+    /// Emits a 64-bit logical shift-right by an 8-bit immediate.
+    ///
+    /// Assembly equivalent: `shr destination, immediate`
+    ///
+    /// # Warning
+    ///
+    /// This function fails if:
+    ///
+    /// - `assembler` is `NULL`.
+    /// - `assembler->status` != [`BAL_SUCCESS`]
+    /// - `assembler->buffer` is full.
+    /// - `immediate` is greater than 63.
+    void bal_x86_emit_shr_r64_imm8(bal_x86_assembler_t *assembler,
+                                   bal_x86_register_t   destination,
+                                   uint8_t              immediate);
 
     /// Emits a Stack Pop instruction.
     ///

@@ -24,7 +24,6 @@ extern "C"
     {
         /// This opcode represents a volatile load of a guest register.
         OPCODE_GET_REGISTER,
-        OPCODE_CONST,
         OPCODE_MOV,
         OPCODE_ADD,
         OPCODE_SUB,
