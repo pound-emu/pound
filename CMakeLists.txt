@@ -216,6 +216,7 @@ target_compile_definitions(${PROJECT_NAME} PUBLIC -DCIMGUI_USE_OPENGL3 -DCIMGUI_
 add_compiler_flags(${PROJECT_NAME})
 add_linker_flags(${PROJECT_NAME})
 add_sanitizers(${PROJECT_NAME})
+ballistic_deploy_runtime(${PROJECT_NAME})
 
 message(STATUS "==================================================================")
 message(STATUS "[Pound] Cmake configuration completed successfully.")

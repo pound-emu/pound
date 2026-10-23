@@ -59,6 +59,7 @@ if (WIN32)
     set(BALLISTIC_ENGINE_LIBRARY "${BALLISTIC_ROOT}/windows/lib/Ballistic.lib")
     set(BALLISTIC_LUAJIT_IMPLIB "${BALLISTIC_ROOT}/windows/lib/lua51.lib")
     set(BALLISTIC_LUAJIT_RUNTIME "${BALLISTIC_ROOT}/windows/bin/lua51.dll")
+    set(BALLISTIC_LUAJIT_RUNTIME_NAME "lua51.dll")
 
     ballistic_verify_file("${BALLISTIC_ENGINE_LIBRARY}" "Ballistic import library")
     ballistic_verify_file("${BALLISTIC_LUAJIT_IMPLIB}" "LuaJIT import library")
@@ -78,6 +79,9 @@ if (WIN32)
 elseif (CMAKE_SYSTEM_NAME STREQUAL "Linux")
     set(BALLISTIC_ENGINE_LIBRARY "${BALLISTIC_ROOT}/linux/lib/libBallistic.a")
     set(BALLISTIC_LUAJIT_RUNTIME "${BALLISTIC_ROOT}/linux/bin/libluajit.so")
+    # The bundled libluajit.so has SONAME libluajit-5.1.so.2, so that is the file name
+    # the dynamic loader searches for at runtime, not libluajit.so.
+    set(BALLISTIC_LUAJIT_RUNTIME_NAME "libluajit-5.1.so.2")
 
     ballistic_verify_file("${BALLISTIC_ENGINE_LIBRARY}" "Ballistic static library")
     ballistic_verify_file("${BALLISTIC_LUAJIT_RUNTIME}" "LuaJIT shared library")
@@ -104,3 +108,16 @@ ballistic_verify_imported_path(Ballistic::LuaJIT IMPORTED_LOCATION)
 if (WIN32)
     ballistic_verify_imported_path(Ballistic::LuaJIT IMPORTED_IMPLIB)
 endif ()
+
+# Copies the LuaJIT runtime next to the given executable so the loader can find it.
+# Windows searches the executable's directory for DLLs, and on Linux the library has
+# to exist under its SONAME, which the bundled file does not.
+function(ballistic_deploy_runtime target)
+    add_custom_command(TARGET ${target} POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "${BALLISTIC_LUAJIT_RUNTIME}"
+            "$<TARGET_FILE_DIR:${target}>/${BALLISTIC_LUAJIT_RUNTIME_NAME}"
+            COMMENT "[Ballistic] Deploying LuaJIT runtime for ${target}"
+            VERBATIM
+    )
+endfunction()
