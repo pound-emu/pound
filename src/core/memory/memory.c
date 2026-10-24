@@ -1,4 +1,5 @@
 #include "memory.h"
+#include "log.h"
 #include "platform.h"
 
 #include "mimalloc-stats.h"
@@ -82,7 +83,17 @@ memory_bucket_type_t
 memory_subsystem_set_bucket(const memory_bucket_type_t bucket)
 {
     const memory_bucket_type_t old_bucket_index = tls_current_bucket_index;
-    tls_current_bucket_index = (memory_bucket_type_t)(bucket & MEMORY_BUCKET_COUNT);
+
+    if (POUND_UNLIKELY(bucket >= MEMORY_BUCKET_COUNT))
+    {
+        POUND_LOG_ERROR(&thread_logger,
+                        "Rejecting invalid memory bucket %d; keeping bucket %d.",
+                        (int)bucket,
+                        (int)old_bucket_index);
+        return old_bucket_index;
+    }
+
+    tls_current_bucket_index = bucket;
     return old_bucket_index;
 }
 
@@ -101,8 +112,13 @@ memory_subsystem_get_memory_used_by_bucket(const int bucket)
         return tls_current_allocator->total_memory_used;
     }
 
-    const memory_bucket_type_t bucket_index = bucket & MEMORY_BUCKET_COUNT;
-    const size_t memory_used_by_bucket = tls_current_allocator->memory_used_by_bucket[bucket_index];
+    if (POUND_UNLIKELY(bucket >= MEMORY_BUCKET_COUNT))
+    {
+        POUND_LOG_ERROR(&thread_logger, "Rejecting invalid memory bucket %d.", bucket);
+        return 0U;
+    }
+
+    const size_t memory_used_by_bucket = tls_current_allocator->memory_used_by_bucket[bucket];
     return memory_used_by_bucket;
 }
 
