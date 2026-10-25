@@ -207,7 +207,7 @@ message(STATUS "[Pound] Configuring Pound Executable...")
 
 add_executable(${PROJECT_NAME} src/main.c)
 target_include_directories(${PROJECT_NAME} PRIVATE src/)
-target_link_libraries(${PROJECT_NAME} PRIVATE mimalloc PoundCore PoundGui Ballistic::Engine SDL3::SDL3 imgui)
+target_link_libraries(${PROJECT_NAME} PRIVATE mimalloc PoundCore PoundJit PoundGui Ballistic::Engine SDL3::SDL3 imgui)
 if (MSVC)
     # Keep mimalloc.dll mapped so redirect can override malloc for the whole process.
     target_link_options(${PROJECT_NAME} PRIVATE "/INCLUDE:mi_version")
