@@ -6,10 +6,9 @@
 /// How much brighter a box becomes while hovered (0.0 = unchanged, 1.0 = white).
 #define GUI_BOX_HOVER_LIGHTEN 0.25F
 
-#define GUI_BOX_LABEL_INSET           4.0F
-#define GUI_BOX_LABEL_COLOR           IM_COL32(0, 0, 0, 255)
-#define GUI_BOX_CAPTION_COLOR         IM_COL32(128, 128, 128, 255)
-#define GUI_BOX_INFO_MEMORY_PAGE_SIZE 4096ULL
+#define GUI_BOX_LABEL_INSET   4.0F
+#define GUI_BOX_LABEL_COLOR   IM_COL32(0, 0, 0, 255)
+#define GUI_BOX_CAPTION_COLOR IM_COL32(128, 128, 128, 255)
 
 POUND_HOT void progress_bar_render(double numerator_mib, double denominator_mib);
 
@@ -339,9 +338,8 @@ debug_memory_gui_box_info_render(const debug_memory_gui_box_info_t *info)
     if (size_bytes != 0)
     {
         const double   size_mib = (double)size_bytes / (1024.0F * 1024.0F);
-        const uint64_t pages
-            = (size_bytes / GUI_BOX_INFO_MEMORY_PAGE_SIZE)
-              + ((size_bytes % GUI_BOX_INFO_MEMORY_PAGE_SIZE) != 0ULL ? 1ULL : 0ULL);
+        const uint64_t pages    = (size_bytes / MEMORY_PAGE_SIZE)
+                               + ((size_bytes % MEMORY_PAGE_SIZE) != 0ULL ? 1ULL : 0ULL);
         igText("%.2f MiB · %llu pages", size_mib, (unsigned long long)pages);
     }
     else

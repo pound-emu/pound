@@ -4,6 +4,8 @@
 #include "attributes.h"
 #include <stddef.h>
 
+#define MEMORY_PAGE_SIZE 4096ULL
+
 typedef enum
 {
     MEMORY_HEAP_TYPE_HOST,

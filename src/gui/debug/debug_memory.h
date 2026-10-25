@@ -8,7 +8,7 @@
 #define CIMGUI_DEFINE_ENUMS_AND_STRUCTS
 #include "cimgui.h"
 
-#define DEBUG_MEMORY_GUI_BOX_COUNT         3
+#define DEBUG_MEMORY_GUI_BOX_COUNT         4
 #define DEBUG_MEMORY_GUI_BOX_MINIMUM_WIDTH 64.0F
 
 typedef struct
