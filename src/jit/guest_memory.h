@@ -32,7 +32,6 @@ static_assert(64 == sizeof(guest_memory_t), "Struct size mismatch");
 
 /// `host_base` must be at least 16-byte aligned.
 error_t guest_memory_init(guest_memory_t *POUND_RESTRICT guest_memory,
-                          void *POUND_RESTRICT           host_base,
                           size_t                         host_size,
                           uint64_t                       guest_base);
 
