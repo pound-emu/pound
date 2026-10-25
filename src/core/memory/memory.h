@@ -6,7 +6,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#define MEMORY_PAGE_SIZE 4096ULL
+#define MEMORY_PAGE_SHIFT 12ULL
+#define MEMORY_PAGE_SIZE  (1ULL << MEMORY_PAGE_SHIFT)
 
 typedef enum
 {
