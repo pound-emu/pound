@@ -108,6 +108,11 @@ guest_memory_translate_read(const guest_memory_t *guest_memory,
         return NULL;
     }
 
+    if (NULL == guest_memory->host_base)
+    {
+        return NULL;
+    }
+
     const bool is_guest_address_valid = guest_memory_contains(guest_memory, guest_address);
 
     if (false == is_guest_address_valid)
@@ -135,6 +140,11 @@ guest_memory_translate_write(const guest_memory_t *POUND_RESTRICT guest_memory,
                              size_t *POUND_RESTRICT               max_writable_bytes)
 {
     if (NULL == guest_memory || NULL == max_writable_bytes)
+    {
+        return NULL;
+    }
+
+    if (NULL == guest_memory->host_base)
     {
         return NULL;
     }
