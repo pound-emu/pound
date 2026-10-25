@@ -1,4 +1,5 @@
 #include "gui/gui.h"
+#include "jit/guest_memory.h"
 #include "log.h"
 #include "memory/memory.h"
 
@@ -60,6 +61,12 @@ main(void)
     mi_option_set(mi_option_arena_reserve, 128 * 1024);
     pound_logger_init_default();
     memory_subsystem_init();
+
+    guest_memory_t guest_memory            = { 0 };
+    const size_t   guest_memory_size_bytes = 64U * 1024U;
+    const size_t   guest_base_address      = 0x0U;
+    guest_memory_init(&guest_memory, guest_memory_size_bytes, guest_base_address);
+
     (void)memory_subsystem_set_bucket(MEMORY_BUCKET_UI);
 
     if (!SDL_Init(SDL_INIT_VIDEO))
@@ -131,6 +138,8 @@ main(void)
 
     app_gui_shutdown(&app);
     app_video_shutdown(&app);
+
+    guest_memory_destroy(&guest_memory);
     memory_subsystem_destroy();
     SDL_Quit();
 
