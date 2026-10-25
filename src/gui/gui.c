@@ -115,7 +115,6 @@ gui_create(const void *POUND_RESTRICT saved_data, size_t saved_size, void **out)
     const size_t                memory_alignment = 8U;
     gui_state_t *POUND_RESTRICT gui_state
         = memory_subsystem_allocate(memory_alignment, sizeof(gui_state_t));
-    (void)memset(gui_state, 0, sizeof(gui_state_t));
 
     if (NULL == gui_state)
     {
@@ -124,6 +123,8 @@ gui_create(const void *POUND_RESTRICT saved_data, size_t saved_size, void **out)
                         sizeof(gui_state_t));
         return GUI_PLUGIN_ERROR_ALLOCATION_FAILED;
     }
+
+    (void)memset(gui_state, 0, sizeof(gui_state_t));
 
     gui_state->debug_memory_tracker.first_time_run = true;
 
