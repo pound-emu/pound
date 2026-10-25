@@ -18,19 +18,25 @@ guest_memory_init(guest_memory_t *guest_memory, const size_t host_size, const ui
         return POUND_ERROR_INVALID_ARGUMENT;
     }
 
-    const memory_bucket_type_t previous_bucket
-        = memory_subsystem_set_bucket(MEMORY_BUCKET_GUEST_MEMORY);
-    const size_t memory_alignment   = 16U;
-    const size_t guest_memory_bytes = 64U;
-    void        *host_base = memory_subsystem_allocate(memory_alignment, guest_memory_bytes);
-    (void)memory_subsystem_set_bucket(previous_bucket);
-
-    if (guest_base > UINT64_MAX - host_size)
+    if (POUND_UNLIKELY(guest_base > UINT64_MAX - host_size))
     {
         POUND_LOG_ERROR(&thread_logger,
                         "Aborting function: guest_base (%llx) is too big.",
                         (unsigned long long)guest_base);
         return POUND_ERROR_GUEST_ADDRESS_OVERFLOW;
+    }
+
+    const memory_bucket_type_t previous_bucket
+        = memory_subsystem_set_bucket(MEMORY_BUCKET_GUEST_MEMORY);
+    const size_t memory_alignment   = 16U;
+    const size_t guest_memory_bytes = host_size;
+    void        *host_base = memory_subsystem_allocate(memory_alignment, guest_memory_bytes);
+    (void)memory_subsystem_set_bucket(previous_bucket);
+
+    if (POUND_UNLIKELY(NULL == host_base))
+    {
+        POUND_LOG_ERROR(&thread_logger, "Aborting function: guest_memory allocation failed.");
+        return POUND_ERROR_ALLOCATION_FAILED;
     }
 
     guest_memory->host_base  = host_base;

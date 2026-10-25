@@ -21,6 +21,9 @@ typedef enum
 
     /// Guest Address fell outside the mapped memory region.
     POUND_ERROR_GUEST_ADDRESS_OUT_OF_BOUNDS,
+
+    /// The memory allocator failed to reserve the requested memory.
+    POUND_ERROR_ALLOCATION_FAILED,
 } error_t;
 
 #endif // POUND_ERRORS_H
