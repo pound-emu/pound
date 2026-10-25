@@ -1,4 +1,5 @@
 #include "guest_memory.h"
+#include "log.h"
 
 error_t
 guest_memory_init(guest_memory_t *guest_memory,
@@ -6,8 +7,21 @@ guest_memory_init(guest_memory_t *guest_memory,
                   const size_t    host_size,
                   const uint64_t  guest_base)
 {
-    if (guest_memory == NULL || host_base == NULL || host_size == 0)
+    if (POUND_UNLIKELY(NULL == guest_memory))
     {
+        POUND_LOG_ERROR(&thread_logger, "Aborting function: guest_memory is NULL.");
+        return POUND_ERROR_INVALID_ARGUMENT;
+    }
+
+    if (POUND_UNLIKELY(NULL == host_base))
+    {
+        POUND_LOG_ERROR(&thread_logger, "Aborting function: host_base is NULL.");
+        return POUND_ERROR_INVALID_ARGUMENT;
+    }
+
+    if (POUND_UNLIKELY(0 == host_size))
+    {
+        POUND_LOG_ERROR(&thread_logger, "Aborting function: host_size is 0.");
         return POUND_ERROR_INVALID_ARGUMENT;
     }
 
@@ -15,11 +29,18 @@ guest_memory_init(guest_memory_t *guest_memory,
 
     if ((host_address & (uintptr_t)15) != (uintptr_t)0)
     {
+        POUND_LOG_ERROR(&thread_logger,
+                        "Aborting function: host_base (%lu) is not aligned to 16 "
+                        "bits.",
+                        host_address);
         return POUND_ERROR_MEMORY_ALIGNMENT;
     }
 
     if (guest_base > UINT64_MAX - host_size)
     {
+        POUND_LOG_ERROR(&thread_logger,
+                        "Aborting function: guest_base (%llx) is too big.",
+                        (unsigned long long)guest_base);
         return POUND_ERROR_GUEST_ADDRESS_OVERFLOW;
     }
 
