@@ -70,7 +70,7 @@ gui_plugin_exports_get(gui_plugin_exports_t *out)
     out->destroy      = gui_destroy;
     out->render_frame = gui_render_frame;
     out->save         = gui_save;
-    return true;
+    return GUI_PLUGIN_SUCCESS;
 }
 
 const char *

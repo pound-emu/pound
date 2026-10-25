@@ -18,7 +18,7 @@
 
 static uint32_t hot_counter = 0;
 
-typedef bool (*get_exports_function_t)(gui_plugin_exports_t *);
+typedef gui_plugin_error_t (*get_exports_function_t)(gui_plugin_exports_t *);
 
 static void *shared_library_load(const char *path);
 static void  shared_library_unload(void *module);
@@ -154,7 +154,7 @@ gui_plugin_load_module(gui_plugin_t *POUND_RESTRICT plugin, const char *POUND_RE
 
     gui_plugin_exports_t exports = { 0 };
 
-    if (false == get_exports(&exports))
+    if (GUI_PLUGIN_SUCCESS != get_exports(&exports))
     {
         POUND_LOG_ERROR(&thread_logger,
                         "Aborting function: gui_plugin_exports_get() returned false for '%s'.",
