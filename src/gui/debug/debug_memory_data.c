@@ -509,6 +509,7 @@ debug_memory_gui_box_init(debug_memory_gui_box_t *box,
     if (POUND_UNLIKELY(NULL == box))
     {
         POUND_LOG_ERROR(&thread_logger, "Aborting function: box is NULL");
+        return;
     }
 
     box->position   = position;
