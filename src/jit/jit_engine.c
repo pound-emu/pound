@@ -14,8 +14,7 @@ jit_engine_init(jit_engine_t *context, guest_memory_t *guest_memory, const uint3
     if (POUND_UNLIKELY(NULL == context))
     {
         POUND_LOG_ERROR(&thread_logger, "Aborting function: context is NULL.");
-        context->status = POUND_ERROR_INVALID_ARGUMENT;
-        return context->status;
+        return POUND_ERROR_INVALID_ARGUMENT;
     }
 
     if (POUND_UNLIKELY(NULL == guest_memory))
