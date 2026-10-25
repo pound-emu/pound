@@ -176,7 +176,7 @@ target_include_directories(PoundJit PUBLIC src/core)
 target_link_libraries(PoundJit PRIVATE PoundCore Ballistic::Engine)
 add_compiler_flags(PoundJit)
 add_linker_flags(PoundJit)
-add_sanitizers(PoundCore)
+add_sanitizers(PoundJit)
 
 message(STATUS "[PoundGUI] Configuring Pound GUI Library...")
 add_library(PoundGui SHARED
