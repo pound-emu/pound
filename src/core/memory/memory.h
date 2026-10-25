@@ -2,7 +2,9 @@
 #define POUND_MEMORY_H
 
 #include "attributes.h"
+#include <assert.h>
 #include <stddef.h>
+#include <stdint.h>
 
 #define MEMORY_PAGE_SIZE 4096ULL
 
@@ -23,6 +25,16 @@ typedef enum
     MEMORY_BUCKET_DEBUG_PROFILING,
     MEMORY_BUCKET_COUNT,
 } memory_bucket_type_t;
+
+typedef struct
+{
+    uint64_t used_bytes;
+    uint64_t page_count;
+    uint64_t address_min;
+    uint64_t address_max;
+} memory_bucket_stats_t;
+
+static_assert(32 == sizeof(memory_bucket_stats_t), "Struct size mismatch");
 
 typedef struct memory_allocator memory_allocator_t;
 
