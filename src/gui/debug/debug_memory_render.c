@@ -191,15 +191,15 @@ debug_memory_render(debug_memory_tracker_t *context)
             = { .x = 100.0f / 255.0f, .y = 149.0f / 255.0f, .z = 237.0f / 255.0f, .w = 1.0f };
         igTextColored(header_color, "Memory Utilization");
 
-        const int    all_buckets       = -1;
-        const size_t memory_in_use     = memory_subsystem_get_memory_used_by_bucket(all_buckets);
-        const size_t heap_size         = memory_subsystem_get_heap_size();
-        const double heap_size_mib     = (double)heap_size / (1024.0F * 1024.0F);
-        const double memory_in_use_mib = (double)memory_in_use / (1024.0F * 1024.0F);
+        const int    all_buckets      = -1;
+        const size_t bytes_in_use     = memory_subsystem_get_bytes_used_by_bucket(all_buckets);
+        const size_t heap_size        = memory_subsystem_get_heap_size();
+        const double heap_size_mib    = (double)heap_size / (1024.0F * 1024.0F);
+        const double bytes_in_use_mib = (double)bytes_in_use / (1024.0F * 1024.0F);
 
         igSeparator();
         igText("In Use vs Reserved");
-        progress_bar_render(memory_in_use_mib, heap_size_mib);
+        progress_bar_render(bytes_in_use_mib, heap_size_mib);
     }
 
     igEnd();

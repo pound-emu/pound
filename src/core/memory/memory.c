@@ -7,8 +7,9 @@
 #include <stdlib.h>
 
 #if POUND_PLATFORM_WINDOWS
-    // mi_malloc_usable_size symbol it's not found on windows build so we remap to the mi_usable_size function
-    #define mi_malloc_usable_size mi_usable_size
+// mi_malloc_usable_size symbol it's not found on windows build so we remap to the mi_usable_size
+// function
+#define mi_malloc_usable_size mi_usable_size
 #endif
 
 struct memory_allocator
@@ -17,8 +18,8 @@ struct memory_allocator
     void (*free)(memory_allocator_t *POUND_RESTRICT allocator, void *pointer);
     size_t (*get_usable_size)(const void *POUND_RESTRICT pointer);
     size_t (*get_heap_size)(void);
-    size_t memory_used_by_bucket[MEMORY_BUCKET_COUNT];
-    size_t total_memory_used;
+    size_t bytes_used_by_bucket[MEMORY_BUCKET_COUNT];
+    size_t total_bytes_used;
 };
 
 static void  *host_allocate(memory_allocator_t *POUND_RESTRICT allocator,
@@ -29,11 +30,11 @@ static size_t host_get_usable_size(const void *POUND_RESTRICT pointer);
 static size_t host_get_heap_size(void);
 
 memory_allocator_t g_host_allocator = {
-    .allocate          = host_allocate,
-    .free              = host_free,
-    .get_usable_size   = host_get_usable_size,
-    .get_heap_size     = host_get_heap_size,
-    .total_memory_used = 0,
+    .allocate         = host_allocate,
+    .free             = host_free,
+    .get_usable_size  = host_get_usable_size,
+    .get_heap_size    = host_get_heap_size,
+    .total_bytes_used = 0,
 };
 
 POUND_THREAD_LOCAL memory_allocator_t  *tls_current_allocator    = &g_host_allocator;
@@ -105,11 +106,11 @@ memory_subsystem_get_usable_size(const void *POUND_RESTRICT pointer)
 }
 
 size_t
-memory_subsystem_get_memory_used_by_bucket(const int bucket)
+memory_subsystem_get_bytes_used_by_bucket(const int bucket)
 {
     if (bucket < 0)
     {
-        return tls_current_allocator->total_memory_used;
+        return tls_current_allocator->total_bytes_used;
     }
 
     if (POUND_UNLIKELY(bucket >= MEMORY_BUCKET_COUNT))
@@ -118,8 +119,8 @@ memory_subsystem_get_memory_used_by_bucket(const int bucket)
         return 0U;
     }
 
-    const size_t memory_used_by_bucket = tls_current_allocator->memory_used_by_bucket[bucket];
-    return memory_used_by_bucket;
+    const size_t bytes_used_by_bucket = tls_current_allocator->bytes_used_by_bucket[bucket];
+    return bytes_used_by_bucket;
 }
 
 size_t
@@ -140,8 +141,8 @@ host_allocate(memory_allocator_t *POUND_RESTRICT allocator,
     if (POUND_UNLIKELY(pointer != NULL))
     {
         const size_t usable_size = mi_malloc_usable_size(pointer);
-        allocator->memory_used_by_bucket[tls_current_bucket_index] += usable_size;
-        allocator->total_memory_used += usable_size;
+        allocator->bytes_used_by_bucket[tls_current_bucket_index] += usable_size;
+        allocator->total_bytes_used += usable_size;
     }
 
     return pointer;
@@ -158,8 +159,8 @@ host_free(memory_allocator_t *POUND_RESTRICT allocator, void *pointer)
     }
 
     const size_t usable_size = mi_malloc_usable_size(pointer);
-    allocator->memory_used_by_bucket[tls_current_bucket_index] -= usable_size;
-    allocator->total_memory_used -= usable_size;
+    allocator->bytes_used_by_bucket[tls_current_bucket_index] -= usable_size;
+    allocator->total_bytes_used -= usable_size;
     mi_free(pointer);
 }
 
