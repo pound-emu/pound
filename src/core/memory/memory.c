@@ -40,15 +40,55 @@ memory_allocator_t g_host_allocator = {
 POUND_THREAD_LOCAL memory_allocator_t  *tls_current_allocator    = &g_host_allocator;
 POUND_THREAD_LOCAL memory_bucket_type_t tls_current_bucket_index = MEMORY_BUCKET_NONE;
 
+// Tracks which bucket each live allocation was charged to, so that
+// host_free() can debit the same bucket even if the active bucket
+// changed between allocation and free (otherwise bytes_used_by_bucket[]
+// underflows).
+typedef struct
+{
+    void  *pointer;
+    size_t bucket;
+} allocation_record_t;
+
+static allocation_record_t *allocation_records        = NULL;
+static size_t              allocation_record_count    = 0;
+static size_t              allocation_record_capacity = 0;
+
+#define ALLOCATION_BUCKET_UNKNOWN ((size_t)-1)
+
+static void record_allocation(void *pointer, size_t bucket);
+static size_t lookup_and_remove_allocation_bucket(void *pointer);
+
 void
 memory_subsystem_init(void)
 {
     tls_current_allocator = &g_host_allocator;
+    for (size_t i = 0; i < MEMORY_BUCKET_COUNT; ++i)
+    {
+        g_host_allocator.bytes_used_by_bucket[i] = 0;
+    }
+    g_host_allocator.total_bytes_used = 0;
+
+    free(allocation_records);
+    allocation_records        = NULL;
+    allocation_record_count   = 0;
+    allocation_record_capacity = 0;
 }
 
 void
 memory_subsystem_destroy(void)
 {
+    free(allocation_records);
+    allocation_records        = NULL;
+    allocation_record_count   = 0;
+    allocation_record_capacity = 0;
+
+    for (size_t i = 0; i < MEMORY_BUCKET_COUNT; ++i)
+    {
+        g_host_allocator.bytes_used_by_bucket[i] = 0;
+    }
+    g_host_allocator.total_bytes_used = 0;
+
     tls_current_allocator = NULL;
 }
 
@@ -130,6 +170,59 @@ memory_subsystem_get_heap_size(void)
     return heap_size;
 }
 
+static void
+record_allocation(void *pointer, size_t bucket)
+{
+    if (ALLOCATION_BUCKET_UNKNOWN == bucket)
+    {
+        return;
+    }
+
+    if (allocation_record_count == allocation_record_capacity)
+    {
+        const size_t new_capacity = (0U == allocation_record_capacity)
+                                        ? 64U
+                                        : allocation_record_capacity * 2U;
+        allocation_record_t *new_records
+            = realloc(allocation_records, new_capacity * sizeof(allocation_record_t));
+
+        if (NULL == new_records)
+        {
+            // Tracking failed; accounting for this allocation will be
+            // best-effort only. Do not crash.
+            return;
+        }
+
+        allocation_records        = new_records;
+        allocation_record_capacity = new_capacity;
+    }
+
+    allocation_records[allocation_record_count].pointer = pointer;
+    allocation_records[allocation_record_count].bucket  = bucket;
+    ++allocation_record_count;
+}
+
+static size_t
+lookup_and_remove_allocation_bucket(void *pointer)
+{
+    for (size_t i = 0; i < allocation_record_count; ++i)
+    {
+        if (allocation_records[i].pointer == pointer)
+        {
+            const size_t bucket = allocation_records[i].bucket;
+
+            // Remove by swapping with the last record (O(1)).
+            allocation_records[i] = allocation_records[allocation_record_count - 1U];
+            --allocation_record_count;
+
+            return bucket;
+        }
+    }
+
+    // Unknown allocation: cannot attribute it to a bucket.
+    return ALLOCATION_BUCKET_UNKNOWN;
+}
+
 static void *
 host_allocate(memory_allocator_t *POUND_RESTRICT allocator,
               const size_t                       alignment,
@@ -143,6 +236,7 @@ host_allocate(memory_allocator_t *POUND_RESTRICT allocator,
         const size_t usable_size = mi_malloc_usable_size(pointer);
         allocator->bytes_used_by_bucket[tls_current_bucket_index] += usable_size;
         allocator->total_bytes_used += usable_size;
+        record_allocation(pointer, tls_current_bucket_index);
     }
 
     return pointer;
@@ -159,7 +253,13 @@ host_free(memory_allocator_t *POUND_RESTRICT allocator, void *pointer)
     }
 
     const size_t usable_size = mi_malloc_usable_size(pointer);
-    allocator->bytes_used_by_bucket[tls_current_bucket_index] -= usable_size;
+    const size_t bucket      = lookup_and_remove_allocation_bucket(pointer);
+
+    if (ALLOCATION_BUCKET_UNKNOWN != bucket
+        && bucket < MEMORY_BUCKET_COUNT)
+    {
+        allocator->bytes_used_by_bucket[bucket] -= usable_size;
+    }
     allocator->total_bytes_used -= usable_size;
     mi_free(pointer);
 }
