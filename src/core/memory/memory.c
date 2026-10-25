@@ -37,8 +37,9 @@ memory_allocator_t g_host_allocator = {
     .total_bytes_used = 0,
 };
 
-POUND_THREAD_LOCAL memory_allocator_t  *tls_current_allocator    = &g_host_allocator;
-POUND_THREAD_LOCAL memory_bucket_type_t tls_current_bucket_index = MEMORY_BUCKET_NONE;
+POUND_THREAD_LOCAL memory_allocator_t   *tls_current_allocator    = &g_host_allocator;
+POUND_THREAD_LOCAL memory_bucket_type_t  tls_current_bucket_index = MEMORY_BUCKET_NONE;
+POUND_THREAD_LOCAL memory_bucket_stats_t tls_memory_bucket_stats[MEMORY_BUCKET_COUNT] = { 0 };
 
 void
 memory_subsystem_init(void)
