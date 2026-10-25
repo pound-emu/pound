@@ -530,4 +530,51 @@ debug_memory_gui_box_lighten(const ImU32 color, const float amount)
     return new_color;
 }
 
+void
+debug_memory_gui_box_layout_compute(ImVec2_c  origin,
+                                    float     available_width,
+                                    float     box_gap,
+                                    int       box_count,
+                                    float    *out_box_width,
+                                    ImVec2_c *out_positions)
+{
+    if (POUND_UNLIKELY(NULL == out_box_width))
+    {
+        POUND_LOG_ERROR(&thread_logger, "Aborting function: out_box_width is NULL.");
+        return;
+    }
+
+    *out_box_width = 0.0F;
+
+    if (POUND_UNLIKELY(NULL == out_positions))
+    {
+        POUND_LOG_ERROR(&thread_logger, "Aborting function: out_positions is NULL.");
+        return;
+    }
+
+    if (POUND_UNLIKELY(box_count <= 0))
+    {
+        POUND_LOG_ERROR(&thread_logger, "Aborting function: box_count is <= 0");
+        return;
+    }
+
+    float box_width = (available_width - (box_gap * (float)(box_count - 1))) / (float)box_count;
+
+    if (box_width < DEBUG_MEMORY_GUI_BOX_MINIMUM_WIDTH)
+    {
+        box_width = DEBUG_MEMORY_GUI_BOX_MINIMUM_WIDTH;
+    }
+
+    *out_box_width                  = box_width;
+    const float              stride = box_width + box_gap;
+    ImVec2_c *POUND_RESTRICT cursor = out_positions;
+
+    for (int i = 0; i < box_count; ++i)
+    {
+        cursor->x = origin.x + (stride * (float)i);
+        cursor->y = origin.y;
+        ++cursor;
+    }
+}
+
 /*** end of file ***/

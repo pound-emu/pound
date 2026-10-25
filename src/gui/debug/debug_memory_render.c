@@ -5,7 +5,6 @@
 
 /// How much brighter a box becomes while hovered (0.0 = unchanged, 1.0 = white).
 #define GUI_BOX_HOVER_LIGHTEN 0.25F
-#define GUI_BOX_MINIMUM_WIDTH 64.0F
 
 #define GUI_BOX_LABEL_INSET           4.0F
 #define GUI_BOX_LABEL_COLOR           IM_COL32(0, 0, 0, 255)
@@ -61,14 +60,16 @@ debug_memory_render(debug_memory_tracker_t *context)
         const float                font_height = igGetFontSize();
         const ImU32                box_color   = IM_COL32(100, 149, 237, 255);
 
-        const int   box_count   = 3;
-        const float avail_width = igGetContentRegionAvail().x;
-        float box_width = (avail_width - (box_gap * (float)(box_count - 1))) / (float)box_count;
+        float       box_width       = 0.0F;
+        const float available_width = igGetContentRegionAvail().x;
+        ImVec2_c    box_positions[DEBUG_MEMORY_GUI_BOX_COUNT];
 
-        if (box_width < GUI_BOX_MINIMUM_WIDTH)
-        {
-            box_width = GUI_BOX_MINIMUM_WIDTH;
-        }
+        debug_memory_gui_box_layout_compute(origin,
+                                            available_width,
+                                            box_gap,
+                                            DEBUG_MEMORY_GUI_BOX_COUNT,
+                                            &box_width,
+                                            box_positions);
 
         const char *text_label_name  = ".text";
         const char *data_label_name  = ".data";
@@ -101,10 +102,9 @@ debug_memory_render(debug_memory_tracker_t *context)
         const char *vram_caption
             = (written > 0 && written < (int)sizeof(vram_address)) ? vram_address : NULL;
 
-        const ImVec2_c text_position = origin;
-        const ImVec2_c data_position = { .x = origin.x + box_width + box_gap, .y = origin.y };
-        const ImVec2_c vram_position
-            = { .x = origin.x + 2.0f * (box_width + box_gap), .y = origin.y };
+        const ImVec2_c text_position = box_positions[0];
+        const ImVec2_c data_position = box_positions[1];
+        const ImVec2_c vram_position = box_positions[2];
 
         debug_memory_gui_box_t text_box = { 0 };
         debug_memory_gui_box_init(&text_box,

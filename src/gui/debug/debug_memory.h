@@ -8,6 +8,9 @@
 #define CIMGUI_DEFINE_ENUMS_AND_STRUCTS
 #include "cimgui.h"
 
+#define DEBUG_MEMORY_GUI_BOX_COUNT         3
+#define DEBUG_MEMORY_GUI_BOX_MINIMUM_WIDTH 64.0F
+
 typedef struct
 {
     uint64_t current_frame;
@@ -59,6 +62,12 @@ POUND_HOT void debug_memory_gui_box_init(debug_memory_gui_box_t *POUND_RESTRICT 
                                          const char                            *caption);
 
 POUND_HOT ImU32 debug_memory_gui_box_lighten(ImU32 color, float amount);
+POUND_HOT void  debug_memory_gui_box_layout_compute(ImVec2_c                 origin,
+                                                    float                    available_width,
+                                                    float                    box_gap,
+                                                    int                      box_count,
+                                                    float *POUND_RESTRICT    out_box_width,
+                                                    ImVec2_c *POUND_RESTRICT out_positions);
 bool            debug_memory_get_host_address_space_range(debug_memory_tracker_t *context);
 
 // debug_memory_render.c
