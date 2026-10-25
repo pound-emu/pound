@@ -65,7 +65,16 @@ main(void)
     guest_memory_t guest_memory            = { 0 };
     const size_t   guest_memory_size_bytes = 64U * 1024U;
     const size_t   guest_base_address      = 0x0U;
-    guest_memory_init(&guest_memory, guest_memory_size_bytes, guest_base_address);
+
+    if (POUND_UNLIKELY(POUND_SUCCESS != guest_memory_init(&guest_memory,
+                                                          guest_memory_size_bytes,
+                                                          guest_base_address)))
+    {
+        POUND_LOG_ERROR(&thread_logger, "Aborting process: guest_memory_init failed.");
+        (void)guest_memory_destroy(&guest_memory);
+        memory_subsystem_destroy();
+        return EXIT_FAILURE;
+    }
 
     (void)memory_subsystem_set_bucket(MEMORY_BUCKET_UI);
 
