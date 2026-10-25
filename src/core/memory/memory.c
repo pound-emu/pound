@@ -101,6 +101,23 @@ memory_subsystem_set_bucket(const memory_bucket_type_t bucket)
     return old_bucket_index;
 }
 
+memory_bucket_stats_t *
+memory_subsystem_get_bucket_stats(memory_bucket_type_t bucket)
+{
+    const int bucket_index = (int)bucket;
+
+    if (POUND_UNLIKELY(bucket_index < 0 || bucket_index >= MEMORY_BUCKET_COUNT))
+    {
+        POUND_LOG_ERROR(
+            &thread_logger, "Aborting function: invalid memory bucket %d.", bucket_index);
+        return NULL;
+    }
+
+    memory_bucket_stats_t *POUND_RESTRICT stats
+        = &tls_current_allocator->bucket_stats[bucket_index];
+    return stats;
+}
+
 size_t
 memory_subsystem_get_usable_size(const void *POUND_RESTRICT pointer)
 {
