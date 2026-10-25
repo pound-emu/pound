@@ -57,49 +57,26 @@ set_target_properties(Ballistic::Engine PROPERTIES INTERFACE_INCLUDE_DIRECTORIES
 
 if (WIN32)
     set(BALLISTIC_ENGINE_LIBRARY "${BALLISTIC_ROOT}/windows/lib/Ballistic.lib")
-    set(BALLISTIC_LUAJIT_IMPLIB "${BALLISTIC_ROOT}/windows/lib/lua51.lib")
-    set(BALLISTIC_LUAJIT_RUNTIME "${BALLISTIC_ROOT}/windows/bin/lua51.dll")
-
     ballistic_verify_file("${BALLISTIC_ENGINE_LIBRARY}" "Ballistic import library")
-    ballistic_verify_file("${BALLISTIC_LUAJIT_IMPLIB}" "LuaJIT import library")
-    ballistic_verify_file("${BALLISTIC_LUAJIT_RUNTIME}" "LuaJIT shared library")
 
     set_target_properties(Ballistic::Engine PROPERTIES
             IMPORTED_LOCATION "${BALLISTIC_ENGINE_LIBRARY}"
     )
 
     add_library(Ballistic::LuaJIT SHARED IMPORTED GLOBAL)
-
-    set_target_properties(Ballistic::LuaJIT PROPERTIES
-            IMPORTED_IMPLIB "${BALLISTIC_LUAJIT_IMPLIB}"
-            IMPORTED_LOCATION "${BALLISTIC_LUAJIT_RUNTIME}"
-    )
-    target_link_libraries(Ballistic::Engine INTERFACE Ballistic::LuaJIT)
 elseif (CMAKE_SYSTEM_NAME STREQUAL "Linux")
     set(BALLISTIC_ENGINE_LIBRARY "${BALLISTIC_ROOT}/linux/lib/libBallistic.a")
-    set(BALLISTIC_LUAJIT_RUNTIME "${BALLISTIC_ROOT}/linux/bin/libluajit.so")
 
     ballistic_verify_file("${BALLISTIC_ENGINE_LIBRARY}" "Ballistic static library")
-    ballistic_verify_file("${BALLISTIC_LUAJIT_RUNTIME}" "LuaJIT shared library")
 
     set_target_properties(Ballistic::Engine PROPERTIES
             IMPORTED_LOCATION "${BALLISTIC_ENGINE_LIBRARY}"
     )
-
-    add_library(Ballistic::LuaJIT SHARED IMPORTED GLOBAL)
-
-    set_target_properties(Ballistic::LuaJIT PROPERTIES
-            IMPORTED_LOCATION "${BALLISTIC_LUAJIT_RUNTIME}"
-            IMPORTED_NO_SONAME TRUE
-    )
-
-    target_link_libraries(Ballistic::Engine INTERFACE Ballistic::LuaJIT)
 else ()
     message(FATAL_ERROR "[Ballistic] Ballistic integration does not support this platform yet.")
 endif ()
 
 ballistic_verify_imported_path(Ballistic::Engine IMPORTED_LOCATION)
-ballistic_verify_imported_path(Ballistic::LuaJIT IMPORTED_LOCATION)
 
 if (WIN32)
     ballistic_verify_imported_path(Ballistic::LuaJIT IMPORTED_IMPLIB)
