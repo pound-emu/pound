@@ -154,7 +154,7 @@ set_target_properties(SDL3-shared PROPERTIES
 )
 
 message(STATUS "[PoundCore] Configuring Pound Core Library...")
-add_library(PoundCore OBJECT
+add_library(PoundCore SHARED
         src/core/memory/memory.c
         src/core/log.c
         src/core/safe_math.c
