@@ -34,6 +34,8 @@ error_t guest_memory_init(guest_memory_t *POUND_RESTRICT guest_memory,
                           size_t                         host_size,
                           uint64_t                       guest_base);
 
+error_t guest_memory_destroy(guest_memory_t *POUND_RESTRICT guest_memory);
+
 /// Returns true if `guest_address` is inside this guest memory region.
 bool guest_memory_contains(const guest_memory_t *POUND_RESTRICT guest_memory,
                            uint64_t                             guest_address);

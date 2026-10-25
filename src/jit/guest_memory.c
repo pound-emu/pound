@@ -1,6 +1,7 @@
 #include "guest_memory.h"
 #include "log.h"
 #include "memory/memory.h"
+#include <string.h>
 
 error_t
 guest_memory_init(guest_memory_t *guest_memory, const size_t host_size, const uint64_t guest_base)
@@ -36,6 +37,44 @@ guest_memory_init(guest_memory_t *guest_memory, const size_t host_size, const ui
     guest_memory->host_size  = host_size;
     guest_memory->guest_base = guest_base;
     guest_memory->guest_end  = guest_base + host_size;
+    return POUND_SUCCESS;
+}
+
+error_t
+guest_memory_destroy(guest_memory_t *guest_memory)
+{
+    if (POUND_UNLIKELY(NULL == guest_memory))
+    {
+        POUND_LOG_ERROR(&thread_logger, "Aborting function: guest_memory is NULL.");
+        return POUND_ERROR_INVALID_ARGUMENT;
+    }
+
+    if (POUND_UNLIKELY(NULL == guest_memory->host_base))
+    {
+        POUND_LOG_WARN(&thread_logger,
+                       "guest_memory->host_base is NULL. Struct was never "
+                       "initialized or is already destroyed, resetting it anyways.");
+        (void)memset(guest_memory, 0, sizeof(guest_memory_t));
+        return POUND_SUCCESS;
+    }
+
+    const size_t guest_range_size = guest_memory->guest_end - guest_memory->guest_base;
+
+    if (POUND_UNLIKELY(guest_range_size != guest_memory->host_size))
+    {
+        POUND_LOG_WARN(&thread_logger,
+                       "Guest range size (%zu) differs from host_size (%zu); struct was "
+                       "modified after guest_memory_init().",
+                       guest_range_size,
+                       guest_memory->host_size);
+    }
+
+    const memory_bucket_type_t previous_bucket
+        = memory_subsystem_set_bucket(MEMORY_BUCKET_GUEST_MEMORY);
+    memory_subsystem_free(guest_memory->host_base);
+    (void)memory_subsystem_set_bucket(previous_bucket);
+
+    (void)memset(guest_memory, 0, sizeof(guest_memory_t));
     return POUND_SUCCESS;
 }
 
