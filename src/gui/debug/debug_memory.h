@@ -9,13 +9,14 @@
 #define CIMGUI_DEFINE_ENUMS_AND_STRUCTS
 #include "cimgui.h"
 
-#define DEBUG_MEMORY_GUI_BOX_COUNT         4
+#define DEBUG_MEMORY_GUI_BOX_COUNT         5
 #define DEBUG_MEMORY_GUI_BOX_MINIMUM_WIDTH 64.0F
 
 typedef enum
 {
     // Index must align with memory_bucket_type_t.
     GUI_BOX_INDEX_UI = 1,
+    GUI_BOX_INDEX_GUEST_MEMORY,
 
     // These don't need alignment.
     GUI_BOX_INDEX_TEXT,
@@ -97,7 +98,7 @@ POUND_HOT ImVec2_c debug_memory_gui_box_render(ImDrawList *POUND_RESTRICT draw_l
                                                const debug_memory_gui_box_t *POUND_RESTRICT box);
 POUND_HOT bool debug_memory_gui_box_is_clicked(const debug_memory_gui_box_t *POUND_RESTRICT box);
 void           debug_memory_gui_box_info_render(const debug_memory_gui_box_info_t *info,
-                                                bool                               is_memory_bucket);
+                                                bool                               ignore_gva_range);
 
 #endif // POUND_MEMORY_DATA_H
 
