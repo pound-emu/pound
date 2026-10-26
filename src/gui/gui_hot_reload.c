@@ -300,7 +300,7 @@ file_modified_time(const char *path)
         return 0;
     }
 
-#if defined(_WIN32)
+#if POUND_PLATFORM_WINDOWS
 
     WIN32_FILE_ATTRIBUTE_DATA data;
 

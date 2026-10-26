@@ -64,6 +64,10 @@ if (WIN32)
     )
 
     add_library(Ballistic::LuaJIT SHARED IMPORTED GLOBAL)
+    set_target_properties(Ballistic::LuaJIT PROPERTIES
+            IMPORTED_IMPLIB "${BALLISTIC_ROOT}/windows/lib/lua51.lib"
+            IMPORTED_LOCATION "${BALLISTIC_ROOT}/windows/bin/lua51.dll"
+    )
 elseif (CMAKE_SYSTEM_NAME STREQUAL "Linux")
     set(BALLISTIC_ENGINE_LIBRARY "${BALLISTIC_ROOT}/linux/lib/libBallistic.a")
 

@@ -2,6 +2,7 @@
 #define POUND_LOGGING_H
 
 #include "attributes.h"
+#include "platform.h"
 #include <stdarg.h>
 #include <stdint.h>
 
@@ -86,7 +87,12 @@ extern "C"
         uint32_t pad;
     } logger_t;
 
+#if POUND_PLATFORM_WINDOWS && !defined(POUND_CORE_BUILD)
+    POUND_CORE_API logger_t *pound_get_thread_logger(void);
+#    define thread_logger (*pound_get_thread_logger())
+#else
     extern POUND_THREAD_LOCAL logger_t thread_logger;
+#endif
 
     /// Dispatches a log message to the configured backend.
     ///
@@ -102,7 +108,7 @@ extern "C"
     /// The `format` string must match the arguments provided in the variadic list, following
     /// standard `printf`.
 
-    POUND_HOT void pound_log_message(const logger_t *logger,
+    POUND_CORE_API POUND_HOT void pound_log_message(const logger_t *logger,
                                      log_level_t     log_level,
                                      const char     *filename,
                                      const char     *function,
@@ -111,7 +117,7 @@ extern "C"
                                      ...);
 
     /// Populates the thread local storage logger with Ballistic's default logging implementation.
-    POUND_COLD void pound_logger_init_default(void);
+    POUND_CORE_API POUND_COLD void pound_logger_init_default(void);
 
 #define POUND_LOG_ERROR(logger, format, ...)        \
     pound_log_message((logger),                     \

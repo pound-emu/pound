@@ -159,7 +159,9 @@ add_library(PoundCore SHARED
         src/core/log.c
         src/core/safe_math.c
 )
+set_target_properties(PoundCore PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS ON)
 target_include_directories(PoundCore PUBLIC src/core)
+target_compile_definitions(PoundCore PRIVATE POUND_CORE_BUILD)
 target_link_libraries(PoundCore PRIVATE mimalloc)
 set_target_properties(PoundCore PROPERTIES POSITION_INDEPENDENT_CODE ON)
 add_compiler_flags(PoundCore)

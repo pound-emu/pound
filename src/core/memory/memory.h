@@ -39,19 +39,19 @@ static_assert(64 == sizeof(memory_bucket_stats_t), "Struct size mismatch");
 
 typedef struct memory_allocator memory_allocator_t;
 
-void                   memory_subsystem_init(void);
-void                   memory_subsystem_destroy(void);
-memory_allocator_t    *memory_subsystem_set_allocator(memory_allocator_t *POUND_RESTRICT allocator);
-memory_allocator_t    *memory_subsystem_get_allocator(void);
-void                  *memory_subsystem_allocate(size_t alignment, size_t bytes);
-void                   memory_subsystem_free(void *POUND_RESTRICT pointer);
-memory_bucket_type_t   memory_subsystem_set_bucket(memory_bucket_type_t bucket);
-memory_bucket_stats_t *memory_subsystem_get_bucket_stats(memory_bucket_type_t bucket);
-size_t                 memory_subsystem_get_usable_size(const void *POUND_RESTRICT pointer);
-size_t                 memory_subsystem_get_bytes_used_by_bucket(int bucket);
-size_t                 memory_subsystem_get_heap_size(void);
+POUND_CORE_API void                   memory_subsystem_init(void);
+POUND_CORE_API void                   memory_subsystem_destroy(void);
+POUND_CORE_API memory_allocator_t    *memory_subsystem_set_allocator(memory_allocator_t *POUND_RESTRICT allocator);
+POUND_CORE_API memory_allocator_t    *memory_subsystem_get_allocator(void);
+POUND_CORE_API void                  *memory_subsystem_allocate(size_t alignment, size_t bytes);
+POUND_CORE_API void                   memory_subsystem_free(void *POUND_RESTRICT pointer);
+POUND_CORE_API memory_bucket_type_t   memory_subsystem_set_bucket(memory_bucket_type_t bucket);
+POUND_CORE_API memory_bucket_stats_t *memory_subsystem_get_bucket_stats(memory_bucket_type_t bucket);
+POUND_CORE_API size_t                 memory_subsystem_get_usable_size(const void *POUND_RESTRICT pointer);
+POUND_CORE_API size_t                 memory_subsystem_get_bytes_used_by_bucket(int bucket);
+POUND_CORE_API size_t                 memory_subsystem_get_heap_size(void);
 
-extern memory_allocator_t g_host_allocator;
+extern POUND_CORE_API memory_allocator_t g_host_allocator;
 
 #endif // POUND_MEMORY_H
 

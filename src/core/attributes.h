@@ -36,6 +36,16 @@
 /// Usage: POUND_EXPORT void POUND_public_api_function(void);
 #define POUND_EXPORT __attribute__((visibility("default")))
 
+#if defined(_WIN32)
+#    if defined(POUND_CORE_BUILD)
+#        define POUND_CORE_API __declspec(dllexport)
+#    else
+#        define POUND_CORE_API __declspec(dllimport)
+#    endif
+#else
+#    define POUND_CORE_API POUND_EXPORT
+#endif
+
 /// POUND_WEAK
 /// Marks a function or variable as weak, allowing the host application to override it at link-time
 /// by providing a strong symbol with the same name.

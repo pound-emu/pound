@@ -1,5 +1,6 @@
 #include "log.h"
 #include "attributes.h"
+#include "platform.h"
 
 #include <stdarg.h>
 #include <stdint.h>
@@ -7,6 +8,14 @@
 #include <string.h>
 
 POUND_THREAD_LOCAL logger_t thread_logger = { 0 };
+
+#if POUND_PLATFORM_WINDOWS
+POUND_CORE_API logger_t *
+pound_get_thread_logger(void)
+{
+    return &thread_logger;
+}
+#endif
 
 POUND_WEAK POUND_HOT void pound_default_logger(void       *user_data,
                                                log_data_t *pound_data,
