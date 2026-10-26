@@ -24,13 +24,26 @@ debug_memory_render(debug_memory_tracker_t *context)
     if (POUND_UNLIKELY(true == context->first_time_run))
     {
         debug_memory_get_host_address_space_range(context);
-        context->selected_box_info_index = 0;
+        context->selected_box_info_index = GUI_BOX_INDEX_UI;
         context->first_time_run          = false;
+
+        memory_bucket_stats_t *POUND_RESTRICT bucket_stats
+            = memory_subsystem_get_bucket_stats(MEMORY_BUCKET_UI);
+        context->gva_ui_start = bucket_stats->address_min;
+        context->gva_ui_end   = bucket_stats->address_max;
+        context->bucket_stats = bucket_stats;
     }
 
     if (0 == (++context->current_frame & 127))
     {
         debug_memory_get_host_address_space_range(context);
+
+        if (context->selected_box_info_index < GUI_BOX_INDEX_TEXT)
+        {
+            // TODO: Create a function to get the bucket stats by passing a gui_box_index_t.
+            context->bucket_stats = memory_subsystem_get_bucket_stats(
+                (memory_bucket_type_t)context->selected_box_info_index);
+        }
     }
 
     char title[160];
@@ -73,9 +86,11 @@ debug_memory_render(debug_memory_tracker_t *context)
         const char *text_label_name  = ".text";
         const char *data_label_name  = ".data";
         const char *vram_label_name  = "VRAM";
+        const char *ui_label_name    = "UI";
         char        text_address[24] = { 0 };
         char        data_address[24] = { 0 };
         char        vram_address[24] = { 0 };
+        char        ui_address[24]   = { 0 };
 
         int written = snprintf(text_address,
                                sizeof(text_address),
@@ -101,9 +116,21 @@ debug_memory_render(debug_memory_tracker_t *context)
         const char *vram_caption
             = (written > 0 && written < (int)sizeof(vram_address)) ? vram_address : NULL;
 
-        const ImVec2_c text_position = box_positions[0];
-        const ImVec2_c data_position = box_positions[1];
-        const ImVec2_c vram_position = box_positions[2];
+        written = snprintf(
+            ui_address, sizeof(ui_address), "0x%llx", (unsigned long long)context->gva_ui_start);
+
+        const char *ui_caption
+            = written > 0 && written < (int)sizeof(ui_address) ? vram_address : NULL;
+
+        const ImVec2_c ui_position   = box_positions[0];
+        const ImVec2_c text_position = box_positions[1];
+        const ImVec2_c data_position = box_positions[2];
+        const ImVec2_c vram_position = box_positions[3];
+
+        debug_memory_gui_box_t ui_box = { 0 };
+        debug_memory_gui_box_init(
+            &ui_box, ui_position, box_width, box_height, box_color, ui_label_name, ui_caption);
+        debug_memory_gui_box_render(draw_list, &ui_box);
 
         debug_memory_gui_box_t text_box = { 0 };
         debug_memory_gui_box_init(&text_box,
@@ -140,46 +167,56 @@ debug_memory_render(debug_memory_tracker_t *context)
                 .y = box_height + GUI_BOX_LABEL_INSET + font_height + GUI_BOX_LABEL_INSET };
         igDummy(reserved);
 
-        if (debug_memory_gui_box_is_clicked(&text_box))
+        if (debug_memory_gui_box_is_clicked(&ui_box))
         {
-            context->selected_box_info_index = 0;
+            context->selected_box_info_index = GUI_BOX_INDEX_UI;
+        }
+        else if (debug_memory_gui_box_is_clicked(&text_box))
+        {
+            context->selected_box_info_index = GUI_BOX_INDEX_TEXT;
         }
         else if (debug_memory_gui_box_is_clicked(&data_box))
         {
-            context->selected_box_info_index = 1;
+            context->selected_box_info_index = GUI_BOX_INDEX_DATA;
         }
         else if (debug_memory_gui_box_is_clicked(&vram_box))
         {
-            context->selected_box_info_index = 2;
+            context->selected_box_info_index = GUI_BOX_INDEX_VRAM;
         }
         else
         {
         }
 
-        const int32_t               selected_index    = context->selected_box_info_index;
         debug_memory_gui_box_info_t selected_box_info = { 0 };
 
-        switch (selected_index)
+        switch (context->selected_box_info_index)
         {
-            case 1: {
+            case GUI_BOX_INDEX_DATA: {
                 selected_box_info.name        = data_label_name;
                 selected_box_info.permissions = "R W";
                 selected_box_info.gva_start   = context->gva_data_start;
                 selected_box_info.gva_end     = context->gva_data_end;
                 break;
             }
-            case 2: {
+            case GUI_BOX_INDEX_VRAM: {
                 selected_box_info.name        = vram_label_name;
                 selected_box_info.permissions = "R W";
                 selected_box_info.gva_start   = context->gva_vram_framebuffer_start;
                 selected_box_info.gva_end     = context->gva_vram_framebuffer_end;
                 break;
             }
-            default: {
+            case GUI_BOX_INDEX_TEXT: {
                 selected_box_info.name        = text_label_name;
                 selected_box_info.permissions = "R X";
                 selected_box_info.gva_start   = context->gva_text_start;
                 selected_box_info.gva_end     = context->gva_text_end;
+                break;
+            }
+            default: {
+                selected_box_info.name        = ui_label_name;
+                selected_box_info.permissions = "R W";
+                selected_box_info.gva_start   = context->gva_ui_start;
+                selected_box_info.gva_end     = context->gva_ui_end;
                 break;
             }
         }
