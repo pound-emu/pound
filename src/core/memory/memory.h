@@ -31,9 +31,8 @@ POUND_ALIGNED(64) typedef struct
 {
     uint64_t used_bytes;
     uint64_t page_count;
-    uint64_t address_min;
-    uint64_t address_max;
-    uint64_t pad[4];
+    uint64_t allocation_count;
+    char     pad[40];
 } memory_bucket_stats_t;
 
 static_assert(64 == sizeof(memory_bucket_stats_t), "Struct size mismatch");

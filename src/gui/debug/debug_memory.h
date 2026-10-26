@@ -21,25 +21,23 @@ typedef enum
     GUI_BOX_INDEX_TEXT,
     GUI_BOX_INDEX_DATA,
     GUI_BOX_INDEX_VRAM
-} gui_box_index_t;
+} debug_memory_gui_box_index_t;
 
 typedef struct
 {
-    memory_bucket_stats_t *bucket_stats;
-    uint64_t               current_frame;
-    uint64_t               gva_high;
-    uint64_t               gva_low;
-    uint64_t               gva_text_start;
-    uint64_t               gva_text_end;
-    uint64_t               gva_data_start;
-    uint64_t               gva_data_end;
-    uint64_t               gva_vram_framebuffer_start;
-    uint64_t               gva_vram_framebuffer_end;
-    uint64_t               gva_ui_start;
-    uint64_t               gva_ui_end;
-    gui_box_index_t        selected_box_info_index;
-    bool                   first_time_run;
-    char                   pad[3];
+    memory_bucket_stats_t       *bucket_stats;
+    uint64_t                     current_frame;
+    uint64_t                     gva_high;
+    uint64_t                     gva_low;
+    uint64_t                     gva_text_start;
+    uint64_t                     gva_text_end;
+    uint64_t                     gva_data_start;
+    uint64_t                     gva_data_end;
+    uint64_t                     gva_vram_framebuffer_start;
+    uint64_t                     gva_vram_framebuffer_end;
+    debug_memory_gui_box_index_t selected_box_info_index;
+    bool                         first_time_run;
+    char                         pad[3];
 } debug_memory_tracker_t;
 
 typedef struct
@@ -64,6 +62,9 @@ typedef struct
     const char *permissions;
     uint64_t    gva_start;
     uint64_t    gva_end;
+
+    // This is used by memory bucket gui boxes only.
+    uint64_t used_bytes;
 } debug_memory_gui_box_info_t;
 
 // debug_memory_data.c
@@ -95,7 +96,8 @@ void debug_memory_render(debug_memory_tracker_t *context);
 POUND_HOT ImVec2_c debug_memory_gui_box_render(ImDrawList *POUND_RESTRICT draw_list,
                                                const debug_memory_gui_box_t *POUND_RESTRICT box);
 POUND_HOT bool debug_memory_gui_box_is_clicked(const debug_memory_gui_box_t *POUND_RESTRICT box);
-void           debug_memory_gui_box_info_render(const debug_memory_gui_box_info_t *info);
+void           debug_memory_gui_box_info_render(const debug_memory_gui_box_info_t *info,
+                                                bool                               is_memory_bucket);
 
 #endif // POUND_MEMORY_DATA_H
 

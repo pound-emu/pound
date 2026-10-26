@@ -29,21 +29,12 @@ debug_memory_render(debug_memory_tracker_t *context)
 
         memory_bucket_stats_t *POUND_RESTRICT bucket_stats
             = memory_subsystem_get_bucket_stats(MEMORY_BUCKET_UI);
-        context->gva_ui_start = bucket_stats->address_min;
-        context->gva_ui_end   = bucket_stats->address_max;
         context->bucket_stats = bucket_stats;
     }
 
     if (0 == (++context->current_frame & 127))
     {
         debug_memory_get_host_address_space_range(context);
-
-        if (context->selected_box_info_index < GUI_BOX_INDEX_TEXT)
-        {
-            // TODO: Create a function to get the bucket stats by passing a gui_box_index_t.
-            context->bucket_stats = memory_subsystem_get_bucket_stats(
-                (memory_bucket_type_t)context->selected_box_info_index);
-        }
     }
 
     char title[160];
@@ -90,7 +81,7 @@ debug_memory_render(debug_memory_tracker_t *context)
         char        text_address[24] = { 0 };
         char        data_address[24] = { 0 };
         char        vram_address[24] = { 0 };
-        char        ui_address[24]   = { 0 };
+        char        ui_address[24]   = "0x0";
 
         int written = snprintf(text_address,
                                sizeof(text_address),
@@ -116,11 +107,7 @@ debug_memory_render(debug_memory_tracker_t *context)
         const char *vram_caption
             = (written > 0 && written < (int)sizeof(vram_address)) ? vram_address : NULL;
 
-        written = snprintf(
-            ui_address, sizeof(ui_address), "0x%llx", (unsigned long long)context->gva_ui_start);
-
-        const char *ui_caption
-            = written > 0 && written < (int)sizeof(ui_address) ? vram_address : NULL;
+        const char *ui_caption = ui_address;
 
         const ImVec2_c ui_position   = box_positions[0];
         const ImVec2_c text_position = box_positions[1];
@@ -188,6 +175,7 @@ debug_memory_render(debug_memory_tracker_t *context)
         }
 
         debug_memory_gui_box_info_t selected_box_info = { 0 };
+        bool                        is_memory_bucket  = true;
 
         switch (context->selected_box_info_index)
         {
@@ -196,6 +184,7 @@ debug_memory_render(debug_memory_tracker_t *context)
                 selected_box_info.permissions = "R W";
                 selected_box_info.gva_start   = context->gva_data_start;
                 selected_box_info.gva_end     = context->gva_data_end;
+                is_memory_bucket              = false;
                 break;
             }
             case GUI_BOX_INDEX_VRAM: {
@@ -203,6 +192,7 @@ debug_memory_render(debug_memory_tracker_t *context)
                 selected_box_info.permissions = "R W";
                 selected_box_info.gva_start   = context->gva_vram_framebuffer_start;
                 selected_box_info.gva_end     = context->gva_vram_framebuffer_end;
+                is_memory_bucket              = false;
                 break;
             }
             case GUI_BOX_INDEX_TEXT: {
@@ -210,18 +200,20 @@ debug_memory_render(debug_memory_tracker_t *context)
                 selected_box_info.permissions = "R X";
                 selected_box_info.gva_start   = context->gva_text_start;
                 selected_box_info.gva_end     = context->gva_text_end;
+                is_memory_bucket              = false;
                 break;
             }
             default: {
                 selected_box_info.name        = ui_label_name;
                 selected_box_info.permissions = "R W";
-                selected_box_info.gva_start   = context->gva_ui_start;
-                selected_box_info.gva_end     = context->gva_ui_end;
+                selected_box_info.gva_start   = 0x0U; // Mimalloc gva ranges are not contiguous.
+                selected_box_info.gva_end     = 0x0U;
+                selected_box_info.used_bytes  = context->bucket_stats->used_bytes;
                 break;
             }
         }
 
-        debug_memory_gui_box_info_render(&selected_box_info);
+        debug_memory_gui_box_info_render(&selected_box_info, is_memory_bucket);
 
         const ImVec4_c header_color
             = { .x = 100.0f / 255.0f, .y = 149.0f / 255.0f, .z = 237.0f / 255.0f, .w = 1.0f };
@@ -311,7 +303,7 @@ debug_memory_gui_box_is_clicked(const debug_memory_gui_box_t *box)
 }
 
 void
-debug_memory_gui_box_info_render(const debug_memory_gui_box_info_t *info)
+debug_memory_gui_box_info_render(const debug_memory_gui_box_info_t *info, bool is_memory_bucket)
 {
     if (POUND_UNLIKELY(NULL == info))
     {
@@ -370,6 +362,11 @@ debug_memory_gui_box_info_render(const debug_memory_gui_box_info_t *info)
     if (info->gva_start != UINT64_MAX && info->gva_end != 0 && info->gva_start < info->gva_end)
     {
         size_bytes = info->gva_end - info->gva_start;
+    }
+
+    if (is_memory_bucket)
+    {
+        size_bytes = info->used_bytes;
     }
 
     if (size_bytes != 0)

@@ -164,40 +164,12 @@ host_allocate(memory_allocator_t *POUND_RESTRICT allocator,
         memory_bucket_stats_t *POUND_RESTRICT stats
             = &allocator->bucket_stats[tls_current_bucket_index];
 
-        uint64_t       address_min = stats->address_min;
-        uint64_t       address_max = stats->address_max;
-        const uint64_t address     = (uint64_t)pointer;
-        uint64_t       address_end = address + (uint64_t)usable_size;
         const uint64_t pages_to_add
             = ((uint64_t)usable_size + MEMORY_PAGE_SIZE - 1ULL) >> MEMORY_PAGE_SHIFT;
 
-        if (address_end < address)
-        {
-            address_end = UINT64_MAX;
-        }
-
-        if (0ULL == address_max)
-        {
-            address_min = address;
-            address_max = address_end;
-        }
-        else
-        {
-            if (address < address_min)
-            {
-                address_min = address;
-            }
-
-            if (address_end > address_max)
-            {
-                address_max = address_end;
-            }
-        }
-
         stats->used_bytes += usable_size;
         stats->page_count += pages_to_add;
-        stats->address_min = address_min;
-        stats->address_max = address_max;
+        ++stats->allocation_count;
         allocator->total_bytes_used += usable_size;
     }
 
