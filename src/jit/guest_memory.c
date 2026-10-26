@@ -89,6 +89,7 @@ guest_memory_contains(const guest_memory_t *guest_memory, const uint64_t guest_a
 {
     if (guest_memory == NULL)
     {
+        POUND_LOG_ERROR(&thread_logger, "Aborting function: guest_memory is NULL.");
         return false;
     }
 
@@ -103,13 +104,21 @@ guest_memory_translate_read(const guest_memory_t *guest_memory,
                             const uint64_t        guest_address,
                             size_t               *max_readable_bytes)
 {
-    if (NULL == guest_memory || NULL == max_readable_bytes)
+    if (NULL == guest_memory)
     {
+        POUND_LOG_ERROR(&thread_logger, "Aborting function: guest_memory is NULL.");
+        return NULL;
+    }
+
+    if (NULL == max_readable_bytes)
+    {
+        POUND_LOG_ERROR(&thread_logger, "Aborting function: max_readable_bytes is NULL.");
         return NULL;
     }
 
     if (NULL == guest_memory->host_base)
     {
+        POUND_LOG_ERROR(&thread_logger, "Aborting function: guest_memory->host_base is NULL.");
         return NULL;
     }
 
@@ -117,6 +126,10 @@ guest_memory_translate_read(const guest_memory_t *guest_memory,
 
     if (false == is_guest_address_valid)
     {
+        POUND_LOG_ERROR(&thread_logger,
+                        "Aborting function: guest_address 0x%llx does not exist inside guest "
+                        "memory buffer.",
+                        (unsigned long long)guest_address);
         return NULL;
     }
 
@@ -125,6 +138,11 @@ guest_memory_translate_read(const guest_memory_t *guest_memory,
 
     if (offset >= guest_memory->host_size)
     {
+        POUND_LOG_ERROR(&thread_logger,
+                        "Aborting function: offset %llu is greater than guest "
+                        "memory buffer (%llu).",
+                        offset,
+                        guest_memory->host_size);
         return NULL;
     }
 
@@ -139,13 +157,21 @@ guest_memory_translate_write(const guest_memory_t *POUND_RESTRICT guest_memory,
                              const uint64_t                       guest_address,
                              size_t *POUND_RESTRICT               max_writable_bytes)
 {
-    if (NULL == guest_memory || NULL == max_writable_bytes)
+    if (NULL == guest_memory)
     {
+        POUND_LOG_ERROR(&thread_logger, "Aborting function: guest_memory is NULL.");
+        return NULL;
+    }
+
+    if (NULL == max_writable_bytes)
+    {
+        POUND_LOG_ERROR(&thread_logger, "Aborting function: max_readable_bytes is NULL.");
         return NULL;
     }
 
     if (NULL == guest_memory->host_base)
     {
+        POUND_LOG_ERROR(&thread_logger, "Aborting function: guest_memory->host_base is NULL.");
         return NULL;
     }
 
@@ -153,6 +179,10 @@ guest_memory_translate_write(const guest_memory_t *POUND_RESTRICT guest_memory,
 
     if (false == is_guest_address_valid)
     {
+        POUND_LOG_ERROR(&thread_logger,
+                        "Aborting function: guest_address 0x%llx does not exist inside guest "
+                        "memory buffer.",
+                        (unsigned long long)guest_address);
         return NULL;
     }
 
@@ -161,6 +191,11 @@ guest_memory_translate_write(const guest_memory_t *POUND_RESTRICT guest_memory,
 
     if (offset >= guest_memory->host_size)
     {
+        POUND_LOG_ERROR(&thread_logger,
+                        "Aborting function: offset %llu is greater than guest "
+                        "memory buffer (%llu).",
+                        offset,
+                        guest_memory->host_size);
         return NULL;
     }
 
