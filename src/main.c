@@ -1,10 +1,11 @@
+#include <mimalloc.h>
+
 #include "gui/gui.h"
 #include "jit/guest_memory.h"
 #include "log.h"
 #include "memory/memory.h"
 
 #include <SDL3/SDL.h>
-#include <mimalloc-override.h>
 #include <stdlib.h>
 
 // This is required to perform hot reloading using Windows DLLs.

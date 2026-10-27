@@ -70,7 +70,13 @@ endif ()
 include(Ballistic)
 
 message(STATUS "[Mimalloc] Configuring Mimalloc...")
+set(MI_OVERRIDE OFF CACHE BOOL "" FORCE)
+set(MI_WIN_REDIRECT OFF CACHE BOOL "" FORCE)
+
 add_subdirectory(extern/mimalloc/mimalloc)
+if (TARGET mimalloc-redirect)
+    message(FATAL_ERROR "mimalloc-redirect target still exists. MI_OVERRIDE was not disabled correctly.")
+endif ()
 
 message(STATUS "[ImGUI] Configuring ImGUI...")
 add_subdirectory(extern/cimgui)
@@ -93,14 +99,9 @@ set_target_properties(imgui PROPERTIES
 )
 set_target_properties(imgui PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS ON)
 
-# clang-cl doesn't receive /EHsc by default; mimalloc's alloc.c is compiled
-# as C++ and requires exceptions for its new/delete overrides.
-foreach (mi_target mimalloc mimalloc-static mimalloc-obj)
-    if (TARGET ${mi_target})
-        target_compile_options(${mi_target} PRIVATE $<$<COMPILE_LANGUAGE:CXX>:/EHsc>)
-    endif ()
-endforeach ()
-
+if (TARGET mimalloc)
+    target_compile_options(mimalloc PRIVATE $<$<COMPILE_LANGUAGE:CXX>:/EHsc>)
+endif ()
 
 message(STATUS "[SDL] Configuring SDL library...")
 
@@ -196,9 +197,6 @@ if (WIN32)
     # MSVC/clang-cl do not prefix DLLs with "lib"; the loader looks for libPoundGui.dll.
     set_target_properties(PoundGui PROPERTIES PREFIX "lib")
 endif ()
-if (MSVC)
-    target_link_options(PoundGui PRIVATE "/INCLUDE:mi_version")
-endif ()
 add_compiler_flags(PoundGui)
 add_linker_flags(PoundGui)
 add_sanitizers(PoundGui)
@@ -208,10 +206,6 @@ message(STATUS "[Pound] Configuring Pound Executable...")
 add_executable(${PROJECT_NAME} src/main.c)
 target_include_directories(${PROJECT_NAME} PRIVATE src/)
 target_link_libraries(${PROJECT_NAME} PRIVATE mimalloc PoundCore PoundJit PoundGui Ballistic::Engine SDL3::SDL3 imgui)
-if (MSVC)
-    # Keep mimalloc.dll mapped so redirect can override malloc for the whole process.
-    target_link_options(${PROJECT_NAME} PRIVATE "/INCLUDE:mi_version")
-endif ()
 target_compile_definitions(${PROJECT_NAME} PUBLIC -DCIMGUI_USE_OPENGL3 -DCIMGUI_USE_SDL3)
 add_compiler_flags(${PROJECT_NAME})
 add_linker_flags(${PROJECT_NAME})
