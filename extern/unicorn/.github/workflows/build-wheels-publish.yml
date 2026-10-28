@@ -1,0 +1,202 @@
+name: Build and publish wheels with cibuildwheel
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+on:
+  workflow_dispatch:
+    inputs:
+      debugMode:
+        description: 'Debug Mode'
+        required: false
+        default: ''
+        type: choice
+        options:
+          - '0'
+          - '1'
+  push:
+    paths-ignore:
+      - ".gitignore"
+      - "AUTHORS.TXT"
+      - "COPYING"
+      - "COPYING.LGPL2"
+      - "COPYING_GLIB"
+      - "CREDITS.TXT"
+      - "ChangeLog"
+      - "README.md"
+      - "docs/**"
+  pull_request:
+
+env:
+  # Enable DEBUG flag either according to the tag release or manual override
+  UNICORN_DEBUG: ${{ inputs.debugMode != '' && inputs.debugMode || (startsWith(github.ref, 'refs/tags') && !startsWith(github.ref, 'refs/tags/v')) && '0' || contains(github.event.head_commit.message, 'CI(release)') && '0' || '1' }}
+
+jobs:
+  # job to be executed for every push - testing purpose
+  build_and_test_wheels:
+    name: Building on ${{ matrix.os }} - ${{ matrix.arch }} - ${{ matrix.cibw_build }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # NOTE: Doing this to parallelize and speed up workflow
+          # i686 - manylinux
+          - { os: ubuntu-latest, arch: i686, cibw_build: 'cp*-manylinux*', cibw_skip: 'cp36*' }
+          # i686 - musllinux
+          - { os: ubuntu-latest, arch: i686, cibw_build: 'cp*-musllinux*', cibw_skip: 'cp36*' }
+          # x86_64 - manylinux
+          - { os: ubuntu-latest, arch: x86_64, cibw_build: 'cp*-manylinux*', cibw_skip: 'cp36*' }
+          # x86_64 - musllinux
+          - { os: ubuntu-latest, arch: x86_64, cibw_build: 'cp*-musllinux*', cibw_skip: 'cp36*' }
+          # aarch64 - manylinux
+          - { os: ubuntu-24.04-arm, arch: aarch64, cibw_build: 'cp*-manylinux*', cibw_skip: 'cp36*' }
+          # aarch64 - musllinux
+          - { os: ubuntu-24.04-arm, arch: aarch64, cibw_build: 'cp*-musllinux*', cibw_skip: 'cp36*' }
+          - { os: macos-13, arch: x86_64, cibw_build: 'cp*', cibw_skip: 'cp36*' }
+          - { os: macos-14, arch: arm64, cibw_build: 'cp*', cibw_skip: 'cp36* cp37*' }
+          - { os: windows-2022, arch: AMD64, cibw_build: 'cp*', cibw_skip: 'cp36*' }
+          - { os: windows-2022, arch: x86, cibw_build: 'cp*', cibw_skip: 'cp36*' }
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # https://github.com/actions/upload-artifact/issues/22
+      - name: Prepare a unique name for Artifacts
+        shell: bash
+        run: |
+          # replace not-allowed chars with dash
+          name="cibw-wheels-${{ matrix.os }}-${{ matrix.arch }}-${{ matrix.cibw_build }}"
+          name=$(echo -n "$name" | sed -e 's/[ \t:\/\\"<>|*?]/-/g' -e 's/--*/-/g' | sed -e 's/\-$//')
+          echo "ARTIFACT_NAME=$name" >> $GITHUB_ENV
+
+      - name: "Increase pagefile to avoid OOM"
+        if: runner.os == 'Windows'
+        uses: al-cheb/configure-pagefile-action@v1.4
+        with:
+          minimum-size: 8GB
+          disk-root: "C:"
+
+      - name: '🛠️ Add msbuild to PATH'
+        if: runner.os == 'Windows'
+        uses: microsoft/setup-msbuild@v2
+        with:
+          vs-version: '17'
+
+      # https://cibuildwheel.pypa.io/en/stable/faq/#macos-building-cpython-38-wheels-on-arm64
+      - uses: actions/setup-python@v5
+        if: runner.os == 'macOS' && runner.arch == 'ARM64'
+        with:
+          python-version: 3.8
+
+      - name: '🛠️ Win MSVC 32 dev cmd setup'
+        if: runner.os == 'Windows' && matrix.arch == 'x86'
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x86
+
+      - name: '🛠️ Win MSVC 64 dev cmd setup'
+        if: runner.os == 'Windows' && matrix.arch == 'AMD64'
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+
+      - name: '🛠️ Set up QEMU'
+        if: runner.os == 'Linux' && matrix.arch == 'i686'
+        uses: docker/setup-qemu-action@v3
+
+      - name: '🚧 cibuildwheel run'
+        uses: pypa/cibuildwheel@v2.23.3
+        env:
+          CIBW_BUILD_FRONTEND: build
+          CIBW_BUILD: ${{ matrix.cibw_build }}
+          CIBW_SKIP: ${{ matrix.cibw_skip }}
+          CIBW_ARCHS: ${{ matrix.arch }}
+          CIBW_ENVIRONMENT: DEBUG=${{ env.UNICORN_DEBUG }} GENERATORS='Visual Studio 17 2022'
+          CIBW_ENVIRONMENT_PASS_LINUX: DEBUG
+          CIBW_TEST_EXTRAS: test
+          CIBW_TEST_COMMAND: 'python -m unittest discover -v {project}/tests/regress "*.py"'
+          # https://github.com/pypa/cibuildwheel/pull/1169
+          CIBW_TEST_SKIP: "cp38-macosx_*:arm64"
+        with:
+          package-dir: bindings/python
+          output-dir: wheelhouse
+
+      # we re-tag cp38 wheel (just an old one) with py2 tag. Hacky but it works...
+      - name: '🚧 Python 2.7 wheels re-tagging'
+        env:
+          PIP_BREAK_SYSTEM_PACKAGES: 1
+        shell: bash
+        run: |
+          python3 -m pip install -U pip wheel
+          python3 -m wheel tags --python-tag='py2' --abi-tag=none wheelhouse/*cp37*.whl
+
+      - uses: LizardByte/actions/actions/setup_python@v2025.715.25226
+        if: (runner.os == 'Linux' && (matrix.arch == 'x86_64' || matrix.arch == 'aarch64') && matrix.cibw_build == 'cp*-manylinux*') || (runner.os == 'macOS' && matrix.arch == 'arm64') || (runner.os == 'Windows' && matrix.arch == 'AMD64')
+        with:
+          python-version: 2.7
+
+      # we install and test python2.7 wheels only on native arch
+      - name: 'Python 2.7 tests - Windows'
+        if: runner.os == 'Windows' && matrix.arch == 'AMD64'
+        shell: bash
+        run: |
+          C:/Python27/python.exe -m pip install capstone==4.0.2 wheelhouse/*py2*.whl
+          C:/Python27/python.exe -m unittest discover tests/regress "*.py"
+
+      # NOTE: no python2.7 support for macos-13: https://github.com/LizardByte/setup-python-action/issues/2
+      - name: 'Python 2.7 tests - Non-Windows'
+        if: (runner.os == 'Linux' && (matrix.arch == 'x86_64' || matrix.arch == 'aarch64') && matrix.cibw_build == 'cp*-manylinux*') || (runner.os == 'macOS' && matrix.arch == 'arm64')
+        run: |
+          python2 -m pip install capstone==4.0.2 wheelhouse/*py2*.whl
+          python2 -m unittest discover tests/regress "*.py"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.ARTIFACT_NAME }}
+          path: ./wheelhouse/*.whl
+
+  make_sdist:
+    name: Make SDist
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Build SDist
+        run: |
+          python3 -m pip install -U pip build
+          python3 -m build --sdist bindings/python
+          python3 -m pip install bindings/python/dist/*.tar.gz
+          python3 -c 'import unicorn; print(f"Unicorn version installed from sdist: {unicorn.__version__}")'
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sdist-archive
+          path: bindings/python/dist/*.tar.gz
+
+  publish:
+    needs: [ build_and_test_wheels, make_sdist ]
+    environment: pypi
+    permissions:
+      id-token: write
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags') && !startsWith(github.ref, 'refs/tags/v')
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          merge-multiple: true
+          path: dist
+
+      - name: Show downloaded artifacts
+        run: ls -laR dist
+
+      - name: '📦 Publish distribution to PyPI'
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          user: __token__
+          password: ${{ secrets.pypi_pass }}
