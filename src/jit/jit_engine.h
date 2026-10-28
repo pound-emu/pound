@@ -6,6 +6,7 @@
 #include "bal_engine.h"
 #include "bal_memory.h"
 #include "guest_memory.h"
+#include "unicorn/unicorn.h"
 
 POUND_ALIGNED(64) typedef struct
 {
@@ -23,13 +24,20 @@ POUND_ALIGNED(64) typedef struct
     bal_memory_interface_t ballistic_memory_interface;
     guest_memory_t        *guest_memory;
     bal_allocator_t        allocator;
-    uint32_t               engine_flags;
-    volatile bool          stop_requested;
-    bool                   initialized;
-    char                   pad0[2];
-    error_t                status;
-    char                   pad1[36];
-    jit_stats_t            stats;
+
+    // NULL until the first fallback triggers.
+    uc_engine *unicorn_engine;
+    uc_hook    unicorn_memory_hook;
+    bool       unicorn_initialized;
+    char       pad0[3];
+
+    uint32_t      engine_flags;
+    volatile bool stop_requested;
+    bool          initialized;
+    char          pad1[2];
+    error_t       status;
+    char          pad2[16];
+    jit_stats_t   stats;
 } jit_engine_t;
 
 POUND_COLD error_t jit_engine_init(jit_engine_t *POUND_RESTRICT   context,
