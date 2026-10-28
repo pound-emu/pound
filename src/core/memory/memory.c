@@ -160,7 +160,7 @@ host_allocate(memory_allocator_t *POUND_RESTRICT allocator,
 
     if (POUND_UNLIKELY(pointer != NULL))
     {
-        const size_t                          usable_size = mi_malloc_usable_size(pointer);
+        const size_t                          usable_size = mi_usable_size(pointer);
         memory_bucket_stats_t *POUND_RESTRICT stats
             = &allocator->bucket_stats[tls_current_bucket_index];
 
@@ -186,7 +186,7 @@ host_free(memory_allocator_t *POUND_RESTRICT allocator, void *pointer)
         return;
     }
 
-    const size_t                          usable_size = mi_malloc_usable_size(pointer);
+    const size_t                          usable_size = mi_usable_size(pointer);
     memory_bucket_stats_t *POUND_RESTRICT stats
         = &allocator->bucket_stats[tls_current_bucket_index];
 
