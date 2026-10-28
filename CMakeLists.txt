@@ -74,6 +74,12 @@ set(MI_OVERRIDE OFF CACHE BOOL "" FORCE)
 set(MI_WIN_REDIRECT OFF CACHE BOOL "" FORCE)
 add_subdirectory(extern/mimalloc/mimalloc)
 
+message(STATUS "[Unicorn] Configuring Unicorn...")
+set(CMAKE_C_EXTENSIONS ON)
+set(UNICORN_ARCH "aarch64" CACHE STRING "" FORCE)
+add_subdirectory(extern/unicorn)
+set(CMAKE_C_EXTENSIONS OFF)
+
 message(STATUS "[ImGUI] Configuring ImGUI...")
 add_subdirectory(extern/cimgui)
 add_library(imgui SHARED
@@ -170,7 +176,7 @@ add_library(PoundJit STATIC
         src/jit/jit_engine.c
 )
 target_include_directories(PoundJit PUBLIC src/core)
-target_link_libraries(PoundJit PRIVATE PoundCore Ballistic::Engine)
+target_link_libraries(PoundJit PRIVATE PoundCore Ballistic::Engine unicorn)
 add_compiler_flags(PoundJit)
 add_linker_flags(PoundJit)
 add_sanitizers(PoundJit)
