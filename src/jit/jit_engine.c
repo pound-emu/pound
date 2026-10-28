@@ -95,6 +95,38 @@ jit_engine_stop(jit_engine_t *POUND_RESTRICT engine)
     }
 }
 
+POUND_COLD error_t
+jit_engine_reset(jit_engine_t *POUND_RESTRICT engine)
+{
+    if (POUND_UNLIKELY(NULL == engine))
+    {
+        POUND_LOG_ERROR(&thread_logger, "Aborting function: engine is NULL.");
+        return POUND_ERROR_INVALID_ARGUMENT;
+    }
+
+    if (POUND_UNLIKELY(false == engine->initialized))
+    {
+        POUND_LOG_ERROR(&thread_logger, "Aborting function: engine is not initialized.");
+        return POUND_ERROR_INVALID_ARGUMENT;
+    }
+
+    const bal_error_t error = bal_engine_reset(&engine->ballistic_engine);
+
+    if (POUND_UNLIKELY(error != BAL_SUCCESS))
+    {
+        POUND_LOG_ERROR(&thread_logger,
+                        "Aborting function: bal_engine_reset() failed because "
+                        "%s",
+                        bal_error_to_string(error));
+        return POUND_ERROR_INVALID_ARGUMENT;
+    }
+
+    engine->stop_requested = false;
+    engine->status         = POUND_SUCCESS;
+    POUND_LOG_INFO(&thread_logger, "JIT engine reset complete.");
+    return POUND_SUCCESS;
+}
+
 static const uint8_t *
 ballistic_translate_guest_address(void                     *context,
                                   const bal_guest_address_t guest_address,
