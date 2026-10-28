@@ -2,6 +2,7 @@
 
 #include "gui/gui.h"
 #include "jit/guest_memory.h"
+#include "jit/jit_engine.h"
 #include "log.h"
 #include "memory/memory.h"
 
@@ -67,11 +68,22 @@ main(void)
     const size_t   guest_memory_size_bytes = 64U * 1024U;
     const size_t   guest_base_address      = 0x0U;
 
-    if (POUND_UNLIKELY(POUND_SUCCESS != guest_memory_init(&guest_memory,
-                                                          guest_memory_size_bytes,
-                                                          guest_base_address)))
+    if (POUND_UNLIKELY(
+            POUND_SUCCESS
+            != guest_memory_init(&guest_memory, guest_memory_size_bytes, guest_base_address)))
     {
         POUND_LOG_ERROR(&thread_logger, "Aborting process: guest_memory_init failed.");
+        (void)guest_memory_destroy(&guest_memory);
+        memory_subsystem_destroy();
+        return EXIT_FAILURE;
+    }
+
+    jit_engine_t   jit_engine   = { 0 };
+    const uint32_t engine_flags = 0x0U;
+
+    if (POUND_UNLIKELY(POUND_SUCCESS != jit_engine_init(&jit_engine, &guest_memory, engine_flags)))
+    {
+        POUND_LOG_ERROR(&thread_logger, "Aborting process: jit_engine_init failed.");
         (void)guest_memory_destroy(&guest_memory);
         memory_subsystem_destroy();
         return EXIT_FAILURE;
@@ -149,6 +161,7 @@ main(void)
     app_gui_shutdown(&app);
     app_video_shutdown(&app);
 
+    jit_engine_destroy(&jit_engine);
     guest_memory_destroy(&guest_memory);
     memory_subsystem_destroy();
     SDL_Quit();
