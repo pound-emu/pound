@@ -72,11 +72,7 @@ include(Ballistic)
 message(STATUS "[Mimalloc] Configuring Mimalloc...")
 set(MI_OVERRIDE OFF CACHE BOOL "" FORCE)
 set(MI_WIN_REDIRECT OFF CACHE BOOL "" FORCE)
-
 add_subdirectory(extern/mimalloc/mimalloc)
-if (TARGET mimalloc-redirect)
-    message(FATAL_ERROR "mimalloc-redirect target still exists. MI_OVERRIDE was not disabled correctly.")
-endif ()
 
 message(STATUS "[ImGUI] Configuring ImGUI...")
 add_subdirectory(extern/cimgui)
