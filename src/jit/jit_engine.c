@@ -8,6 +8,8 @@ static const uint8_t *ballistic_translate_guest_address(void               *cont
                                                         bal_guest_address_t guest_address,
                                                         size_t             *max_readable);
 
+POUND_COLD static void unicorn_destroy(jit_engine_t *POUND_RESTRICT engine);
+
 error_t
 jit_engine_init(jit_engine_t *context, guest_memory_t *guest_memory, const uint32_t flags)
 {
@@ -127,6 +129,35 @@ jit_engine_reset(jit_engine_t *POUND_RESTRICT engine)
     return POUND_SUCCESS;
 }
 
+POUND_COLD void
+jit_engine_destroy(jit_engine_t *engine)
+{
+    if (POUND_UNLIKELY(NULL == engine))
+    {
+        POUND_LOG_ERROR(&thread_logger, "Aborting function: engine is NULL.");
+        return;
+    }
+
+    if (POUND_UNLIKELY(false == engine->initialized))
+    {
+        POUND_LOG_WARN(&thread_logger, "JIT engine was never initialized, nothing to destory.");
+        return;
+    }
+
+    POUND_LOG_INFO(&thread_logger,
+                   "Destroying JIT engine. stats: ballistic=%llu, unicorn=%llu, "
+                   "fallbacks=%llu, resumes=%llu.",
+                   (unsigned long long)engine->stats.ballistic_instructions,
+                   (unsigned long long)engine->stats.unicorn_instructions,
+                   (unsigned long long)engine->stats.fallback_count,
+                   (unsigned long long)engine->stats.resume_count);
+
+    unicorn_destroy(engine);
+    bal_engine_destroy(&engine->ballistic_engine);
+    (void)memset(engine, 0, sizeof(jit_engine_t));
+    POUND_LOG_DEBUG(&thread_logger, "JIT engine destoryed.");
+}
+
 static const uint8_t *
 ballistic_translate_guest_address(void                     *context,
                                   const bal_guest_address_t guest_address,
@@ -158,4 +189,18 @@ ballistic_translate_guest_address(void                     *context,
     }
 
     return result;
+}
+
+POUND_COLD static void
+unicorn_destroy(jit_engine_t *POUND_RESTRICT engine)
+{
+    if (NULL == engine->unicorn_engine)
+    {
+        return;
+    }
+
+    POUND_LOG_DEBUG(&thread_logger, "Destroying Unicorn engine.");
+    uc_close(engine->unicorn_engine);
+    engine->unicorn_engine      = NULL;
+    engine->unicorn_initialized = false;
 }
