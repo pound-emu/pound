@@ -76,6 +76,25 @@ jit_engine_init(jit_engine_t *context, guest_memory_t *guest_memory, const uint3
     return context->status;
 }
 
+POUND_HOT void
+jit_engine_stop(jit_engine_t *POUND_RESTRICT engine)
+{
+    if (POUND_UNLIKELY(NULL == engine))
+    {
+        POUND_LOG_ERROR(&thread_logger, "Aborting function: engine is NULL.");
+        return;
+    }
+
+    POUND_LOG_DEBUG(&thread_logger, "Stop requested.");
+    engine->stop_requested = true;
+    bal_engine_stop_thread(&engine->ballistic_engine);
+
+    if (engine->unicorn_initialized && NULL != engine->unicorn_engine)
+    {
+        uc_emu_stop(engine->unicorn_engine);
+    }
+}
+
 static const uint8_t *
 ballistic_translate_guest_address(void                     *context,
                                   const bal_guest_address_t guest_address,
