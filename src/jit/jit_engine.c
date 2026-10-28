@@ -40,6 +40,7 @@ jit_engine_init(jit_engine_t *context, guest_memory_t *guest_memory, const uint3
         return context->status;
     }
 
+    POUND_LOG_DEBUG(&thread_logger, "Configuring JIT subsystem...");
     (void)memset(context, 0, sizeof(jit_engine_t));
     context->guest_memory   = guest_memory;
     context->engine_flags   = flags;
@@ -50,14 +51,13 @@ jit_engine_init(jit_engine_t *context, guest_memory_t *guest_memory, const uint3
     context->ballistic_memory_interface.translate = ballistic_translate_guest_address;
 
     POUND_LOG_DEBUG(&thread_logger,
-                    "Memory interface bridge configured. "
-                    "guest range [0x%llx, 0x%llx), host_base=%p.",
+                    "Memory interface bridge configured: "
+                    "guest range=[0x%llx, 0x%llx), host_base=%p.",
                     (unsigned long long)guest_memory->guest_base,
                     (unsigned long long)guest_memory->guest_end,
                     (void *)guest_memory->host_base);
 
     bal_allocator_default_init(&context->allocator);
-    POUND_LOG_DEBUG(&thread_logger, "Default allocator initialized.");
 
     const bal_error_t ballistic_error = bal_engine_init(&context->ballistic_engine,
                                                         &context->cpu,
@@ -74,7 +74,7 @@ jit_engine_init(jit_engine_t *context, guest_memory_t *guest_memory, const uint3
     context->ballistic_engine.flags = flags;
     context->initialized            = true;
     context->status                 = POUND_SUCCESS;
-    POUND_LOG_INFO(&thread_logger, "Ballistic engine ready.");
+    POUND_LOG_INFO(&thread_logger, "Successfully configured JIT subsystem.");
     return context->status;
 }
 
