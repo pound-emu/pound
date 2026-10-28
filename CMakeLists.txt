@@ -176,7 +176,7 @@ add_library(PoundJit STATIC
         src/jit/jit_engine.c
 )
 target_include_directories(PoundJit PUBLIC src/core)
-target_link_libraries(PoundJit PRIVATE PoundCore Ballistic::Engine unicorn)
+target_link_libraries(PoundJit PUBLIC PoundCore Ballistic::Engine unicorn)
 add_compiler_flags(PoundJit)
 add_linker_flags(PoundJit)
 add_sanitizers(PoundJit)
