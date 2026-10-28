@@ -14,7 +14,7 @@ POUND_ALIGNED(64) typedef struct
     uint64_t fallback_count;
     uint64_t resume_count;
     char     pad[32];
-} jit_dual_stats_t;
+} jit_stats_t;
 
 POUND_ALIGNED(64) typedef struct
 {
@@ -29,7 +29,7 @@ POUND_ALIGNED(64) typedef struct
     char                   pad0[2];
     error_t                status;
     char                   pad1[36];
-    jit_dual_stats_t       stats;
+    jit_stats_t            stats;
 } jit_engine_t;
 
 POUND_COLD error_t jit_engine_init(jit_engine_t *POUND_RESTRICT   context,
