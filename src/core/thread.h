@@ -17,4 +17,15 @@ typedef pthread_t thread_id_t;
 
 #define THREAD_ID_INVALID ((thread_id_t)0)
 
+typedef enum
+{
+    THREAD_PRIORITY_IDLE          = -15,
+    THREAD_PRIORITY_LOWEST        = -2,
+    THREAD_PRIORITY_BELOW_NORMAL  = -1,
+    THREAD_PRIORITY_NORMAL        = 0,
+    THREAD_PRIORITY_ABOVE_NORMAL  = 1,
+    THREAD_PRIORITY_HIGHEST       = 2,
+    THREAD_PRIORITY_TIME_CRITICAL = 15,
+} thread_priority_t;
+
 #endif // POUND_THREAD_H
