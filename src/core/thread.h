@@ -15,4 +15,6 @@ typedef pthread_t thread_id_t;
 
 #endif // POUND_PLATFORM_WINDOWS
 
+#define THREAD_ID_INVALID ((thread_id_t)0)
+
 #endif // POUND_THREAD_H
