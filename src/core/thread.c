@@ -6,6 +6,27 @@
 
 #endif // POUND_PLATFORM_WINDOWS
 
+bool
+thread_join(thread_id_t id)
+{
+    if (THREAD_ID_INVALID == id)
+    {
+        return false;
+    }
+
+#if POUND_PLATFORM_WINDOWS
+
+    DWORD r = WaitForSingleObject(id, INFINITE);
+    CloseHandle(id);
+    return WAIT_OBJECT_0 == r;
+
+#else
+
+    return pthread_join(id, NULL) == 0;
+
+#endif // POUND_PLATFORM_WINDOWS
+}
+
 void
 thread_exit(void)
 {
@@ -31,5 +52,5 @@ thread_yield(void)
 
     sched_yield();
 
-#endif
+#endif // POUND_PLATFORM_WINDOWS
 }

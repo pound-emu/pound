@@ -2,6 +2,7 @@
 #define POUND_THREAD_H
 
 #include "platform.h"
+#include <stdbool.h>
 
 #if POUND_PLATFORM_WINDOWS
 
@@ -27,6 +28,9 @@ typedef enum
     THREAD_PRIORITY_HIGHEST       = 2,
     THREAD_PRIORITY_TIME_CRITICAL = 15,
 } thread_priority_t;
+
+/// Wait for thread to finish and release resources. Returns true on success.
+bool thread_join(thread_id_t id);
 
 /// Exit the current thread.
 void thread_exit(void);
