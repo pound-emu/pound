@@ -28,4 +28,7 @@ typedef enum
     THREAD_PRIORITY_TIME_CRITICAL = 15,
 } thread_priority_t;
 
+/// Exit the current thread.
+void thread_exit(void);
+
 #endif // POUND_THREAD_H

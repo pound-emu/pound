@@ -161,6 +161,7 @@ add_library(PoundCore STATIC
         src/core/memory/memory.c
         src/core/log.c
         src/core/safe_math.c
+        src/core/thread.c
 )
 target_include_directories(PoundCore PUBLIC src/core)
 target_link_libraries(PoundCore PRIVATE mimalloc)
