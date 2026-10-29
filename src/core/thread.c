@@ -19,3 +19,17 @@ thread_exit(void)
 
 #endif // POUND_PLATFORM_WINDOWS
 }
+
+void
+thread_yield(void)
+{
+#if POUND_PLATFORM_WINDOWS
+
+    SwitchToThread();
+
+#else
+
+    sched_yield();
+
+#endif
+}

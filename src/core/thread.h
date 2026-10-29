@@ -31,4 +31,7 @@ typedef enum
 /// Exit the current thread.
 void thread_exit(void);
 
+/// Yield execution to another thread.
+void thread_yield(void);
+
 #endif // POUND_THREAD_H
