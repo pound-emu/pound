@@ -44,6 +44,8 @@ POUND_COLD error_t jit_engine_init(jit_engine_t *POUND_RESTRICT   context,
                                    guest_memory_t *POUND_RESTRICT guest_memory,
                                    uint32_t                       flags);
 
+POUND_HOT error_t jit_engine_run(jit_engine_t *POUND_RESTRICT engine);
+
 // Thread Safe.
 POUND_HOT void jit_engine_stop(jit_engine_t *POUND_RESTRICT engine);
 

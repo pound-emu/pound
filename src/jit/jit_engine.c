@@ -78,6 +78,38 @@ jit_engine_init(jit_engine_t *context, guest_memory_t *guest_memory, const uint3
     return context->status;
 }
 
+error_t
+jit_engine_run(jit_engine_t *engine)
+{
+    if (POUND_UNLIKELY(NULL == engine))
+    {
+        POUND_LOG_ERROR(&thread_logger, "Aborting function: context is NULL.");
+        return POUND_ERROR_INVALID_ARGUMENT;
+    }
+
+    if (POUND_UNLIKELY(false == engine->initialized))
+    {
+        POUND_LOG_ERROR(&thread_logger,
+                        "Aborting function: engine not initialized, call "
+                        "jit_engine_init() first.");
+        engine->status = POUND_ERROR_INVALID_ARGUMENT;
+        return engine->status;
+    }
+
+    POUND_LOG_INFO(
+        &thread_logger, "Starting JIT engine at PC 0x%llx.", (unsigned long long)engine->cpu.pc);
+
+    bool                         stop_requested   = engine->stop_requested;
+    bal_engine_t *POUND_RESTRICT ballistic_engine = &engine->ballistic_engine;
+    bal_cpu_t *POUND_RESTRICT    ballistic_cpu    = &engine->cpu;
+    jit_stats_t *POUND_RESTRICT  jit_stats        = &engine->stats;
+
+    while (false == stop_requested)
+    {
+        // TODO: implement threading API.
+    }
+}
+
 POUND_HOT void
 jit_engine_stop(jit_engine_t *POUND_RESTRICT engine)
 {
