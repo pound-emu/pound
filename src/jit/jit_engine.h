@@ -47,7 +47,8 @@ POUND_COLD error_t jit_engine_init(jit_engine_t *POUND_RESTRICT   context,
 // Thread Safe.
 POUND_HOT void jit_engine_stop(jit_engine_t *POUND_RESTRICT engine);
 
-POUND_COLD error_t jit_engine_reset(jit_engine_t *POUND_RESTRICT engine);
-POUND_COLD void    jit_engine_destroy(jit_engine_t *POUND_RESTRICT engine);
+POUND_COLD error_t    jit_engine_reset(jit_engine_t *POUND_RESTRICT engine);
+POUND_COLD void       jit_engine_destroy(jit_engine_t *POUND_RESTRICT engine);
+POUND_HOT jit_stats_t jit_engine_get_stats(const jit_engine_t *POUND_RESTRICT engine);
 
 #endif // POUND_JIT_DUAL_H

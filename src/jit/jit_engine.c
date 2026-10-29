@@ -158,6 +158,19 @@ jit_engine_destroy(jit_engine_t *engine)
     POUND_LOG_DEBUG(&thread_logger, "JIT engine destoryed.");
 }
 
+POUND_HOT jit_stats_t
+jit_engine_get_stats(const jit_engine_t *engine)
+{
+    if (POUND_UNLIKELY(NULL == engine))
+    {
+        POUND_LOG_ERROR(&thread_logger, "Aborting function: engine is NULL.");
+        const jit_stats_t empty = { 0 };
+        return empty;
+    }
+
+    return engine->stats;
+}
+
 static const uint8_t *
 ballistic_translate_guest_address(void                     *context,
                                   const bal_guest_address_t guest_address,
