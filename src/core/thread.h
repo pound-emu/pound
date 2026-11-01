@@ -44,4 +44,6 @@ void thread_sleep(unsigned ms);
 /// Get current thread ID.
 thread_id_t thread_get_current_id(void);
 
+/// Set priority of an existing thread.
+bool thread_set_priority(thread_id_t id, thread_priority_t priority);
 #endif // POUND_THREAD_H
