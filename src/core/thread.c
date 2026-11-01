@@ -78,3 +78,17 @@ thread_sleep(unsigned ms)
 
 #endif // POUND_PLATFORM_WINDOWS
 }
+
+thread_id_t
+thread_get_current_id(void)
+{
+#if POUND_PLATFORM_WINDOWS
+
+    return GetCurrentThread();
+
+#else
+
+    return pthread_self();
+
+#endif // POUND_PLATFORM_WINDOWS
+}

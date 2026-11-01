@@ -41,4 +41,7 @@ void thread_yield(void);
 /// Sleep for ms milliseconds.
 void thread_sleep(unsigned ms);
 
+/// Get current thread ID.
+thread_id_t thread_get_current_id(void);
+
 #endif // POUND_THREAD_H
