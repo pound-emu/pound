@@ -38,4 +38,7 @@ void thread_exit(void);
 /// Yield execution to another thread.
 void thread_yield(void);
 
+/// Sleep for ms milliseconds.
+void thread_sleep(unsigned ms);
+
 #endif // POUND_THREAD_H

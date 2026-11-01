@@ -4,6 +4,11 @@
 
 #include <process.h>
 
+#else
+
+#include <sys/poll.h>
+#include <unistd.h>
+
 #endif // POUND_PLATFORM_WINDOWS
 
 bool
@@ -51,6 +56,25 @@ thread_yield(void)
 #else
 
     sched_yield();
+
+#endif // POUND_PLATFORM_WINDOWS
+}
+
+void
+thread_sleep(unsigned ms)
+{
+#if POUND_PLATFORM_WINDOWS
+
+    Sleep(ms);
+
+#else
+
+    while (ms > 0)
+    {
+        const unsigned chunk = ms > 1000000U ? 1000000U : ms;
+        (void)poll(NULL, 0, (int)chunk);
+        ms -= chunk;
+    }
 
 #endif // POUND_PLATFORM_WINDOWS
 }
