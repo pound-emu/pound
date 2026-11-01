@@ -117,25 +117,69 @@ thread_set_priority(thread_id_t id, thread_priority_t priority)
     }
 
     // Linear remap: -15 -> -20, 0 -> 0, +15 -> +19
-    int nice_val;
+    int nice_value;
 
     if (p <= 0)
     {
-        nice_val = p * 20 / 15; // 0..-15 -> 0..-20
+        nice_value = p * 20 / 15; // 0..-15 -> 0..-20
     }
     else
     {
-        nice_val = p * 19 / 15; // 1..15  -> 1..19
+        nice_value = p * 19 / 15; // 1..15  -> 1..19
     }
 
     const pid_t tid = gettid();
 
-    if (setpriority(PRIO_PROCESS, (id_t)tid, nice_val) != 0)
+    if (setpriority(PRIO_PROCESS, (id_t)tid, nice_value) != 0)
     {
         return errno == EPERM ? true : false;
     }
 
     return true;
+
+#endif // POUND_PLATFORM_WINDOWS
+}
+
+thread_priority_t
+thread_get_priority(thread_id_t id)
+{
+#if POUND_PLATFORM_WINDOWS
+
+    return (thread_priority_t)GetThreadPriority(id);
+
+#else
+
+    pid_t tid;
+
+    if (pthread_equal(id, pthread_self()))
+    {
+        tid = gettid();
+    }
+    else
+    {
+        return THREAD_PRIORITY_NORMAL;
+    }
+
+    errno                = 0;
+    const int nice_value = getpriority(PRIO_PROCESS, (id_t)tid);
+
+    if (errno != 0)
+    {
+        return THREAD_PRIORITY_NORMAL;
+    }
+
+    int priority;
+
+    if (nice_value <= 0)
+    {
+        priority = nice_value * 15 / 20;
+    }
+    else
+    {
+        priority = nice_value * 15 / 19;
+    }
+
+    return (thread_priority_t)priority;
 
 #endif // POUND_PLATFORM_WINDOWS
 }
