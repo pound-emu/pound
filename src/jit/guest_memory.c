@@ -3,7 +3,7 @@
 #include "memory/memory.h"
 #include <string.h>
 
-error_t
+pound_error_t
 guest_memory_init(guest_memory_t *guest_memory, const size_t host_size, const uint64_t guest_base)
 {
     if (POUND_UNLIKELY(NULL == guest_memory))
@@ -46,7 +46,7 @@ guest_memory_init(guest_memory_t *guest_memory, const size_t host_size, const ui
     return POUND_SUCCESS;
 }
 
-error_t
+pound_error_t
 guest_memory_destroy(guest_memory_t *guest_memory)
 {
     if (POUND_UNLIKELY(NULL == guest_memory))

@@ -35,22 +35,22 @@ POUND_ALIGNED(64) typedef struct
     volatile bool stop_requested;
     bool          initialized;
     char          pad1[2];
-    error_t       status;
+    pound_error_t status;
     char          pad2[16];
     jit_stats_t   stats;
 } jit_engine_t;
 
-POUND_COLD error_t jit_engine_init(jit_engine_t *POUND_RESTRICT   context,
-                                   guest_memory_t *POUND_RESTRICT guest_memory,
-                                   uint32_t                       flags);
+POUND_COLD pound_error_t jit_engine_init(jit_engine_t *POUND_RESTRICT   context,
+                                         guest_memory_t *POUND_RESTRICT guest_memory,
+                                         uint32_t                       flags);
 
-POUND_HOT error_t jit_engine_run(jit_engine_t *POUND_RESTRICT engine);
+POUND_HOT pound_error_t jit_engine_run(jit_engine_t *POUND_RESTRICT engine);
 
 // Thread Safe.
 POUND_HOT void jit_engine_stop(jit_engine_t *POUND_RESTRICT engine);
 
-POUND_COLD error_t    jit_engine_reset(jit_engine_t *POUND_RESTRICT engine);
-POUND_COLD void       jit_engine_destroy(jit_engine_t *POUND_RESTRICT engine);
-POUND_HOT jit_stats_t jit_engine_get_stats(const jit_engine_t *POUND_RESTRICT engine);
+POUND_COLD pound_error_t jit_engine_reset(jit_engine_t *POUND_RESTRICT engine);
+POUND_COLD void          jit_engine_destroy(jit_engine_t *POUND_RESTRICT engine);
+POUND_HOT jit_stats_t    jit_engine_get_stats(const jit_engine_t *POUND_RESTRICT engine);
 
 #endif // POUND_JIT_DUAL_H

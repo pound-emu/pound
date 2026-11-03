@@ -30,11 +30,11 @@ POUND_ALIGNED(64) typedef struct
 
 static_assert(64 == sizeof(guest_memory_t), "Struct size mismatch");
 
-error_t guest_memory_init(guest_memory_t *POUND_RESTRICT guest_memory,
-                          size_t                         host_size,
-                          uint64_t                       guest_base);
+pound_error_t guest_memory_init(guest_memory_t *POUND_RESTRICT guest_memory,
+                                size_t                         host_size,
+                                uint64_t                       guest_base);
 
-error_t guest_memory_destroy(guest_memory_t *POUND_RESTRICT guest_memory);
+pound_error_t guest_memory_destroy(guest_memory_t *POUND_RESTRICT guest_memory);
 
 /// Returns true if `guest_address` is inside this guest memory region.
 bool guest_memory_contains(const guest_memory_t *POUND_RESTRICT guest_memory,

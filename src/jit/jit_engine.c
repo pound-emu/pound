@@ -10,7 +10,7 @@ static const uint8_t *ballistic_translate_guest_address(void               *cont
 
 POUND_COLD static void unicorn_destroy(jit_engine_t *POUND_RESTRICT engine);
 
-error_t
+pound_error_t
 jit_engine_init(jit_engine_t *context, guest_memory_t *guest_memory, const uint32_t flags)
 {
     if (POUND_UNLIKELY(NULL == context))
@@ -78,7 +78,7 @@ jit_engine_init(jit_engine_t *context, guest_memory_t *guest_memory, const uint3
     return context->status;
 }
 
-error_t
+pound_error_t
 jit_engine_run(jit_engine_t *engine)
 {
     if (POUND_UNLIKELY(NULL == engine))
@@ -129,7 +129,7 @@ jit_engine_stop(jit_engine_t *POUND_RESTRICT engine)
     }
 }
 
-POUND_COLD error_t
+POUND_COLD pound_error_t
 jit_engine_reset(jit_engine_t *POUND_RESTRICT engine)
 {
     if (POUND_UNLIKELY(NULL == engine))

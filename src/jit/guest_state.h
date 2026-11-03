@@ -27,7 +27,7 @@ static_assert(offsetof(guest_state_t, x) == offsetof(bal_cpu_t, x),
 static_assert(offsetof(guest_state_t, pc) == offsetof(bal_cpu_t, pc),
               "guest_state_t.pc must overlap bal_cpu_t.pc");
 
-error_t guest_state_init(guest_state_t *state);
+pound_error_t guest_state_init(guest_state_t *state);
 
 #endif // POUND_GUEST_STATE_H
 

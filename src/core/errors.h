@@ -24,7 +24,7 @@ typedef enum
 
     /// The memory allocator failed to reserve the requested memory.
     POUND_ERROR_ALLOCATION_FAILED,
-} error_t;
+} pound_error_t;
 
 #endif // POUND_ERRORS_H
 

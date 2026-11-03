@@ -3,7 +3,7 @@
 #include <stddef.h>
 #include <string.h>
 
-error_t
+pound_error_t
 guest_state_init(guest_state_t *POUND_RESTRICT state)
 {
     if (NULL == state)
