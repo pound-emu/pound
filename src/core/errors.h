@@ -24,6 +24,12 @@ typedef enum
 
     /// The memory allocator failed to reserve the requested memory.
     POUND_ERROR_ALLOCATION_FAILED,
+
+    // Thread Errors
+
+    POUND_ERROR_THREAD_CREATION_FAILED,
+    POUND_ERROR_THREAD_PRIORITY_FAILED,
+    POUND_ERROR_THREAD_AFFINITY_FAILED,
 } pound_error_t;
 
 #endif // POUND_ERRORS_H
