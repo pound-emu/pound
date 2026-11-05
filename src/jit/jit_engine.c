@@ -4,6 +4,8 @@
 
 #include <string.h>
 
+static void           engine_thread_entry(void *POUND_RESTRICT engine);
+static pound_error_t  engine_run(jit_engine_t *POUND_RESTRICT engine);
 static const uint8_t *ballistic_translate_guest_address(void               *context,
                                                         bal_guest_address_t guest_address,
                                                         size_t             *max_readable);
@@ -78,36 +80,102 @@ jit_engine_init(jit_engine_t *context, guest_memory_t *guest_memory, const uint3
     return context->status;
 }
 
-pound_error_t
-jit_engine_run(jit_engine_t *engine)
+POUND_HOT pound_error_t
+jit_engine_start(jit_engine_t *POUND_RESTRICT engine)
 {
     if (POUND_UNLIKELY(NULL == engine))
     {
-        POUND_LOG_ERROR(&thread_logger, "Aborting function: context is NULL.");
+        POUND_LOG_ERROR(&thread_logger, "Aborting function: engine is NULL.");
         return POUND_ERROR_INVALID_ARGUMENT;
     }
 
     if (POUND_UNLIKELY(false == engine->initialized))
     {
         POUND_LOG_ERROR(&thread_logger,
-                        "Aborting function: engine not initialized, call "
+                        "Aborting function: engine not initialized. Call "
                         "jit_engine_init() first.");
-        engine->status = POUND_ERROR_INVALID_ARGUMENT;
+        return POUND_ERROR_INVALID_ARGUMENT;
+    }
+
+    if (POUND_UNLIKELY(true == engine->thread_active))
+    {
+        POUND_LOG_ERROR(&thread_logger,
+                        "JIT thread is already running. Call jit_engine_stop() + "
+                        "jit_engine_join() first.");
+        return POUND_ERROR_INVALID_ARGUMENT;
+    }
+
+    const size_t            stack_size   = 2U * 1024U * 1024U; // 2 KiB
+    const thread_priority_t priority     = THREAD_PRIORITY_ABOVE_NORMAL;
+    const uint32_t          affinity     = 0U;
+    const pound_error_t     thread_error = thread_create(engine_thread_entry,
+                                                     engine,
+                                                     stack_size,
+                                                     priority,
+                                                     "PoundJIT",
+                                                     affinity,
+                                                     &engine->thread_id);
+
+    if (thread_error != POUND_SUCCESS)
+    {
+        POUND_LOG_ERROR(&thread_logger, "thread_create() failed with error %d.", thread_error);
+        engine->thread_active = false;
+        engine->status        = thread_error;
         return engine->status;
     }
 
-    POUND_LOG_INFO(
-        &thread_logger, "Starting JIT engine at PC 0x%llx.", (unsigned long long)engine->cpu.pc);
+    engine->thread_active = true;
 
-    bool                         stop_requested   = engine->stop_requested;
-    bal_engine_t *POUND_RESTRICT ballistic_engine = &engine->ballistic_engine;
-    bal_cpu_t *POUND_RESTRICT    ballistic_cpu    = &engine->cpu;
-    jit_stats_t *POUND_RESTRICT  jit_stats        = &engine->stats;
+    POUND_LOG_INFO(&thread_logger,
+                   "JIT thread spawned. stack=%zu bytes, priority=%d.",
+                   stack_size,
+                   (int)priority);
+    return POUND_SUCCESS;
+}
 
-    while (false == stop_requested)
+bool
+jit_engine_join(jit_engine_t *POUND_RESTRICT engine)
+{
+    if (POUND_UNLIKELY(NULL == engine))
     {
-        // TODO: implement threading API.
+        POUND_LOG_ERROR(&thread_logger, "Aborting function: engine is NULL.");
+        return POUND_ERROR_INVALID_ARGUMENT;
     }
+
+    if (POUND_UNLIKELY(THREAD_ID_INVALID == engine->thread_id))
+    {
+        POUND_LOG_WARN(&thread_logger, "No thread to join. Was jit_engine_start() called?");
+        return true;
+    }
+
+    POUND_LOG_DEBUG(&thread_logger, "Waiting for JIT thread...");
+    const bool joined = thread_join(engine->thread_id);
+
+    if (POUND_UNLIKELY(false == joined))
+    {
+        POUND_LOG_ERROR(&thread_logger,
+                        "thread_join failed. Thread may have been detached or "
+                        "already exited.");
+    }
+    else
+    {
+        POUND_LOG_DEBUG(&thread_logger, "JIT thread joined successfully.");
+    }
+
+    engine->thread_id     = THREAD_ID_INVALID;
+    engine->thread_active = false;
+    return joined;
+}
+
+bool
+jit_engine_is_running(const jit_engine_t *engine)
+{
+    if (POUND_UNLIKELY(NULL == engine))
+    {
+        return false;
+    }
+
+    return engine->thread_active;
 }
 
 POUND_HOT void
@@ -201,6 +269,70 @@ jit_engine_get_stats(const jit_engine_t *engine)
     }
 
     return engine->stats;
+}
+
+void
+engine_thread_entry(void *engine)
+{
+    if (POUND_UNLIKELY(NULL == engine))
+    {
+        POUND_LOG_ERROR(&thread_logger, "Aborting function: engine is NULL.");
+        return;
+    }
+
+    jit_engine_t *POUND_RESTRICT jit_engine = engine;
+    POUND_LOG_INFO(
+        &thread_logger, "JIT thread started. PC=0x%llx.", (unsigned long long)jit_engine->cpu.pc);
+
+    const pound_error_t result = engine_run(jit_engine);
+
+    if (POUND_SUCCESS != result)
+    {
+        POUND_LOG_ERROR(&thread_logger,
+                        "JIT thread exiting with error %d. pc=0x%llx.",
+                        (int)result,
+                        (unsigned long long)jit_engine->cpu.pc);
+    }
+    else
+    {
+        POUND_LOG_INFO(&thread_logger,
+                       "JIT thread exiting cleanly. PC=0x%llX.",
+                       (unsigned long long)jit_engine->cpu.pc);
+    }
+
+    jit_engine->thread_active = false;
+}
+
+pound_error_t
+engine_run(jit_engine_t *engine)
+{
+    if (POUND_UNLIKELY(NULL == engine))
+    {
+        POUND_LOG_ERROR(&thread_logger, "Aborting function: context is NULL.");
+        return POUND_ERROR_INVALID_ARGUMENT;
+    }
+
+    if (POUND_UNLIKELY(false == engine->initialized))
+    {
+        POUND_LOG_ERROR(&thread_logger,
+                        "Aborting function: engine not initialized, call "
+                        "jit_engine_init() first.");
+        engine->status = POUND_ERROR_INVALID_ARGUMENT;
+        return engine->status;
+    }
+
+    POUND_LOG_INFO(
+        &thread_logger, "Starting JIT engine at PC 0x%llx.", (unsigned long long)engine->cpu.pc);
+
+    const bool *POUND_RESTRICT   stop_requested   = &engine->stop_requested;
+    bal_engine_t *POUND_RESTRICT ballistic_engine = &engine->ballistic_engine;
+    bal_cpu_t *POUND_RESTRICT    ballistic_cpu    = &engine->cpu;
+    jit_stats_t *POUND_RESTRICT  jit_stats        = &engine->stats;
+
+    while (false == *stop_requested)
+    {
+        // TODO: implement threading API.
+    }
 }
 
 static const uint8_t *

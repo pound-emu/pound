@@ -89,6 +89,8 @@ main(void)
         return EXIT_FAILURE;
     }
 
+    jit_engine_start(&jit_engine);
+
     (void)memory_subsystem_set_bucket(MEMORY_BUCKET_UI);
 
     if (!SDL_Init(SDL_INIT_VIDEO))
@@ -161,6 +163,8 @@ main(void)
     app_gui_shutdown(&app);
     app_video_shutdown(&app);
 
+    jit_engine_stop(&jit_engine);
+    jit_engine_join(&jit_engine);
     jit_engine_destroy(&jit_engine);
     guest_memory_destroy(&guest_memory);
     memory_subsystem_destroy();

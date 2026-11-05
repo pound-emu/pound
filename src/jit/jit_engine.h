@@ -6,6 +6,7 @@
 #include "bal_engine.h"
 #include "bal_memory.h"
 #include "guest_memory.h"
+#include "thread.h"
 #include "unicorn/unicorn.h"
 
 POUND_ALIGNED(64) typedef struct
@@ -36,7 +37,9 @@ POUND_ALIGNED(64) typedef struct
     bool          initialized;
     char          pad1[2];
     pound_error_t status;
-    char          pad2[16];
+    thread_id_t   thread_id;
+    bool          thread_active;
+    char          pad2[7];
     jit_stats_t   stats;
 } jit_engine_t;
 
@@ -44,7 +47,10 @@ POUND_COLD pound_error_t jit_engine_init(jit_engine_t *POUND_RESTRICT   context,
                                          guest_memory_t *POUND_RESTRICT guest_memory,
                                          uint32_t                       flags);
 
-POUND_HOT pound_error_t jit_engine_run(jit_engine_t *POUND_RESTRICT engine);
+POUND_HOT pound_error_t jit_engine_start(jit_engine_t *POUND_RESTRICT engine);
+
+POUND_COLD bool jit_engine_join(jit_engine_t *POUND_RESTRICT engine);
+POUND_HOT bool  jit_engine_is_running(const jit_engine_t *POUND_RESTRICT engine);
 
 // Thread Safe.
 POUND_HOT void jit_engine_stop(jit_engine_t *POUND_RESTRICT engine);
