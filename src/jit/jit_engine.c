@@ -109,12 +109,12 @@ jit_engine_start(jit_engine_t *POUND_RESTRICT engine)
     const thread_priority_t priority     = THREAD_PRIORITY_ABOVE_NORMAL;
     const uint32_t          affinity     = 0U;
     const pound_error_t     thread_error = thread_create(engine_thread_entry,
-                                                     engine,
-                                                     stack_size,
-                                                     priority,
-                                                     "PoundJIT",
-                                                     affinity,
-                                                     &engine->thread_id);
+                                                         engine,
+                                                         stack_size,
+                                                         priority,
+                                                         "PoundJIT",
+                                                         affinity,
+                                                         &engine->thread_id);
 
     if (thread_error != POUND_SUCCESS)
     {
@@ -329,9 +329,22 @@ engine_run(jit_engine_t *engine)
     bal_cpu_t *POUND_RESTRICT    ballistic_cpu    = &engine->cpu;
     jit_stats_t *POUND_RESTRICT  jit_stats        = &engine->stats;
 
-    while (false == *stop_requested)
+    while (false == (int)*stop_requested)
     {
-        // TODO: implement threading API.
+        const bal_error_t ballistic_result = bal_engine_run_thread(ballistic_engine);
+        jit_stats->ballistic_instructions += ballistic_cpu->instruction_count;
+
+        if (POUND_LIKELY(BAL_SUCCESS == ballistic_result))
+        {
+            POUND_LOG_INFO(
+                &thread_logger,
+                "Ballistic exited cleanly. PC = 0x%llX, total ballistic instructions=%llu"
+                ".",
+                (unsigned long long)ballistic_cpu->pc,
+                (unsigned long long)jit_stats->ballistic_instructions);
+            engine->status = POUND_SUCCESS;
+            return engine->status;
+        }
     }
 }
 
