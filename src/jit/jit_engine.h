@@ -20,7 +20,7 @@ POUND_ALIGNED(64) typedef struct
 
 POUND_ALIGNED(64) typedef struct
 {
-    bal_cpu_t              cpu;
+    bal_cpu_t              ballistic_cpu;
     bal_engine_t           ballistic_engine;
     bal_memory_interface_t ballistic_memory_interface;
     guest_memory_t        *guest_memory;

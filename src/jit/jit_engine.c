@@ -48,7 +48,7 @@ jit_engine_init(jit_engine_t *context, guest_memory_t *guest_memory, const uint3
     context->engine_flags   = flags;
     context->stop_requested = false;
 
-    memset(&context->cpu, 0, sizeof(bal_cpu_t));
+    memset(&context->ballistic_cpu, 0, sizeof(bal_cpu_t));
     context->ballistic_memory_interface.context   = guest_memory;
     context->ballistic_memory_interface.translate = ballistic_translate_guest_address;
 
@@ -62,7 +62,7 @@ jit_engine_init(jit_engine_t *context, guest_memory_t *guest_memory, const uint3
     bal_allocator_default_init(&context->allocator);
 
     const bal_error_t ballistic_error = bal_engine_init(&context->ballistic_engine,
-                                                        &context->cpu,
+                                                        &context->ballistic_cpu,
                                                         &context->allocator,
                                                         &context->ballistic_memory_interface);
 
@@ -281,8 +281,9 @@ engine_thread_entry(void *engine)
     }
 
     jit_engine_t *POUND_RESTRICT jit_engine = engine;
-    POUND_LOG_INFO(
-        &thread_logger, "JIT thread started. PC=0x%llx.", (unsigned long long)jit_engine->cpu.pc);
+    POUND_LOG_INFO(&thread_logger,
+                   "JIT thread started. PC=0x%llx.",
+                   (unsigned long long)jit_engine->ballistic_cpu.pc);
 
     const pound_error_t result = engine_run(jit_engine);
 
@@ -291,13 +292,13 @@ engine_thread_entry(void *engine)
         POUND_LOG_ERROR(&thread_logger,
                         "JIT thread exiting with error %d. pc=0x%llx.",
                         (int)result,
-                        (unsigned long long)jit_engine->cpu.pc);
+                        (unsigned long long)jit_engine->ballistic_cpu.pc);
     }
     else
     {
         POUND_LOG_INFO(&thread_logger,
                        "JIT thread exiting cleanly. PC=0x%llX.",
-                       (unsigned long long)jit_engine->cpu.pc);
+                       (unsigned long long)jit_engine->ballistic_cpu.pc);
     }
 
     jit_engine->thread_active = false;
@@ -321,12 +322,13 @@ engine_run(jit_engine_t *engine)
         return engine->status;
     }
 
-    POUND_LOG_INFO(
-        &thread_logger, "Starting JIT engine at PC 0x%llx.", (unsigned long long)engine->cpu.pc);
+    POUND_LOG_INFO(&thread_logger,
+                   "Starting JIT engine at PC 0x%llx.",
+                   (unsigned long long)engine->ballistic_cpu.pc);
 
     const bool *POUND_RESTRICT   stop_requested   = &engine->stop_requested;
     bal_engine_t *POUND_RESTRICT ballistic_engine = &engine->ballistic_engine;
-    bal_cpu_t *POUND_RESTRICT    ballistic_cpu    = &engine->cpu;
+    bal_cpu_t *POUND_RESTRICT    ballistic_cpu    = &engine->ballistic_cpu;
     jit_stats_t *POUND_RESTRICT  jit_stats        = &engine->stats;
 
     while (false == (int)*stop_requested)
