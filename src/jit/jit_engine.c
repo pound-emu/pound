@@ -1,12 +1,22 @@
 #include "jit_engine.h"
-
 #include "log.h"
-
 #include <string.h>
 
 /// Maximum guest instructions Unicorn can execute before returning control to Ballistic.
 /// Keep this small to minimize state divergence.
 #define JIT_FALLBACK_INSTRUCTION_LIMIT 64
+
+static const int UNICORN_REGISTER_BATCH_IDS[32] = {
+    UC_ARM64_REG_X0,  UC_ARM64_REG_X1,  UC_ARM64_REG_X2,  UC_ARM64_REG_X3,  UC_ARM64_REG_X4,
+    UC_ARM64_REG_X5,  UC_ARM64_REG_X6,  UC_ARM64_REG_X7,  UC_ARM64_REG_X8,  UC_ARM64_REG_X9,
+    UC_ARM64_REG_X10, UC_ARM64_REG_X11, UC_ARM64_REG_X12, UC_ARM64_REG_X13, UC_ARM64_REG_X14,
+    UC_ARM64_REG_X15, UC_ARM64_REG_X16, UC_ARM64_REG_X17, UC_ARM64_REG_X18, UC_ARM64_REG_X19,
+    UC_ARM64_REG_X20, UC_ARM64_REG_X21, UC_ARM64_REG_X22, UC_ARM64_REG_X23, UC_ARM64_REG_X24,
+    UC_ARM64_REG_X25, UC_ARM64_REG_X26, UC_ARM64_REG_X27, UC_ARM64_REG_X28, UC_ARM64_REG_X29,
+    UC_ARM64_REG_X30, UC_ARM64_REG_PC,
+};
+
+#define UNICORN_REGISTER_BATCH_COUNT 32
 
 static void           engine_thread_entry(void *POUND_RESTRICT engine);
 static pound_error_t  engine_run(jit_engine_t *POUND_RESTRICT engine);
@@ -16,6 +26,8 @@ static const uint8_t *ballistic_translate_guest_address(void               *cont
 
 POUND_COLD static pound_error_t unicorn_init(jit_engine_t *POUND_RESTRICT engine);
 POUND_COLD static void          unicorn_destroy(jit_engine_t *POUND_RESTRICT engine);
+POUND_HOT static pound_error_t  unicorn_load_state_from_ballistic(
+    jit_engine_t *POUND_RESTRICT engine);
 
 pound_error_t
 jit_engine_init(jit_engine_t *context, guest_memory_t *guest_memory, const uint32_t flags)
@@ -379,6 +391,19 @@ engine_run(jit_engine_t *engine)
                     return engine->status;
                 }
             }
+
+            const pound_error_t unicorn_load_state_error
+                = unicorn_load_state_from_ballistic(engine);
+
+            if (POUND_UNLIKELY(unicorn_load_state_error != POUND_SUCCESS))
+            {
+                POUND_LOG_ERROR(&thread_logger,
+                                "Aborting execution: failed to load state from "
+                                "Ballistic to Unicorn at PC=0x%llX.",
+                                (unsigned long long)fault_pc);
+                engine->status = unicorn_load_state_error;
+                return engine->status;
+            }
         }
     }
 }
@@ -472,4 +497,52 @@ unicorn_destroy(jit_engine_t *POUND_RESTRICT engine)
     uc_close(engine->unicorn_engine);
     engine->unicorn_engine      = NULL;
     engine->unicorn_initialized = false;
+}
+
+pound_error_t
+unicorn_load_state_from_ballistic(jit_engine_t *restrict engine)
+{
+    uc_engine *POUND_RESTRICT unicorn_engine = engine->unicorn_engine;
+
+    if (POUND_UNLIKELY(NULL == unicorn_engine))
+    {
+        POUND_LOG_ERROR(&thread_logger, "Aborting function: Unicorn engine is NULL.");
+        return POUND_ERROR_INVALID_ARGUMENT;
+    }
+
+    bal_cpu_t *POUND_RESTRICT ballistic_cpu = &engine->ballistic_cpu;
+    void                     *register_values[UNICORN_REGISTER_BATCH_COUNT] = { 0 };
+
+    for (int i = 0; i < UNICORN_REGISTER_BATCH_COUNT; ++i)
+    {
+        register_values[i] = (void *)&ballistic_cpu->x[i];
+    }
+
+    const uc_err read_batch_error = uc_reg_read_batch(
+        unicorn_engine, UNICORN_REGISTER_BATCH_IDS, register_values, UNICORN_REGISTER_BATCH_COUNT);
+
+    if (POUND_UNLIKELY(read_batch_error != UC_ERR_OK))
+    {
+        POUND_LOG_ERROR(&thread_logger,
+                        "Aborting function: uc_reg_read_batch() failed: %s.",
+                        uc_strerror(read_batch_error));
+        return POUND_ERROR_MEMORY_FAULT;
+    }
+
+    uint32_t     nzcv       = 0U;
+    const uc_err flag_error = uc_reg_read(unicorn_engine, UC_ARM64_REG_NZCV, &nzcv);
+
+    if (POUND_UNLIKELY(UC_ERR_OK != flag_error))
+    {
+        POUND_LOG_ERROR(&thread_logger,
+                        "Aborting function: uc_reg_read(NZCV) failed: %s.",
+                        uc_strerror(flag_error));
+        return POUND_ERROR_MEMORY_FAULT;
+    }
+
+    ballistic_cpu->flag_n = (uint8_t)((nzcv >> 31U) & 1U);
+    ballistic_cpu->flag_z = (uint8_t)((nzcv >> 30U) & 1U);
+    ballistic_cpu->flag_c = (uint8_t)((nzcv >> 29U) & 1U);
+    ballistic_cpu->flag_v = (uint8_t)((nzcv >> 28U) & 1U);
+    return POUND_SUCCESS;
 }
