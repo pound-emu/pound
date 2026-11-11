@@ -4,13 +4,18 @@
 
 #include <string.h>
 
+/// Maximum guest instructions Unicorn can execute before returning control to Ballistic.
+/// Keep this small to minimize state divergence.
+#define JIT_FALLBACK_INSTRUCTION_LIMIT 64
+
 static void           engine_thread_entry(void *POUND_RESTRICT engine);
 static pound_error_t  engine_run(jit_engine_t *POUND_RESTRICT engine);
 static const uint8_t *ballistic_translate_guest_address(void               *context,
                                                         bal_guest_address_t guest_address,
                                                         size_t             *max_readable);
 
-POUND_COLD static void unicorn_destroy(jit_engine_t *POUND_RESTRICT engine);
+POUND_COLD pound_error_t unicorn_init(jit_engine_t *POUND_RESTRICT engine);
+POUND_COLD static void   unicorn_destroy(jit_engine_t *POUND_RESTRICT engine);
 
 pound_error_t
 jit_engine_init(jit_engine_t *context, guest_memory_t *guest_memory, const uint32_t flags)
@@ -347,6 +352,34 @@ engine_run(jit_engine_t *engine)
             engine->status = POUND_SUCCESS;
             return engine->status;
         }
+
+        if (BAL_ERROR_UNKNOWN_INSTRUCTION == ballistic_result)
+        {
+            ++jit_stats->fallback_count;
+            const uint64_t fault_pc = ballistic_cpu->pc;
+
+            POUND_LOG_DEBUG(
+                &thread_logger,
+                "FALLBACK #%llu: Unknown instruction at PC=0x%llX, delegating to Unicorn"
+                ".",
+                (unsigned long long)jit_stats->fallback_count,
+                (unsigned long long)fault_pc);
+
+            if (POUND_UNLIKELY(false == engine->unicorn_initialized))
+            {
+                const pound_error_t unicorn_init_error = unicorn_init(engine);
+
+                if (POUND_UNLIKELY(false == engine->unicorn_initialized))
+                {
+                    POUND_LOG_ERROR(&thread_logger,
+                                    "Aborting function: Unicorn init failed at "
+                                    "PC=0x%llX.",
+                                    (unsigned long long)fault_pc);
+                    engine->status = unicorn_init_error;
+                    return engine->status;
+                }
+            }
+        }
     }
 }
 
@@ -381,6 +414,50 @@ ballistic_translate_guest_address(void                     *context,
     }
 
     return result;
+}
+
+pound_error_t
+unicorn_init(jit_engine_t *restrict engine)
+{
+    POUND_LOG_DEBUG(&thread_logger, "Initializing Unicorn engine...");
+    uc_engine   *unicorn_engine     = NULL;
+    const uc_err unicorn_open_error = uc_open(UC_ARCH_ARM64, UC_MODE_ARM, &unicorn_engine);
+
+    if (unicorn_open_error != UC_ERR_OK)
+    {
+        POUND_LOG_ERROR(&thread_logger,
+                        "Aborting function: uc_open() failed: %s.",
+                        uc_strerror(unicorn_open_error));
+        return POUND_ERROR_MEMORY_FAULT;
+    }
+
+    const uint64_t guest_base = engine->guest_memory->guest_base;
+    const size_t   host_size  = engine->guest_memory->host_size;
+    void          *host_base  = engine->guest_memory->host_base;
+
+    const uc_err unicorn_memory_map_ptr_error
+        = uc_mem_map_ptr(unicorn_engine, guest_base, host_size, UC_PROT_ALL, host_base);
+
+    if (unicorn_memory_map_ptr_error != UC_ERR_OK)
+    {
+        POUND_LOG_ERROR(&thread_logger,
+                        "Aborting function: uc_mem_map_ptr() failed: %s. "
+                        "guest_base=0x%llX, size=%zu.",
+                        uc_strerror(unicorn_memory_map_ptr_error),
+                        guest_base,
+                        host_size);
+        uc_close(unicorn_engine);
+        return POUND_ERROR_MEMORY_FAULT;
+    }
+
+    engine->unicorn_engine      = unicorn_engine;
+    engine->unicorn_initialized = true;
+    POUND_LOG_INFO(&thread_logger,
+                   "Unicorn initialized. Mapping %zu bytes at guest_base=0x%llX"
+                   ".",
+                   host_size,
+                   (unsigned long long)guest_base);
+    return POUND_SUCCESS;
 }
 
 POUND_COLD static void
