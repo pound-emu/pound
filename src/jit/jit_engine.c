@@ -14,8 +14,8 @@ static const uint8_t *ballistic_translate_guest_address(void               *cont
                                                         bal_guest_address_t guest_address,
                                                         size_t             *max_readable);
 
-POUND_COLD pound_error_t unicorn_init(jit_engine_t *POUND_RESTRICT engine);
-POUND_COLD static void   unicorn_destroy(jit_engine_t *POUND_RESTRICT engine);
+POUND_COLD static pound_error_t unicorn_init(jit_engine_t *POUND_RESTRICT engine);
+POUND_COLD static void          unicorn_destroy(jit_engine_t *POUND_RESTRICT engine);
 
 pound_error_t
 jit_engine_init(jit_engine_t *context, guest_memory_t *guest_memory, const uint32_t flags)
@@ -416,7 +416,7 @@ ballistic_translate_guest_address(void                     *context,
     return result;
 }
 
-pound_error_t
+static pound_error_t
 unicorn_init(jit_engine_t *restrict engine)
 {
     POUND_LOG_DEBUG(&thread_logger, "Initializing Unicorn engine...");
