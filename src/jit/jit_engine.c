@@ -442,6 +442,14 @@ engine_run(jit_engine_t *engine)
                             (unsigned long long)ballistic_cpu->pc);
             bal_engine_clear_cache(ballistic_engine);
         }
+
+        POUND_LOG_ERROR(&thread_logger,
+                        "Aborting function: Ballistic returned fatal error "
+                        "because %s at PC=0x%llX.",
+                        bal_error_to_string(ballistic_result),
+                        (unsigned long long)ballistic_cpu->pc);
+        engine->status = POUND_ERROR_MEMORY_FAULT;
+        return engine->status;
     }
 }
 
