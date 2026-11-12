@@ -59,4 +59,6 @@ POUND_COLD pound_error_t jit_engine_reset(jit_engine_t *POUND_RESTRICT engine);
 POUND_COLD void          jit_engine_destroy(jit_engine_t *POUND_RESTRICT engine);
 POUND_HOT jit_stats_t    jit_engine_get_stats(const jit_engine_t *POUND_RESTRICT engine);
 
+extern jit_engine_t g_jit_engine;
+
 #endif // POUND_JIT_DUAL_H

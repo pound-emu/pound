@@ -6,6 +6,8 @@
 /// Keep this small to minimize state divergence.
 #define JIT_FALLBACK_INSTRUCTION_LIMIT 64
 
+jit_engine_t g_jit_engine = {};
+
 static const int UNICORN_REGISTER_BATCH_IDS[32] = {
     UC_ARM64_REG_X0,  UC_ARM64_REG_X1,  UC_ARM64_REG_X2,  UC_ARM64_REG_X3,  UC_ARM64_REG_X4,
     UC_ARM64_REG_X5,  UC_ARM64_REG_X6,  UC_ARM64_REG_X7,  UC_ARM64_REG_X8,  UC_ARM64_REG_X9,
