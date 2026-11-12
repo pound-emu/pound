@@ -341,7 +341,7 @@ app_gui_init(app_t *app)
         return false;
     }
 
-    POUND_LOG_DEBUG(&thread_logger, "Configuring UI subsystem...");
+    POUND_LOG_DEBUG(&thread_logger, "Configuring GUI subsystem...");
     app->imgui_context = igCreateContext(NULL);
 
     if (NULL == app->imgui_context)
