@@ -28,6 +28,9 @@ POUND_COLD static pound_error_t unicorn_init(jit_engine_t *POUND_RESTRICT engine
 POUND_COLD static void          unicorn_destroy(jit_engine_t *POUND_RESTRICT engine);
 POUND_HOT static pound_error_t  unicorn_load_state_from_ballistic(
     jit_engine_t *POUND_RESTRICT engine);
+POUND_HOT static pound_error_t unicorn_save_state_to_ballistic(jit_engine_t *POUND_RESTRICT engine);
+POUND_HOT static pound_error_t unicorn_run(jit_engine_t *POUND_RESTRICT engine,
+                                           uint64_t                    *out_instructions_executed);
 
 pound_error_t
 jit_engine_init(jit_engine_t *context, guest_memory_t *guest_memory, const uint32_t flags)
@@ -404,6 +407,40 @@ engine_run(jit_engine_t *engine)
                 engine->status = unicorn_load_state_error;
                 return engine->status;
             }
+
+            uint64_t            unicorn_instructions = 0U;
+            const pound_error_t unicorn_run_error    = unicorn_run(engine, &unicorn_instructions);
+
+            if (POUND_UNLIKELY(unicorn_run_error != POUND_SUCCESS))
+            {
+                POUND_LOG_ERROR(&thread_logger,
+                                "Aborting function: Unicorn failed at PC=0x%llX.",
+                                (unsigned long long)fault_pc);
+                engine->status = unicorn_run_error;
+                return engine->status;
+            }
+
+            jit_stats->unicorn_instructions += unicorn_instructions;
+            const pound_error_t unicorn_save_state_error = unicorn_save_state_to_ballistic(engine);
+
+            if (POUND_UNLIKELY(unicorn_save_state_error != POUND_SUCCESS))
+            {
+                POUND_LOG_ERROR(&thread_logger,
+                                "Aborting function: failed to save Unicorn state "
+                                "to Ballistic. PC=0x%llX.",
+                                (unsigned long long)ballistic_cpu->pc);
+                engine->status = unicorn_save_state_error;
+                return engine->status;
+            }
+
+            ++jit_stats->resume_count;
+            POUND_LOG_DEBUG(&thread_logger,
+                            "RESUME #%llu: Unicorn executed %llu instructions. "
+                            "Resuming Ballistic at PC=0x%llX.",
+                            (unsigned long long)jit_stats->resume_count,
+                            (unsigned long long)unicorn_instructions,
+                            (unsigned long long)ballistic_cpu->pc);
+            bal_engine_clear_cache(ballistic_engine);
         }
     }
 }
@@ -510,6 +547,66 @@ unicorn_load_state_from_ballistic(jit_engine_t *restrict engine)
         return POUND_ERROR_INVALID_ARGUMENT;
     }
 
+    const bal_cpu_t *POUND_RESTRICT ballistic_cpu = &engine->ballistic_cpu;
+    const uc_err batch_error = uc_reg_write_batch(unicorn_engine,
+                                                  UNICORN_REGISTER_BATCH_IDS,
+                                                  (const void *const *)&ballistic_cpu->x[0],
+                                                  UNICORN_REGISTER_BATCH_COUNT);
+
+    if (POUND_UNLIKELY(batch_error != UC_ERR_OK))
+    {
+        POUND_LOG_ERROR(&thread_logger,
+                        "Aborting function: uc_reg_write_batch() failed: %s.",
+                        uc_strerror(batch_error));
+        return POUND_ERROR_MEMORY_FAULT;
+    }
+
+    uint32_t nzcv = 0U;
+
+    if (ballistic_cpu->flag_n)
+    {
+        nzcv |= 1U << 31;
+    }
+
+    if (ballistic_cpu->flag_z)
+    {
+        nzcv |= 1U << 30;
+    }
+
+    if (ballistic_cpu->flag_c)
+    {
+        nzcv |= 1U << 29;
+    }
+
+    if (ballistic_cpu->flag_v)
+    {
+        nzcv |= 1U << 28;
+    }
+
+    const uc_err flag_write_error = uc_reg_write(unicorn_engine, UC_ARM64_REG_NZCV, &nzcv);
+
+    if (POUND_UNLIKELY(flag_write_error != UC_ERR_OK))
+    {
+        POUND_LOG_ERROR(&thread_logger,
+                        "Aborting function: uc_reg_write(NZCV) failed: %s.",
+                        uc_strerror(flag_write_error));
+        return POUND_ERROR_MEMORY_FAULT;
+    }
+
+    return POUND_SUCCESS;
+}
+
+pound_error_t
+unicorn_save_state_to_ballistic(jit_engine_t *restrict engine)
+{
+    uc_engine *POUND_RESTRICT unicorn_engine = engine->unicorn_engine;
+
+    if (POUND_UNLIKELY(NULL == unicorn_engine))
+    {
+        POUND_LOG_ERROR(&thread_logger, "Aborting function: Unicorn engine is NULL.");
+        return POUND_ERROR_INVALID_ARGUMENT;
+    }
+
     bal_cpu_t *POUND_RESTRICT ballistic_cpu = &engine->ballistic_cpu;
     void                     *register_values[UNICORN_REGISTER_BATCH_COUNT] = { 0 };
 
@@ -544,5 +641,53 @@ unicorn_load_state_from_ballistic(jit_engine_t *restrict engine)
     ballistic_cpu->flag_z = (uint8_t)((nzcv >> 30U) & 1U);
     ballistic_cpu->flag_c = (uint8_t)((nzcv >> 29U) & 1U);
     ballistic_cpu->flag_v = (uint8_t)((nzcv >> 28U) & 1U);
+    return POUND_SUCCESS;
+}
+
+static pound_error_t
+unicorn_run(jit_engine_t *restrict engine, uint64_t *out_instructions_executed)
+{
+    if (POUND_UNLIKELY(NULL == out_instructions_executed))
+    {
+        POUND_LOG_ERROR(&thread_logger, "Aborting function: out_instructions_executed is NULL.");
+        return POUND_ERROR_INVALID_ARGUMENT;
+    }
+
+    uc_engine *POUND_RESTRICT unicorn_engine = engine->unicorn_engine;
+    bal_cpu_t *POUND_RESTRICT ballistic_cpu  = &engine->ballistic_cpu;
+    const uint64_t            start_pc       = ballistic_cpu->pc;
+    const uint64_t            guest_end      = engine->guest_memory->guest_end;
+
+    POUND_LOG_TRACE(&thread_logger,
+                    "Starting Unicorn Engine, PC=0x%llX, max_instructions=%d.",
+                    (unsigned long long)start_pc,
+                    JIT_FALLBACK_INSTRUCTION_LIMIT);
+
+    const uint64_t timeout   = 0U;
+    const uc_err   run_error = uc_emu_start(
+        unicorn_engine, start_pc, guest_end, timeout, JIT_FALLBACK_INSTRUCTION_LIMIT);
+
+    if (run_error != UC_ERR_OK)
+    {
+        uint64_t stopped_pc = 0U;
+        uc_reg_read(unicorn_engine, UC_ARM64_REG_PC, &stopped_pc);
+        POUND_LOG_ERROR(&thread_logger,
+                        "Aborting function: uc_emu_start() failed: %s. "
+                        "start_pc=0x%llX, stopped_pc=0x%llX.",
+                        uc_strerror(run_error),
+                        start_pc,
+                        stopped_pc);
+        *out_instructions_executed = 0U;
+        return POUND_ERROR_MEMORY_FAULT;
+    }
+
+    uint64_t end_pc = 0;
+    uc_reg_read(unicorn_engine, UC_ARM64_REG_PC, &end_pc);
+
+    // Precise counting requires a hook which is expensive.
+    *out_instructions_executed = JIT_FALLBACK_INSTRUCTION_LIMIT;
+    ballistic_cpu->pc          = end_pc;
+    POUND_LOG_TRACE(
+        &thread_logger, "Unicorn run completed: end_pc=0x%llX.", (unsigned long long)end_pc);
     return POUND_SUCCESS;
 }
