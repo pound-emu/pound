@@ -294,6 +294,8 @@ jit_engine_get_stats(const jit_engine_t *engine)
 void
 engine_thread_entry(void *engine)
 {
+    pound_logger_init_default();
+
     if (POUND_UNLIKELY(NULL == engine))
     {
         POUND_LOG_ERROR(&thread_logger, "Aborting function: engine is NULL.");
