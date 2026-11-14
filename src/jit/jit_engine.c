@@ -390,10 +390,10 @@ engine_run(jit_engine_t *engine)
                    "Starting JIT engine at PC 0x%llx.",
                    (unsigned long long)engine->ballistic_cpu.pc);
 
-    const bool *POUND_RESTRICT   stop_requested   = &engine->stop_requested;
-    bal_engine_t *POUND_RESTRICT ballistic_engine = &engine->ballistic_engine;
-    bal_cpu_t *POUND_RESTRICT    ballistic_cpu    = &engine->ballistic_cpu;
-    jit_stats_t *POUND_RESTRICT  jit_stats        = &engine->stats;
+    const volatile bool *POUND_RESTRICT stop_requested   = &engine->stop_requested;
+    bal_engine_t *POUND_RESTRICT        ballistic_engine = &engine->ballistic_engine;
+    const bal_cpu_t *POUND_RESTRICT     ballistic_cpu    = &engine->ballistic_cpu;
+    jit_stats_t *POUND_RESTRICT         jit_stats        = &engine->stats;
 
     while (false == (int)*stop_requested)
     {
@@ -495,6 +495,8 @@ engine_run(jit_engine_t *engine)
         engine->status = POUND_ERROR_MEMORY_FAULT;
         return engine->status;
     }
+
+    return engine->status;
 }
 
 static const uint8_t *
@@ -602,7 +604,7 @@ unicorn_load_state_from_ballistic(jit_engine_t *restrict engine)
     const bal_cpu_t *POUND_RESTRICT ballistic_cpu = &engine->ballistic_cpu;
     const uc_err batch_error = uc_reg_write_batch(unicorn_engine,
                                                   UNICORN_REGISTER_BATCH_IDS,
-                                                  (const void *const *)&ballistic_cpu->x[0],
+                                                  (void *const *)&ballistic_cpu->x[0],
                                                   UNICORN_REGISTER_BATCH_COUNT);
 
     if (POUND_UNLIKELY(batch_error != UC_ERR_OK))
