@@ -35,11 +35,13 @@ POUND_HOT static pound_error_t unicorn_run(jit_engine_t *POUND_RESTRICT engine,
                                            uint64_t                    *out_instructions_executed);
 
 pound_error_t
-jit_engine_init(jit_engine_t *context, guest_memory_t *guest_memory, const uint32_t flags)
+jit_engine_init(guest_memory_t *guest_memory, const uint32_t flags)
 {
-    if (POUND_UNLIKELY(NULL == context))
+    jit_engine_t *POUND_RESTRICT context = &g_jit_engine;
+
+    if (context->initialized)
     {
-        POUND_LOG_ERROR(&thread_logger, "Aborting function: context is NULL.");
+        POUND_LOG_ERROR(&thread_logger, "Aborting function: jit engine already initialized.");
         return POUND_ERROR_INVALID_ARGUMENT;
     }
 
@@ -103,8 +105,10 @@ jit_engine_init(jit_engine_t *context, guest_memory_t *guest_memory, const uint3
 }
 
 POUND_HOT pound_error_t
-jit_engine_start(jit_engine_t *POUND_RESTRICT engine)
+jit_engine_start(void)
 {
+    jit_engine_t *POUND_RESTRICT engine = &g_jit_engine;
+
     if (POUND_UNLIKELY(NULL == engine))
     {
         POUND_LOG_ERROR(&thread_logger, "Aborting function: engine is NULL.");
@@ -156,12 +160,20 @@ jit_engine_start(jit_engine_t *POUND_RESTRICT engine)
 }
 
 bool
-jit_engine_join(jit_engine_t *POUND_RESTRICT engine)
+jit_engine_join(void)
 {
+    jit_engine_t *POUND_RESTRICT engine = &g_jit_engine;
+
     if (POUND_UNLIKELY(NULL == engine))
     {
         POUND_LOG_ERROR(&thread_logger, "Aborting function: engine is NULL.");
-        return POUND_ERROR_INVALID_ARGUMENT;
+        return false;
+    }
+
+    if (POUND_UNLIKELY(false == engine->initialized))
+    {
+        POUND_LOG_ERROR(&thread_logger, "Aborting function: engine is not initialized.");
+        return false;
     }
 
     if (POUND_UNLIKELY(THREAD_ID_INVALID == engine->thread_id))
@@ -190,10 +202,18 @@ jit_engine_join(jit_engine_t *POUND_RESTRICT engine)
 }
 
 bool
-jit_engine_is_running(const jit_engine_t *engine)
+jit_engine_is_running(void)
 {
+    const jit_engine_t *POUND_RESTRICT engine = &g_jit_engine;
+
     if (POUND_UNLIKELY(NULL == engine))
     {
+        return false;
+    }
+
+    if (POUND_UNLIKELY(false == engine->initialized))
+    {
+        POUND_LOG_ERROR(&thread_logger, "Aborting function: engine is not initialized.");
         return false;
     }
 
@@ -201,11 +221,19 @@ jit_engine_is_running(const jit_engine_t *engine)
 }
 
 POUND_HOT void
-jit_engine_stop(jit_engine_t *POUND_RESTRICT engine)
+jit_engine_stop(void)
 {
+    jit_engine_t *POUND_RESTRICT engine = &g_jit_engine;
+
     if (POUND_UNLIKELY(NULL == engine))
     {
         POUND_LOG_ERROR(&thread_logger, "Aborting function: engine is NULL.");
+        return;
+    }
+
+    if (POUND_UNLIKELY(false == engine->initialized))
+    {
+        POUND_LOG_ERROR(&thread_logger, "Aborting function: engine is not initialized.");
         return;
     }
 
@@ -220,8 +248,10 @@ jit_engine_stop(jit_engine_t *POUND_RESTRICT engine)
 }
 
 POUND_COLD pound_error_t
-jit_engine_reset(jit_engine_t *POUND_RESTRICT engine)
+jit_engine_reset(void)
 {
+    jit_engine_t *POUND_RESTRICT engine = &g_jit_engine;
+
     if (POUND_UNLIKELY(NULL == engine))
     {
         POUND_LOG_ERROR(&thread_logger, "Aborting function: engine is NULL.");
@@ -252,8 +282,10 @@ jit_engine_reset(jit_engine_t *POUND_RESTRICT engine)
 }
 
 POUND_COLD void
-jit_engine_destroy(jit_engine_t *engine)
+jit_engine_destroy(void)
 {
+    jit_engine_t *POUND_RESTRICT engine = &g_jit_engine;
+
     if (POUND_UNLIKELY(NULL == engine))
     {
         POUND_LOG_ERROR(&thread_logger, "Aborting function: engine is NULL.");
@@ -277,16 +309,24 @@ jit_engine_destroy(jit_engine_t *engine)
     unicorn_destroy(engine);
     bal_engine_destroy(&engine->ballistic_engine);
     (void)memset(engine, 0, sizeof(jit_engine_t));
-    POUND_LOG_DEBUG(&thread_logger, "JIT engine destoryed.");
+    POUND_LOG_DEBUG(&thread_logger, "JIT engine destroyed.");
 }
 
 POUND_HOT jit_stats_t
-jit_engine_get_stats(const jit_engine_t *engine)
+jit_engine_get_stats(void)
 {
+    const jit_engine_t *POUND_RESTRICT engine = &g_jit_engine;
+    const jit_stats_t                  empty  = { 0 };
+
     if (POUND_UNLIKELY(NULL == engine))
     {
         POUND_LOG_ERROR(&thread_logger, "Aborting function: engine is NULL.");
-        const jit_stats_t empty = { 0 };
+        return empty;
+    }
+
+    if (POUND_UNLIKELY(false == engine->initialized))
+    {
+        POUND_LOG_ERROR(&thread_logger, "Aborting function: engine is not initialized.");
         return empty;
     }
 

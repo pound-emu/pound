@@ -43,21 +43,20 @@ POUND_ALIGNED(64) typedef struct
     jit_stats_t   stats;
 } jit_engine_t;
 
-POUND_COLD pound_error_t jit_engine_init(jit_engine_t *POUND_RESTRICT   context,
-                                         guest_memory_t *POUND_RESTRICT guest_memory,
+POUND_COLD pound_error_t jit_engine_init(guest_memory_t *POUND_RESTRICT guest_memory,
                                          uint32_t                       flags);
 
-POUND_HOT pound_error_t jit_engine_start(jit_engine_t *POUND_RESTRICT engine);
+POUND_HOT pound_error_t jit_engine_start(void);
 
-POUND_COLD bool jit_engine_join(jit_engine_t *POUND_RESTRICT engine);
-POUND_HOT bool  jit_engine_is_running(const jit_engine_t *POUND_RESTRICT engine);
+POUND_COLD bool jit_engine_join(void);
+POUND_HOT bool  jit_engine_is_running(void);
 
 // Thread Safe.
-POUND_HOT void jit_engine_stop(jit_engine_t *POUND_RESTRICT engine);
+POUND_HOT void jit_engine_stop(void);
 
-POUND_COLD pound_error_t jit_engine_reset(jit_engine_t *POUND_RESTRICT engine);
-POUND_COLD void          jit_engine_destroy(jit_engine_t *POUND_RESTRICT engine);
-POUND_HOT jit_stats_t    jit_engine_get_stats(const jit_engine_t *POUND_RESTRICT engine);
+POUND_COLD pound_error_t jit_engine_reset(void);
+POUND_COLD void          jit_engine_destroy(void);
+POUND_HOT jit_stats_t    jit_engine_get_stats(void);
 
 extern jit_engine_t g_jit_engine;
 

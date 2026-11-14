@@ -78,10 +78,9 @@ main(void)
         return EXIT_FAILURE;
     }
 
-    jit_engine_t   jit_engine   = { 0 };
     const uint32_t engine_flags = 0x0U;
 
-    if (POUND_UNLIKELY(POUND_SUCCESS != jit_engine_init(&jit_engine, &guest_memory, engine_flags)))
+    if (POUND_UNLIKELY(POUND_SUCCESS != jit_engine_init(&guest_memory, engine_flags)))
     {
         POUND_LOG_ERROR(&thread_logger, "Aborting process: jit_engine_init failed.");
         (void)guest_memory_destroy(&guest_memory);
@@ -89,7 +88,7 @@ main(void)
         return EXIT_FAILURE;
     }
 
-    jit_engine_start(&jit_engine);
+    jit_engine_start();
 
     (void)memory_subsystem_set_bucket(MEMORY_BUCKET_UI);
 
@@ -163,9 +162,9 @@ main(void)
     app_gui_shutdown(&app);
     app_video_shutdown(&app);
 
-    jit_engine_stop(&jit_engine);
-    jit_engine_join(&jit_engine);
-    jit_engine_destroy(&jit_engine);
+    jit_engine_stop();
+    jit_engine_join();
+    jit_engine_destroy();
     guest_memory_destroy(&guest_memory);
     memory_subsystem_destroy();
     SDL_Quit();
