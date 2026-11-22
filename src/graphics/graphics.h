@@ -8,6 +8,14 @@
 #include <stdint.h>
 #include <vulkan/vulkan.h>
 
+/// THIS GRAPHICS SUBSYSTEM IS BEING DESIGNED AROUND 4GB VRAM.
+
+// Keep at 2 for the VRAM target.
+#define GRAPHICS_FRAMES_IN_FLIGHT 2
+
+/// Upper bound on acquired swapchain images.
+#define GRAPHICS_SWAPCHAIN_IMAGE_CAPACITY 8
+
 typedef struct
 {
     const char *window_title;
@@ -90,6 +98,10 @@ POUND_ALIGNED(64) typedef struct
     bool          initialized;
     char          pad1[11];
     // -------------------------------------
+
+    graphics_capabilities_t    capabilities;
+    graphics_frame_t           frames[GRAPHICS_FRAMES_IN_FLIGHT];
+    graphics_swapchain_image_t swapchain_images[GRAPHICS_SWAPCHAIN_IMAGE_CAPACITY];
 } graphics_state_t;
 
 static_assert(64 == sizeof(graphics_capabilities_t), "Struct size mismatch");
