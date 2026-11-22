@@ -16,6 +16,7 @@ POUND_COLD static pound_error_t sdl_window_create(graphics_state_t *POUND_RESTRI
 POUND_COLD static pound_error_t vulkan_instance_create(graphics_state_t *POUND_RESTRICT state);
 POUND_COLD static pound_error_t vulkan_debug_messenger_create(
     graphics_state_t *POUND_RESTRICT state);
+POUND_COLD static pound_error_t vulkan_surface_create(graphics_state_t *POUND_RESTRICT state);
 POUND_COLD static bool vulkan_is_graphics_layer_available(const char *POUND_RESTRICT layer_name);
 
 static VKAPI_ATTR VkBool32 VKAPI_CALL
@@ -212,6 +213,28 @@ vulkan_debug_messenger_create(graphics_state_t *restrict state)
                         (int)result);
         state->debug_messenger = NULL;
         state->status          = POUND_ERROR_GRAPHICS_INIT_FAILED;
+        return state->status;
+    }
+
+    return state->status;
+}
+
+POUND_COLD static pound_error_t
+vulkan_surface_create(graphics_state_t *restrict state)
+{
+    if (state->status != POUND_SUCCESS)
+    {
+        POUND_LOG_ERROR(&thread_logger, "Aborting function: state->status != POUND_SUCCESS.");
+        return state->status;
+    }
+
+    if (false == SDL_Vulkan_CreateSurface(state->window, state->instance, NULL, &state->surface))
+    {
+        POUND_LOG_ERROR(&thread_logger,
+                        "Aborting function: SDL_Vulkan_CreateSurface failed because %s.",
+                        SDL_GetError());
+        state->surface = NULL;
+        state->status  = POUND_ERROR_GRAPHICS_INIT_FAILED;
         return state->status;
     }
 

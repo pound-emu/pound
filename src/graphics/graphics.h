@@ -105,6 +105,7 @@ POUND_ALIGNED(64) typedef struct
     graphics_swapchain_image_t swapchain_images[GRAPHICS_SWAPCHAIN_IMAGE_CAPACITY];
 
     VkInstance               instance;
+    VkSurfaceKHR             surface;
     VkDebugUtilsMessengerEXT debug_messenger;
     SDL_Window              *window;
 } graphics_state_t;
