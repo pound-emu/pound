@@ -67,6 +67,8 @@ POUND_ALIGNED(64) typedef struct
 
 static_assert(64 == sizeof(graphics_capabilities_t), "Struct size mismatch");
 
+extern graphics_state_t g_graphics_state;
+
 POUND_COLD pound_error_t graphics_subsystem_init(const graphics_config_t *POUND_RESTRICT config);
 
 #endif // POUND_GRAPHICS_H
