@@ -22,6 +22,7 @@ POUND_COLD static pound_error_t vulkan_surface_create(graphics_state_t *POUND_RE
 POUND_COLD static pound_error_t vulkan_physical_device_select(
     graphics_state_t *POUND_RESTRICT state);
 POUND_COLD static pound_error_t vulkan_device_create(graphics_state_t *POUND_RESTRICT state);
+POUND_COLD static pound_error_t vulkan_frame_objects_create(graphics_state_t *POUND_RESTRICT state);
 POUND_COLD static bool vulkan_is_graphics_layer_available(const char *POUND_RESTRICT layer_name);
 POUND_COLD static bool vulkan_is_device_extension_supported(VkPhysicalDevice           device,
                                                             const char *POUND_RESTRICT name);
@@ -532,6 +533,80 @@ vulkan_device_create(graphics_state_t *restrict state)
         state->command_pool = NULL;
         state->status       = POUND_ERROR_GRAPHICS_INIT_FAILED;
         return state->status;
+    }
+
+    return state->status;
+}
+
+POUND_COLD static pound_error_t
+vulkan_frame_objects_create(graphics_state_t *restrict state)
+{
+    if (state->status != POUND_SUCCESS)
+    {
+        POUND_LOG_ERROR(&thread_logger, "Aborting function: state->status != POUND_SUCCESS.");
+        return state->status;
+    }
+
+    VkCommandBufferAllocateInfo allocate_info = { 0 };
+    allocate_info.sType                       = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+    allocate_info.commandPool                 = state->command_pool;
+    allocate_info.level                       = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+    allocate_info.commandBufferCount          = 1;
+
+    VkFenceCreateInfo fence_info = { 0 };
+    fence_info.sType             = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+    // Signaled so the very first begin_frame wait succeeds immediately.
+    fence_info.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+
+    VkSemaphoreCreateInfo semaphore_info          = { 0 };
+    semaphore_info.sType                          = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+    graphics_frame_t *POUND_RESTRICT frame_cursor = state->frames;
+
+    for (uint32_t i = 0; i < GRAPHICS_FRAMES_IN_FLIGHT; ++i)
+    {
+        VkResult result = vkAllocateCommandBuffers(
+            state->device, &allocate_info, &frame_cursor->command_buffer);
+
+        if (result != VK_SUCCESS)
+        {
+            POUND_LOG_ERROR(&thread_logger,
+                            "Aborting function: vkAllocateCommandBuffers() returned %d for frame "
+                            "%u.",
+                            (int)result,
+                            i);
+            frame_cursor->command_buffer = NULL;
+            state->status                = POUND_ERROR_GRAPHICS_INIT_FAILED;
+            return state->status;
+        }
+
+        result = vkCreateFence(state->device, &fence_info, NULL, &frame_cursor->in_flight_fence);
+
+        if (result != VK_SUCCESS)
+        {
+            POUND_LOG_ERROR(&thread_logger,
+                            "Aborting function: vkCreateFence() returned %d for frame %u.",
+                            (int)result,
+                            i);
+            frame_cursor->in_flight_fence = NULL;
+            state->status                 = POUND_ERROR_GRAPHICS_INIT_FAILED;
+            return state->status;
+        }
+
+        result = vkCreateSemaphore(
+            state->device, &semaphore_info, NULL, &frame_cursor->image_available_semaphore);
+
+        if (result != VK_SUCCESS)
+        {
+            POUND_LOG_ERROR(&thread_logger,
+                            "Aborting function: vkCreateSemaphore() returned %d for frame %u.",
+                            (int)result,
+                            i);
+            frame_cursor->image_available_semaphore = NULL;
+            state->status                           = POUND_ERROR_GRAPHICS_INIT_FAILED;
+            return state->status;
+        }
+
+        ++frame_cursor;
     }
 
     return state->status;
