@@ -51,6 +51,17 @@ POUND_ALIGNED(64) typedef struct
 
 static_assert(64 == sizeof(graphics_frame_t), "Struct size mismatch");
 
+POUND_ALIGNED(64) typedef struct
+{
+    VkImage       image;
+    VkImageView   image_view;
+    VkFramebuffer framebuffer;
+    VkSemaphore   render_finished_semaphore;
+    char          pad[32];
+} graphics_swapchain_image_t;
+
+static_assert(64 == sizeof(graphics_swapchain_image_t), "Struct size mismatch");
+
 typedef enum
 {
     GRAPHICS_STATE_FLAG_NONE            = 0,
