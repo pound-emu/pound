@@ -68,6 +68,7 @@ endif ()
 # -----------------------------------------------------------------------------
 
 include(Ballistic)
+find_package(Vulkan REQUIRED)
 
 message(STATUS "[Mimalloc] Configuring Mimalloc...")
 set(MI_OVERRIDE OFF CACHE BOOL "" FORCE)
