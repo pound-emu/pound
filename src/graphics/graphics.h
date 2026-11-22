@@ -35,6 +35,36 @@ POUND_ALIGNED(64) typedef struct
     char     pad[12];
 } graphics_capabilities_t;
 
+typedef enum
+{
+    GRAPHICS_STATE_FLAG_NONE            = 0,
+    GRAPHICS_STATE_FLAG_FRAME_ACTIVE    = 1U << 0,
+    GRAPHICS_STATE_FLAG_SWAPCHAIN_DIRTY = 1U << 1,
+    GRAPHICS_STATE_FLAG_MINIMIZED       = 1U << 2,
+    GRAPHICS_STATE_FLAG_VALIDATION      = 1U << 3,
+    GRAPHICS_STATE_FLAG_VSYNC           = 1U << 4,
+} graphics_state_flags_t;
+
+POUND_ALIGNED(64) typedef struct
+{
+    // -------------------------------------
+    // ONE CACHE LINE. THIS INFORMATION IS ACCESSED PER FRAME.
+    uint64_t frame_index;
+    uint64_t submit_count;
+    uint64_t present_count;
+    uint32_t current_frame_slot;
+    uint32_t drawable_width;
+    uint32_t drawable_height;
+    uint32_t swapchain_image_count;
+    /// Bitmask of [`graphics_state_flags_t`].
+    uint32_t      state_flags;
+    uint32_t      pad0;
+    pound_error_t status;
+    bool          initialized;
+    char          pad1[11];
+    // -------------------------------------
+} graphics_state_t;
+
 static_assert(64 == sizeof(graphics_capabilities_t), "Struct size mismatch");
 
 POUND_COLD pound_error_t graphics_subsystem_init(const graphics_config_t *POUND_RESTRICT config);
