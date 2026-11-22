@@ -1,6 +1,7 @@
 #ifndef POUND_GRAPHICS_H
 #define POUND_GRAPHICS_H
 
+#include "SDL3/SDL_video.h"
 #include "attributes.h"
 #include "errors.h"
 #include <assert.h>
@@ -102,6 +103,8 @@ POUND_ALIGNED(64) typedef struct
     graphics_capabilities_t    capabilities;
     graphics_frame_t           frames[GRAPHICS_FRAMES_IN_FLIGHT];
     graphics_swapchain_image_t swapchain_images[GRAPHICS_SWAPCHAIN_IMAGE_CAPACITY];
+
+    SDL_Window *window;
 } graphics_state_t;
 
 static_assert(64 == sizeof(graphics_capabilities_t), "Struct size mismatch");
