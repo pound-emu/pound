@@ -115,7 +115,11 @@ POUND_ALIGNED(64) typedef struct
 
     VkInstance               instance;
     VkPhysicalDevice         physical_device;
+    VkDevice                 device;
     VkSurfaceKHR             surface;
+    VkQueue                  graphics_queue;
+    VkQueue                  present_queue;
+    VkCommandPool            command_pool;
     VkDebugUtilsMessengerEXT debug_messenger;
     SDL_Window              *window;
     char                     device_name[GRAPHICS_DEVICE_NAME_CAPACITY];

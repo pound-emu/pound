@@ -21,6 +21,7 @@ POUND_COLD static pound_error_t vulkan_debug_messenger_create(
 POUND_COLD static pound_error_t vulkan_surface_create(graphics_state_t *POUND_RESTRICT state);
 POUND_COLD static pound_error_t vulkan_physical_device_select(
     graphics_state_t *POUND_RESTRICT state);
+POUND_COLD static pound_error_t vulkan_device_create(graphics_state_t *POUND_RESTRICT state);
 POUND_COLD static bool vulkan_is_graphics_layer_available(const char *POUND_RESTRICT layer_name);
 POUND_COLD static bool vulkan_is_device_extension_supported(VkPhysicalDevice           device,
                                                             const char *POUND_RESTRICT name);
@@ -443,6 +444,96 @@ vulkan_physical_device_select(graphics_state_t *restrict state)
         state->capabilities.graphics_queue_family,
         state->capabilities.present_queue_family,
         (unsigned long long)(state->capabilities.device_local_heap_bytes / (1024ULL * 1024ULL)));
+    return state->status;
+}
+
+POUND_COLD pound_error_t
+vulkan_device_create(graphics_state_t *restrict state)
+{
+    if (state->status != POUND_SUCCESS)
+    {
+        POUND_LOG_ERROR(&thread_logger, "Aborting function: state->status != POUND_SUCCESS.");
+        return state->status;
+    }
+
+    const float             priority = 1.0F;
+    VkDeviceQueueCreateInfo queue_infos[2];
+    (void)memset(queue_infos, 0, sizeof(queue_infos));
+
+    queue_infos[0].sType            = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+    queue_infos[0].queueFamilyIndex = state->capabilities.graphics_queue_family;
+    queue_infos[0].queueCount       = 1;
+    queue_infos[0].pQueuePriorities = &priority;
+    uint32_t queue_info_count       = 1;
+
+    if (state->capabilities.present_queue_family != state->capabilities.graphics_queue_family)
+    {
+        queue_infos[1].sType            = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+        queue_infos[1].queueFamilyIndex = state->capabilities.present_queue_family;
+        queue_infos[1].queueCount       = 1;
+        queue_infos[1].pQueuePriorities = &priority;
+        queue_info_count                = 2;
+    }
+
+    const char *extensions[2];
+    extensions[0]            = VK_KHR_SWAPCHAIN_EXTENSION_NAME;
+    uint32_t extension_count = 1U;
+
+    if ((state->capabilities.feature_flags & GRAPHICS_FEATURE_MEMORY_BUDGET) != 0)
+    {
+        extensions[extension_count++] = VK_EXT_MEMORY_BUDGET_EXTENSION_NAME;
+    }
+
+    VkDeviceCreateInfo create_info      = { 0 };
+    create_info.sType                   = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+    create_info.queueCreateInfoCount    = queue_info_count;
+    create_info.pQueueCreateInfos       = queue_infos;
+    create_info.enabledExtensionCount   = extension_count;
+    create_info.ppEnabledExtensionNames = extensions;
+    create_info.pEnabledFeatures        = NULL;
+
+    const VkResult result
+        = vkCreateDevice(state->physical_device, &create_info, NULL, &state->device);
+    if (POUND_UNLIKELY(result != VK_SUCCESS))
+    {
+        POUND_LOG_ERROR(
+            &thread_logger, "Aborting function: vkCreateDevice() returned %d.", (int)result);
+        state->device = NULL;
+        state->status = POUND_ERROR_GRAPHICS_INIT_FAILED;
+        return state->status;
+    }
+
+    vkGetDeviceQueue(
+        state->device, state->capabilities.graphics_queue_family, 0, &state->graphics_queue);
+    vkGetDeviceQueue(
+        state->device, state->capabilities.present_queue_family, 0, &state->present_queue);
+
+    if (NULL == state->graphics_queue || NULL == state->present_queue)
+    {
+        POUND_LOG_ERROR(&thread_logger,
+                        "Aborting function: vkGetDeviceQueue() returned a NULL queue.");
+        state->status = POUND_ERROR_GRAPHICS_INIT_FAILED;
+        return state->status;
+    }
+
+    VkCommandPoolCreateInfo pool_info = { 0 };
+    pool_info.sType                   = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+    pool_info.flags                   = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+    pool_info.queueFamilyIndex        = state->capabilities.graphics_queue_family;
+
+    const VkResult pool_result
+        = vkCreateCommandPool(state->device, &pool_info, NULL, &state->command_pool);
+
+    if (POUND_UNLIKELY(pool_result != VK_SUCCESS))
+    {
+        POUND_LOG_ERROR(&thread_logger,
+                        "Aborting function: vkCreateCommandPool returned %d.",
+                        (int)pool_result);
+        state->command_pool = NULL;
+        state->status       = POUND_ERROR_GRAPHICS_INIT_FAILED;
+        return state->status;
+    }
+
     return state->status;
 }
 
