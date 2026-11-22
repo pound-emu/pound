@@ -14,7 +14,15 @@ graphics_state_t g_graphics_state = { 0 };
 POUND_COLD static pound_error_t sdl_window_create(graphics_state_t *POUND_RESTRICT        state,
                                                   const graphics_config_t *POUND_RESTRICT config);
 POUND_COLD static pound_error_t vulkan_instance_create(graphics_state_t *POUND_RESTRICT state);
+POUND_COLD static pound_error_t vulkan_debug_messenger_create(
+    graphics_state_t *POUND_RESTRICT state);
 POUND_COLD static bool vulkan_is_graphics_layer_available(const char *POUND_RESTRICT layer_name);
+
+static VKAPI_ATTR VkBool32 VKAPI_CALL
+graphics_debug_callback(VkDebugUtilsMessageSeverityFlagBitsEXT      severity,
+                        VkDebugUtilsMessageTypeFlagsEXT             types,
+                        const VkDebugUtilsMessengerCallbackDataEXT *data,
+                        void                                       *user_data);
 
 POUND_COLD static pound_error_t
 sdl_window_create(graphics_state_t *POUND_RESTRICT        state,
@@ -166,6 +174,50 @@ vulkan_instance_create(graphics_state_t *restrict state)
     }
 }
 
+POUND_COLD static pound_error_t
+vulkan_debug_messenger_create(graphics_state_t *restrict state)
+{
+    if (state->status != POUND_SUCCESS)
+    {
+        POUND_LOG_ERROR(&thread_logger, "Aborting function: state->status != POUND_SUCCESS.");
+        return state->status;
+    }
+
+    const PFN_vkCreateDebugUtilsMessengerEXT create
+        = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(
+            state->instance, "vkCreateDebugUtilsMessengerEXT");
+
+    if (NULL == create)
+    {
+        POUND_LOG_ERROR(&thread_logger,
+                        "Aborting function: vkCreateDebugUtilsMessengerEXT could not be resolved.");
+        return state->status;
+    }
+
+    VkDebugUtilsMessengerCreateInfoEXT create_info = { 0 };
+    create_info.sType           = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
+    create_info.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT
+                                  | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
+    create_info.messageType     = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT
+                                  | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT
+                                  | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
+    create_info.pfnUserCallback = graphics_debug_callback;
+
+    const VkResult result = create(state->instance, &create_info, NULL, &state->debug_messenger);
+
+    if (result != VK_SUCCESS)
+    {
+        POUND_LOG_ERROR(&thread_logger,
+                        "Aborting function: vkCreateDebugUtilsMessengerEXT() returned %d.",
+                        (int)result);
+        state->debug_messenger = NULL;
+        state->status          = POUND_ERROR_GRAPHICS_INIT_FAILED;
+        return state->status;
+    }
+
+    return state->status;
+}
+
 POUND_COLD static bool
 vulkan_is_graphics_layer_available(const char *POUND_RESTRICT layer_name)
 {
@@ -226,4 +278,34 @@ vulkan_is_graphics_layer_available(const char *POUND_RESTRICT layer_name)
     memory_subsystem_free(layers);
     (void)memory_subsystem_set_bucket(bucket);
     return found;
+}
+
+VkBool32
+graphics_debug_callback(VkDebugUtilsMessageSeverityFlagBitsEXT      severity,
+                        VkDebugUtilsMessageTypeFlagsEXT             types,
+                        const VkDebugUtilsMessengerCallbackDataEXT *data,
+                        void                                       *user_data)
+{
+    (void)types;
+    (void)user_data;
+
+    if (NULL == data || NULL == data->pMessage)
+    {
+        return VK_FALSE;
+    }
+
+    if (0 != (severity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT))
+    {
+        POUND_LOG_ERROR(&thread_logger, "Vulkan validation: %s", data->pMessage);
+    }
+    else if (0 != (severity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT))
+    {
+        POUND_LOG_WARN(&thread_logger, "Vulkan validation: %s", data->pMessage);
+    }
+    else
+    {
+        POUND_LOG_DEBUG(&thread_logger, "Vulkan validation: %s", data->pMessage);
+    }
+
+    return VK_FALSE;
 }
