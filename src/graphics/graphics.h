@@ -6,6 +6,7 @@
 #include <assert.h>
 #include <stdbool.h>
 #include <stdint.h>
+#include <vulkan/vulkan.h>
 
 typedef struct
 {
@@ -34,6 +35,21 @@ POUND_ALIGNED(64) typedef struct
     uint32_t feature_flags;
     char     pad[12];
 } graphics_capabilities_t;
+
+static_assert(64 == sizeof(graphics_capabilities_t), "Struct size mismatch");
+
+POUND_ALIGNED(64) typedef struct
+{
+    VkCommandBuffer command_buffer;
+    VkFence         in_flight_fence;
+    VkSemaphore     image_available_semaphore;
+    uint64_t        submission_index;
+    uint32_t        image_index;
+    uint32_t        pad0;
+    char            pad[24];
+} graphics_frame_t;
+
+static_assert(64 == sizeof(graphics_frame_t), "Struct size mismatch");
 
 typedef enum
 {

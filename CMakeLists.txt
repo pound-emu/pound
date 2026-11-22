@@ -188,7 +188,7 @@ add_library(PoundGraphics STATIC
         src/graphics/graphics.c
 )
 target_include_directories(PoundGraphics PUBLIC src/core)
-target_link_libraries(PoundGraphics PUBLIC PoundCore)
+target_link_libraries(PoundGraphics PUBLIC PoundCore Vulkan::Vulkan)
 add_compiler_flags(PoundGraphics)
 add_linker_flags(PoundGraphics)
 add_sanitizers(PoundGraphics)
