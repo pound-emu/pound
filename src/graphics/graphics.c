@@ -4,11 +4,17 @@
 #include "SDL3/SDL_init.h"
 #include "SDL3/SDL_vulkan.h"
 #include "log.h"
+#include "memory/memory.h"
+
+#define GRAPHICS_MAX_INSTANCE_EXTENSIONS 64
+#define GRAPHICS_VALIDATION_LAYER_NAME   "VK_LAYER_KHRONOS_validation"
 
 graphics_state_t g_graphics_state = { 0 };
 
 POUND_COLD static pound_error_t sdl_window_create(graphics_state_t *POUND_RESTRICT        state,
                                                   const graphics_config_t *POUND_RESTRICT config);
+POUND_COLD static pound_error_t vulkan_instance_create(graphics_state_t *POUND_RESTRICT state);
+POUND_COLD static bool vulkan_is_graphics_layer_available(const char *POUND_RESTRICT layer_name);
 
 POUND_COLD static pound_error_t
 sdl_window_create(graphics_state_t *POUND_RESTRICT        state,
@@ -72,4 +78,152 @@ sdl_window_create(graphics_state_t *POUND_RESTRICT        state,
     state->drawable_height = (uint32_t)height;
     state->drawable_width  = (uint32_t)width;
     return state->status;
+}
+
+POUND_COLD static pound_error_t
+vulkan_instance_create(graphics_state_t *restrict state)
+{
+    if (state->status != POUND_SUCCESS)
+    {
+        POUND_LOG_ERROR(&thread_logger, "Aborting function: status->status != POUND_SUCCESS.");
+    }
+
+    uint32_t           sdl_count      = 0;
+    const char *const *sdl_extensions = SDL_Vulkan_GetInstanceExtensions(&sdl_count);
+
+    if (NULL == sdl_extensions)
+    {
+        POUND_LOG_ERROR(&thread_logger,
+                        "Aborting function: SDL_Vulkan_GetInstanceExtensions failed because %s.",
+                        SDL_GetError());
+        state->status = POUND_ERROR_GRAPHICS_INIT_FAILED;
+        return state->status;
+    }
+
+    if (sdl_count + 1U > GRAPHICS_MAX_INSTANCE_EXTENSIONS)
+    {
+        POUND_LOG_ERROR(&thread_logger,
+                        "Aborting function: SDL reported %u instance extensions, capacity is %d.",
+                        sdl_count,
+                        GRAPHICS_MAX_INSTANCE_EXTENSIONS);
+        state->status = POUND_ERROR_GRAPHICS_INIT_FAILED;
+        return state->status;
+    }
+
+    const char                 *extensions[GRAPHICS_MAX_INSTANCE_EXTENSIONS] = { 0 };
+    const char **POUND_RESTRICT extensions_cursor                            = extensions;
+
+    for (uint32_t i = 0; i < sdl_count; ++i)
+    {
+        *extensions_cursor++ = sdl_extensions[i];
+    }
+
+    uint32_t   extension_count = sdl_count;
+    const bool validation      = (1 != (state->state_flags & GRAPHICS_STATE_FLAG_VALIDATION));
+
+    if (validation)
+    {
+        if (false == vulkan_is_graphics_layer_available(GRAPHICS_VALIDATION_LAYER_NAME))
+        {
+            POUND_LOG_ERROR(&thread_logger,
+                            "Aborting function: validation was requested but %s is not installed.",
+                            GRAPHICS_VALIDATION_LAYER_NAME);
+            state->status = POUND_ERROR_GRAPHICS_INIT_FAILED;
+            return state->status;
+        }
+        *extensions_cursor++ = VK_EXT_DEBUG_UTILS_EXTENSION_NAME;
+        ++extension_count;
+
+        VkApplicationInfo application  = { 0 };
+        application.sType              = VK_STRUCTURE_TYPE_APPLICATION_INFO;
+        application.pApplicationName   = "Pound";
+        application.applicationVersion = VK_MAKE_API_VERSION(0, 0, 1, 0);
+        application.pEngineName        = "Pound";
+        application.engineVersion      = VK_MAKE_API_VERSION(0, 0, 1, 0);
+        application.apiVersion         = VK_API_VERSION_1_1;
+
+        VkInstanceCreateInfo create_info    = { 0 };
+        create_info.sType                   = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
+        create_info.pApplicationInfo        = &application;
+        create_info.enabledExtensionCount   = extension_count;
+        create_info.ppEnabledExtensionNames = extensions;
+        create_info.enabledLayerCount       = validation ? 1U : 0U;
+        create_info.ppEnabledLayerNames
+            = validation ? &(const char *) { GRAPHICS_VALIDATION_LAYER_NAME } : NULL;
+
+        const VkResult result = vkCreateInstance(&create_info, NULL, &state->instance);
+
+        if (POUND_UNLIKELY(VK_SUCCESS != result))
+        {
+            POUND_LOG_ERROR(
+                &thread_logger, "Aborting function: vkCreateInstance returned %d.", (int)result);
+            state->instance = NULL;
+            state->status   = POUND_ERROR_GRAPHICS_INIT_FAILED;
+            return state->status;
+        }
+
+        return state->status;
+    }
+}
+
+POUND_COLD static bool
+vulkan_is_graphics_layer_available(const char *POUND_RESTRICT layer_name)
+{
+    uint32_t count  = 0;
+    VkResult result = vkEnumerateInstanceLayerProperties(&count, NULL);
+
+    if (VK_SUCCESS != result)
+    {
+        POUND_LOG_ERROR(
+            &thread_logger, "vkEnumerateInstanceLayerProperties() returned %d.", (int)result);
+        return false;
+    }
+
+    if (0 == count)
+    {
+        false;
+    }
+
+    const memory_bucket_type_t previous_bucket
+        = memory_subsystem_set_bucket(MEMORY_BUCKET_GRAPHICS);
+    VkLayerProperties *POUND_RESTRICT layers
+        = memory_subsystem_allocate(8U, (size_t)count * sizeof(VkLayerProperties));
+    (void)memory_subsystem_set_bucket(previous_bucket);
+
+    if (NULL == layers)
+    {
+        POUND_LOG_ERROR(&thread_logger, "Failed to allocate %u VkLayerProperties entries.", count);
+        return false;
+    }
+
+    result = vkEnumerateInstanceLayerProperties(&count, layers);
+
+    if (VK_SUCCESS != result)
+    {
+        POUND_LOG_ERROR(
+            &thread_logger, "vkEnumerateInstanceLayerProperties returned %d.", (int)result);
+        const memory_bucket_type_t bucket = memory_subsystem_set_bucket(MEMORY_BUCKET_GRAPHICS);
+        memory_subsystem_free(layers);
+        (void)memory_subsystem_set_bucket(bucket);
+        return false;
+    }
+
+    bool                                    found         = false;
+    const VkLayerProperties *POUND_RESTRICT layers_cursor = layers;
+
+    for (uint32_t i = 0; i < count; ++i)
+    {
+        if (0 == strcmp(layers_cursor->layerName, layer_name))
+        {
+            found = true;
+            break;
+        }
+
+        ++layers_cursor;
+    }
+
+    const memory_bucket_type_t bucket = memory_subsystem_set_bucket(MEMORY_BUCKET_GRAPHICS);
+    memory_subsystem_free(layers);
+    (void)memory_subsystem_set_bucket(bucket);
+    return found;
 }
