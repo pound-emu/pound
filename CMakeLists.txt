@@ -183,6 +183,16 @@ add_compiler_flags(PoundJit)
 add_linker_flags(PoundJit)
 add_sanitizers(PoundJit)
 
+message(STATUS "[PoundGraphics] Configuring Pound Graphics Library...")
+add_library(PoundGraphics STATIC
+        src/graphics/graphics.c
+)
+target_include_directories(PoundGraphics PUBLIC src/core)
+target_link_libraries(PoundGraphics PUBLIC PoundCore)
+add_compiler_flags(PoundGraphics)
+add_linker_flags(PoundGraphics)
+add_sanitizers(PoundGraphics)
+
 message(STATUS "[PoundGUI] Configuring Pound GUI Library...")
 add_library(PoundGui SHARED
         src/gui/gui.c
