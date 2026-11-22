@@ -7,6 +7,8 @@
 #include "memory/memory.h"
 
 #define GRAPHICS_MAX_INSTANCE_EXTENSIONS 64
+#define GRAPHICS_MAX_PHYSICAL_DEVICES    8
+#define GRAPHICS_MAX_QUEUE_FAMILIES      32
 #define GRAPHICS_VALIDATION_LAYER_NAME   "VK_LAYER_KHRONOS_validation"
 
 graphics_state_t g_graphics_state = { 0 };
@@ -17,7 +19,11 @@ POUND_COLD static pound_error_t vulkan_instance_create(graphics_state_t *POUND_R
 POUND_COLD static pound_error_t vulkan_debug_messenger_create(
     graphics_state_t *POUND_RESTRICT state);
 POUND_COLD static pound_error_t vulkan_surface_create(graphics_state_t *POUND_RESTRICT state);
+POUND_COLD static pound_error_t vulkan_physical_device_select(
+    graphics_state_t *POUND_RESTRICT state);
 POUND_COLD static bool vulkan_is_graphics_layer_available(const char *POUND_RESTRICT layer_name);
+POUND_COLD static bool vulkan_is_device_extension_supported(VkPhysicalDevice           device,
+                                                            const char *POUND_RESTRICT name);
 
 static VKAPI_ATTR VkBool32 VKAPI_CALL
 graphics_debug_callback(VkDebugUtilsMessageSeverityFlagBitsEXT      severity,
@@ -241,6 +247,205 @@ vulkan_surface_create(graphics_state_t *restrict state)
     return state->status;
 }
 
+POUND_COLD static pound_error_t
+vulkan_physical_device_select(graphics_state_t *restrict state)
+{
+    uint32_t count  = 0U;
+    VkResult result = vkEnumeratePhysicalDevices(state->instance, &count, NULL);
+
+    if (result != VK_SUCCESS)
+    {
+        POUND_LOG_ERROR(&thread_logger,
+                        "Aborting function: vkEnumeratePhysicalDevices() returned %d.",
+                        (int)result);
+        state->status = POUND_ERROR_GRAPHICS_INIT_FAILED;
+        return state->status;
+    }
+
+    if (POUND_UNLIKELY(0 == count))
+    {
+        POUND_LOG_ERROR(&thread_logger,
+                        "Aborting function: no Vulkan physical devices were reported.");
+        state->status = POUND_ERROR_GRAPHICS_INIT_FAILED;
+        return state->status;
+    }
+
+    VkPhysicalDevice devices[GRAPHICS_MAX_PHYSICAL_DEVICES] = { 0 };
+
+    if (count > GRAPHICS_MAX_PHYSICAL_DEVICES)
+    {
+        POUND_LOG_WARN(&thread_logger,
+                       "Reported %u physical devices, only inspecting the first %d.",
+                       count,
+                       GRAPHICS_MAX_PHYSICAL_DEVICES);
+        count = GRAPHICS_MAX_PHYSICAL_DEVICES;
+    }
+
+    result = vkEnumeratePhysicalDevices(state->instance, &count, devices);
+
+    if (POUND_UNLIKELY(VK_SUCCESS != result))
+    {
+        POUND_LOG_ERROR(&thread_logger,
+                        "Aborting function: vkEnumeratePhysicalDevices returned %d.",
+                        (int)result);
+        state->status = POUND_ERROR_GRAPHICS_INIT_FAILED;
+        return state->status;
+    }
+
+    const VkPhysicalDevice *POUND_RESTRICT device_cursor                            = devices;
+    VkPhysicalDevice                       best_device                              = NULL;
+    uint32_t                               best_score                               = 0;
+    graphics_capabilities_t                best_capabilities                        = { 0 };
+    char                                   best_name[GRAPHICS_DEVICE_NAME_CAPACITY] = { 0 };
+
+    for (uint32_t i = 0; i < count; ++i)
+    {
+        const VkPhysicalDevice device       = *device_cursor;
+        uint32_t               family_count = 0U;
+        vkGetPhysicalDeviceQueueFamilyProperties(device, &family_count, NULL);
+
+        if (0 == family_count)
+        {
+            continue;
+        }
+
+        VkQueueFamilyProperties families[GRAPHICS_MAX_QUEUE_FAMILIES];
+
+        if (family_count > GRAPHICS_MAX_QUEUE_FAMILIES)
+        {
+            family_count = GRAPHICS_MAX_QUEUE_FAMILIES;
+        }
+
+        vkGetPhysicalDeviceQueueFamilyProperties(device, &family_count, families);
+
+        uint32_t graphics_family = UINT32_MAX;
+        uint32_t present_family  = UINT32_MAX;
+
+        const VkQueueFamilyProperties *POUND_RESTRICT family_cursor = families;
+
+        for (uint32_t f = 0; f < family_count; ++f)
+        {
+            const VkQueueFamilyProperties properties = *family_cursor;
+
+            if (UINT32_MAX == graphics_family
+                && (properties.queueFlags & VK_QUEUE_GRAPHICS_BIT) != 0)
+            {
+                graphics_family = f;
+            }
+
+            VkBool32       supported = VK_FALSE;
+            const VkResult present
+                = vkGetPhysicalDeviceSurfaceSupportKHR(device, f, state->surface, &supported);
+
+            if (VK_SUCCESS != present)
+            {
+                POUND_LOG_WARN(&thread_logger,
+                               "vkGetPhysicalDeviceSurfaceSupportKHR() returned %d for device %u "
+                               "family %u, skipping that family.",
+                               (int)present,
+                               i,
+                               f);
+                continue;
+            }
+
+            if (UINT32_MAX == present_family && VK_TRUE == supported)
+            {
+                present_family = f;
+            }
+        }
+
+        if (UINT32_MAX == graphics_family || UINT32_MAX == present_family)
+        {
+            continue;
+        }
+
+        if (false == vulkan_is_device_extension_supported(device, VK_KHR_SWAPCHAIN_EXTENSION_NAME))
+        {
+            continue;
+        }
+
+        uint32_t format_count = 0U;
+        result = vkGetPhysicalDeviceSurfaceFormatsKHR(device, state->surface, &format_count, NULL);
+
+        if (result != VK_SUCCESS || 0 == format_count)
+        {
+            continue;
+        }
+
+        VkPhysicalDeviceProperties properties = { 0 };
+        vkGetPhysicalDeviceProperties(device, &properties);
+
+        VkPhysicalDeviceMemoryProperties memory_properties = { 0 };
+        vkGetPhysicalDeviceMemoryProperties(device, &memory_properties);
+
+        uint64_t device_local = 0U;
+
+        for (uint32_t h = 0; h < memory_properties.memoryHeapCount; ++h)
+        {
+            if ((memory_properties.memoryHeaps[h].flags & VK_MEMORY_HEAP_DEVICE_LOCAL_BIT) != 0)
+            {
+                device_local += memory_properties.memoryHeaps[h].size;
+            }
+        }
+
+        // Prefer discrete GPUs, then larger device-local heaps.
+        uint32_t score
+            = (VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU == properties.deviceType) ? 1000000U : 0U;
+        score += (uint32_t)(device_local / (1024ULL * 1024ULL * 256ULL));
+
+        if (score <= best_score && NULL != best_device)
+        {
+            continue;
+        }
+
+        graphics_capabilities_t capabilities = { 0 };
+        capabilities.device_local_heap_bytes = device_local;
+        capabilities.minimum_uniform_buffer_alignment
+            = properties.limits.minUniformBufferOffsetAlignment;
+        capabilities.vendor_id                   = properties.vendorID;
+        capabilities.device_id                   = properties.deviceID;
+        capabilities.api_version                 = properties.apiVersion;
+        capabilities.max_image_dimension_2d      = properties.limits.maxImageDimension2D;
+        capabilities.max_memory_allocation_count = properties.limits.maxMemoryAllocationCount;
+        capabilities.graphics_queue_family       = graphics_family;
+        capabilities.present_queue_family        = present_family;
+        capabilities.feature_flags               = GRAPHICS_FEATURE_NONE;
+
+        if (vulkan_is_device_extension_supported(device, VK_EXT_MEMORY_BUDGET_EXTENSION_NAME)
+            == true)
+        {
+            capabilities.feature_flags |= GRAPHICS_FEATURE_MEMORY_BUDGET;
+        }
+
+        best_device       = device;
+        best_score        = score;
+        best_capabilities = capabilities;
+        (void)memcpy(best_name, properties.deviceName, GRAPHICS_DEVICE_NAME_CAPACITY);
+    }
+
+    if (NULL == best_device)
+    {
+        POUND_LOG_ERROR(&thread_logger,
+                        "Aborting function: no physical device supports graphics, presentation, "
+                        "and VK_KHR_swapchain.");
+        state->status = POUND_ERROR_GRAPHICS_INIT_FAILED;
+        return state->status;
+    }
+
+    state->physical_device = best_device;
+    state->capabilities    = best_capabilities;
+    (void)memcpy(state->device_name, best_name, GRAPHICS_DEVICE_NAME_CAPACITY);
+
+    POUND_LOG_INFO(
+        &thread_logger,
+        "Selected '%s': graphics family %u, present family %u, %llu MiB device-local.",
+        state->device_name,
+        state->capabilities.graphics_queue_family,
+        state->capabilities.present_queue_family,
+        (unsigned long long)(state->capabilities.device_local_heap_bytes / (1024ULL * 1024ULL)));
+    return state->status;
+}
+
 POUND_COLD static bool
 vulkan_is_graphics_layer_available(const char *POUND_RESTRICT layer_name)
 {
@@ -299,6 +504,69 @@ vulkan_is_graphics_layer_available(const char *POUND_RESTRICT layer_name)
 
     const memory_bucket_type_t bucket = memory_subsystem_set_bucket(MEMORY_BUCKET_GRAPHICS);
     memory_subsystem_free(layers);
+    (void)memory_subsystem_set_bucket(bucket);
+    return found;
+}
+
+POUND_COLD static bool
+vulkan_is_device_extension_supported(VkPhysicalDevice device, const char *restrict name)
+{
+    uint32_t count  = 0U;
+    VkResult result = vkEnumerateDeviceExtensionProperties(device, name, &count, NULL);
+
+    if (result != VK_SUCCESS)
+    {
+        POUND_LOG_ERROR(
+            &thread_logger, "vkEnumerateDeviceExtensionProperties() returned %d.", (int)result);
+        return false;
+    }
+
+    if (0 == count)
+    {
+        return false;
+    }
+
+    const memory_bucket_type_t previous_bucket
+        = memory_subsystem_set_bucket(MEMORY_BUCKET_GRAPHICS);
+    VkExtensionProperties *POUND_RESTRICT extensions
+        = memory_subsystem_allocate(8U, (size_t)count * sizeof(VkExtensionProperties));
+    (void)memory_subsystem_set_bucket(previous_bucket);
+
+    if (NULL == extensions)
+    {
+        POUND_LOG_ERROR(
+            &thread_logger, "Failed to allocate %u VkExtensionProperties entries.", count);
+        return false;
+    }
+
+    result = vkEnumerateDeviceExtensionProperties(device, NULL, &count, extensions);
+
+    if (result != VK_SUCCESS)
+    {
+        POUND_LOG_ERROR(
+            &thread_logger, "vkEnumerateDeviceExtensionProperties returned %d.", (int)result);
+        const memory_bucket_type_t bucket = memory_subsystem_set_bucket(MEMORY_BUCKET_GRAPHICS);
+        memory_subsystem_free(extensions);
+        (void)memory_subsystem_set_bucket(bucket);
+        return false;
+    }
+
+    bool                                        found            = false;
+    const VkExtensionProperties *POUND_RESTRICT extension_cursor = extensions;
+
+    for (uint32_t i = 0U; i < count; ++i)
+    {
+        if (0 == strcmp(extension_cursor->extensionName, name))
+        {
+            found = true;
+            break;
+        }
+
+        ++extension_cursor;
+    }
+
+    const memory_bucket_type_t bucket = memory_subsystem_set_bucket(MEMORY_BUCKET_GRAPHICS);
+    memory_subsystem_free(extensions);
     (void)memory_subsystem_set_bucket(bucket);
     return found;
 }

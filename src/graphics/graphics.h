@@ -17,6 +17,9 @@
 /// Upper bound on acquired swapchain images.
 #define GRAPHICS_SWAPCHAIN_IMAGE_CAPACITY 8
 
+/// VK_MAX_PHYSICAL_DEVICE_NAME_SIZE
+#define GRAPHICS_DEVICE_NAME_CAPACITY 256
+
 typedef struct
 {
     const char *window_title;
@@ -28,6 +31,12 @@ typedef struct
 } graphics_config_t;
 
 static_assert(24 == sizeof(graphics_config_t), "Struct size mismatch");
+
+typedef enum
+{
+    GRAPHICS_FEATURE_NONE          = 0,
+    GRAPHICS_FEATURE_MEMORY_BUDGET = 1U << 0, // <-- VK_EXT_memory_budget
+} graphics_feature_flags_t;
 
 POUND_ALIGNED(64) typedef struct
 {
@@ -105,9 +114,11 @@ POUND_ALIGNED(64) typedef struct
     graphics_swapchain_image_t swapchain_images[GRAPHICS_SWAPCHAIN_IMAGE_CAPACITY];
 
     VkInstance               instance;
+    VkPhysicalDevice         physical_device;
     VkSurfaceKHR             surface;
     VkDebugUtilsMessengerEXT debug_messenger;
     SDL_Window              *window;
+    char                     device_name[GRAPHICS_DEVICE_NAME_CAPACITY];
 } graphics_state_t;
 
 static_assert(64 == sizeof(graphics_capabilities_t), "Struct size mismatch");
