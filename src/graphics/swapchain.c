@@ -782,7 +782,6 @@ present_mode_select(graphics_state_t *POUND_RESTRICT state)
         POUND_LOG_ERROR(&thread_logger,
                         "Aborting function: vkGetPhysicalDeviceSurfacePresentModesKHR() returned "
                         "%d.",
-                        "%d.",
                         (int)result);
         state->status = POUND_ERROR_GRAPHICS_INIT_FAILED;
         return state->status;
