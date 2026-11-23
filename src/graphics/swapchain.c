@@ -1,7 +1,7 @@
 #include "swapchain.h"
 #include "log.h"
 
-#define GRAPHICS_MAX_SURFACE_FORMATS 32
+#define GRAPHICS_MAX_SURFACE_FORMATS 128
 #define GRAPHICS_MAX_PRESENT_MODES   8
 
 POUND_HOT static pound_error_t surface_format_select(graphics_state_t *POUND_RESTRICT state);
