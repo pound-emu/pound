@@ -260,6 +260,21 @@ graphics_subsystem_destroy(void)
     POUND_LOG_DEBUG(&thread_logger, "Graphics subsystem destroyed.");
 }
 
+POUND_HOT SDL_Window *
+graphics_subsystem_get_window(void)
+{
+    graphics_state_t *POUND_RESTRICT state = &g_graphics_state;
+
+    if (POUND_UNLIKELY(false == state->initialized))
+    {
+        POUND_LOG_ERROR(&thread_logger,
+                        "Aborting function: graphics subsystem is not initialized.");
+        return NULL;
+    }
+
+    return state->window;
+}
+
 POUND_COLD static pound_error_t
 sdl_window_create(graphics_state_t *POUND_RESTRICT        state,
                   const graphics_config_t *POUND_RESTRICT config)
