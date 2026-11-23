@@ -327,6 +327,261 @@ swapchain_destroy(graphics_state_t *POUND_RESTRICT state)
     state->swapchain_image_count = 0;
 }
 
+POUND_HOT pound_error_t
+graphics_subsystem_begin_frame(void)
+{
+    graphics_state_t *POUND_RESTRICT state = &g_graphics_state;
+
+    if (POUND_UNLIKELY(false == state->initialized))
+    {
+        POUND_LOG_ERROR(&thread_logger,
+                        "Aborting function: graphics subsystem is not initialized.");
+
+        state->status = POUND_ERROR_GRAPHICS_NOT_INITIALIZED;
+        return state->status;
+    }
+
+    if (POUND_UNLIKELY(state->status != POUND_SUCCESS))
+    {
+        POUND_LOG_ERROR(&thread_logger, "Aborting function: state->status != POUND_SUCCESS.");
+        return state->status;
+    }
+
+    if (POUND_UNLIKELY((state->state_flags & GRAPHICS_STATE_FLAG_FRAME_ACTIVE) != 0))
+    {
+        POUND_LOG_ERROR(&thread_logger,
+                        "Aborting function: a frame is already active, call end_frame first.");
+        state->status = POUND_ERROR_GRAPHICS_START_FRAME_FAILED;
+        return state->status;
+    }
+
+    if ((state->state_flags & GRAPHICS_STATE_FLAG_SWAPCHAIN_DIRTY) != 0)
+    {
+        const pound_error_t error = graphics_subsystem_recreate_swapchain();
+
+        if (POUND_UNLIKELY(error != POUND_SUCCESS))
+        {
+            return error;
+        }
+    }
+
+    if (POUND_UNLIKELY((state->state_flags & GRAPHICS_STATE_FLAG_MINIMIZED) != 0))
+    {
+        state->status = POUND_ERROR_GRAPHICS_ZERO_EXTENT;
+        return state->status;
+    }
+
+    if (POUND_UNLIKELY(NULL == state->swapchain))
+    {
+        POUND_LOG_ERROR(&thread_logger, "Aborting function: state->swapchain is NULL.");
+        return POUND_ERROR_GRAPHICS_NOT_INITIALIZED;
+    }
+
+    graphics_frame_t *POUND_RESTRICT frame = &state->frames[state->current_frame_slot];
+    VkResult                         result
+        = vkWaitForFences(state->device, 1, &frame->in_flight_fence, VK_TRUE, UINT64_MAX);
+
+    if (POUND_UNLIKELY(result != VK_SUCCESS))
+    {
+        POUND_LOG_ERROR(&thread_logger,
+                        "Aborting function: vkWaitForFences() returned %d on frame slot %u.",
+                        (int)result,
+                        state->current_frame_slot);
+        state->status = VK_ERROR_DEVICE_LOST == result ? POUND_ERROR_GRAPHICS_DEVICE_LOST
+                                                       : POUND_ERROR_GRAPHICS_FENCE_WAIT_FAILED;
+        return state->status;
+    }
+
+    uint32_t image_index = 0U;
+    result               = vkAcquireNextImageKHR(state->device,
+                                                 state->swapchain,
+                                                 UINT64_MAX,
+                                                 frame->image_available_semaphore,
+                                                 NULL,
+                                                 &image_index);
+
+    if (VK_ERROR_OUT_OF_DATE_KHR == result)
+    {
+        state->state_flags |= GRAPHICS_STATE_FLAG_SWAPCHAIN_DIRTY;
+        POUND_LOG_DEBUG(&thread_logger, "Swapchain out of date at acquire, skipping frame.");
+        return POUND_ERROR_GRAPHICS_SWAPCHAIN_OUT_OF_DATE;
+    }
+
+    if (VK_SUBOPTIMAL_KHR == result)
+    {
+        state->state_flags |= GRAPHICS_STATE_FLAG_SWAPCHAIN_DIRTY;
+        POUND_LOG_DEBUG(&thread_logger, "Swapchain is suboptimal at acquire, rendering anyway.");
+    }
+    else if (POUND_UNLIKELY(result != VK_SUCCESS))
+    {
+        POUND_LOG_ERROR(
+            &thread_logger, "Aborting function: vkAcquireNextImageKHR() returned %d.", (int)result);
+        state->status = VK_ERROR_DEVICE_LOST == result ? POUND_ERROR_GRAPHICS_DEVICE_LOST
+                                                       : POUND_ERROR_GRAPHICS_START_FRAME_FAILED;
+        return state->status;
+    }
+
+    if (POUND_UNLIKELY(image_index >= state->swapchain_image_count))
+    {
+        POUND_LOG_ERROR(&thread_logger,
+                        "Aborting function: acquired image index %u exceeds image count %u.",
+                        image_index,
+                        state->swapchain_image_count);
+        state->status = POUND_ERROR_GRAPHICS_IMAGE_ACQUIRE_FAILED;
+        return state->status;
+    }
+
+    // The fence is only reset after a successful acquire. If acquire fails the
+    // fence stays signaled, so the next begin_frame wait cannot deadlock.
+    result = vkResetFences(state->device, 1U, &frame->in_flight_fence);
+
+    if (POUND_UNLIKELY(result != VK_SUCCESS))
+    {
+        POUND_LOG_ERROR(
+            &thread_logger, "Aborting function: vkResetFences returned %d.", (int)result);
+        state->status = POUND_ERROR_GRAPHICS_FENCE_RESET_FAILED;
+        return state->status;
+    }
+
+    result = vkResetCommandBuffer(frame->command_buffer, 0U);
+
+    if (POUND_UNLIKELY(result != VK_SUCCESS))
+    {
+        POUND_LOG_ERROR(
+            &thread_logger, "Aborting function: vkResetCommandBuffer returned %d.", (int)result);
+        state->status = POUND_ERROR_GRAPHICS_COMMAND_BUFFER_RESET_FAILED;
+        return state->status;
+    }
+
+    VkCommandBufferBeginInfo begin_info = { 0 };
+    begin_info.sType                    = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+    begin_info.flags                    = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+    result = vkBeginCommandBuffer(frame->command_buffer, &begin_info);
+
+    if (POUND_UNLIKELY(result != VK_SUCCESS))
+    {
+        POUND_LOG_ERROR(
+            &thread_logger, "Aborting function: vkBeginCommandBuffer returned %d.", (int)result);
+        state->status = POUND_ERROR_GRAPHICS_COMMAND_BUFFER_BEGIN_FAILED;
+        return state->status;
+    }
+
+    VkClearValue clear     = { 0 };
+    clear.color.float32[0] = 0.06F;
+    clear.color.float32[1] = 0.06F;
+    clear.color.float32[2] = 0.06F;
+    clear.color.float32[3] = 1.0F;
+
+    VkRenderPassBeginInfo pass_info = { 0 };
+    pass_info.sType                 = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+    pass_info.renderPass            = state->render_pass;
+    pass_info.framebuffer           = state->swapchain_images[image_index].framebuffer;
+    pass_info.renderArea.offset     = (VkOffset2D) { .x = 0, .y = 0 };
+    pass_info.renderArea.extent     = state->swapchain_extent;
+    pass_info.clearValueCount       = 1;
+    pass_info.pClearValues          = &clear;
+
+    vkCmdBeginRenderPass(frame->command_buffer, &pass_info, VK_SUBPASS_CONTENTS_INLINE);
+
+    VkViewport viewport;
+    viewport.x        = 0.0F;
+    viewport.y        = 0.0F;
+    viewport.width    = (float)state->swapchain_extent.width;
+    viewport.height   = (float)state->swapchain_extent.height;
+    viewport.minDepth = 0.0F;
+    viewport.maxDepth = 1.0F;
+    vkCmdSetViewport(frame->command_buffer, 0, 1, &viewport);
+
+    VkRect2D scissor;
+    scissor.offset = (VkOffset2D) { .x = 0, .y = 0 };
+    scissor.extent = state->swapchain_extent;
+    vkCmdSetScissor(frame->command_buffer, 0, 1, &scissor);
+
+    frame->image_index = image_index;
+    state->state_flags |= GRAPHICS_STATE_FLAG_FRAME_ACTIVE;
+
+    ImGui_ImplVulkan_NewFrame();
+    ImGui_ImplSDL3_NewFrame();
+    igNewFrame();
+    return state->status;
+}
+
+POUND_HOT pound_error_t
+graphics_subsystem_recreate_swapchain(void)
+{
+    graphics_state_t *POUND_RESTRICT state = &g_graphics_state;
+
+    if (POUND_UNLIKELY(false == state->initialized))
+    {
+        POUND_LOG_ERROR(&thread_logger,
+                        "Aborting function: graphics subsystem is not initialized.");
+        state->status = POUND_ERROR_GRAPHICS_NOT_INITIALIZED;
+        return state->status;
+    }
+
+    if (POUND_UNLIKELY((state->state_flags & GRAPHICS_STATE_FLAG_FRAME_ACTIVE) != 0))
+    {
+        POUND_LOG_ERROR(&thread_logger,
+                        "Aborting function: cannot recreate the swapchain mid-frame.");
+        state->status = POUND_ERROR_GRAPHICS_START_FRAME_FAILED;
+        return state->status;
+    }
+
+    int width  = 0;
+    int height = 0;
+
+    if (false == SDL_GetWindowSizeInPixels(state->window, &width, &height))
+    {
+        POUND_LOG_ERROR(&thread_logger,
+                        "Aborting function: SDL_Vulkan_GetDrawableSize failed because %s.",
+                        SDL_GetError());
+        state->status = POUND_ERROR_GRAPHICS_START_FRAME_FAILED;
+        return state->status;
+    }
+
+    if (width <= 0 || height <= 0)
+    {
+        state->state_flags |= GRAPHICS_STATE_FLAG_MINIMIZED;
+        POUND_LOG_DEBUG(&thread_logger, "Window minimized, deferring swapchain recreation.");
+        state->status = POUND_ERROR_GRAPHICS_ZERO_EXTENT;
+        return state->status;
+    }
+
+    state->drawable_width  = (uint32_t)width;
+    state->drawable_height = (uint32_t)height;
+
+    const VkResult idle = vkDeviceWaitIdle(state->device);
+
+    if (POUND_UNLIKELY(idle != VK_SUCCESS))
+    {
+        POUND_LOG_ERROR(&thread_logger,
+                        "Aborting function: vkDeviceWaitIdle() returned %d before recreation.",
+                        (int)idle);
+        state->status = VK_ERROR_DEVICE_LOST == idle ? POUND_ERROR_GRAPHICS_DEVICE_LOST
+                                                     : POUND_ERROR_GRAPHICS_FENCE_WAIT_FAILED;
+        return state->status;
+    }
+
+    swapchain_destroy(state);
+
+    const pound_error_t error = swapchain_create(state);
+
+    if (POUND_UNLIKELY(error != POUND_SUCCESS))
+    {
+        return error;
+    }
+
+    ImGui_ImplVulkan_SetMinImageCount(state->swapchain_image_count);
+
+    POUND_LOG_DEBUG(&thread_logger,
+                    "Swapchain recreated at %ux%u with %u images.",
+                    state->swapchain_extent.width,
+                    state->swapchain_extent.height,
+                    state->swapchain_image_count);
+    return state->status;
+}
+
 POUND_HOT static pound_error_t
 surface_format_select(graphics_state_t *POUND_RESTRICT state)
 {

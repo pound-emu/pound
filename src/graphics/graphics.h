@@ -141,6 +141,10 @@ extern graphics_state_t g_graphics_state;
 
 POUND_COLD pound_error_t graphics_subsystem_init(const graphics_config_t *POUND_RESTRICT config);
 POUND_COLD void          graphics_subsystem_destroy(void);
-POUND_HOT SDL_Window    *graphics_subsystem_get_window(void);
+
+POUND_HOT pound_error_t graphics_subsystem_begin_frame(void);
+POUND_HOT pound_error_t graphics_subsystem_recreate_swapchain(void);
+
+POUND_HOT SDL_Window *graphics_subsystem_get_window(void);
 
 #endif // POUND_GRAPHICS_H
