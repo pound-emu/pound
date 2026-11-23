@@ -116,11 +116,16 @@ POUND_ALIGNED(64) typedef struct
     VkInstance               instance;
     VkPhysicalDevice         physical_device;
     VkDevice                 device;
+    VkSwapchainKHR           swapchain;
+    VkRenderPass             render_pass;
+    VkExtent2D               swapchain_extent;
     VkSurfaceKHR             surface;
+    VkSurfaceFormatKHR       surface_format;
     VkQueue                  graphics_queue;
     VkQueue                  present_queue;
     VkCommandPool            command_pool;
     VkDebugUtilsMessengerEXT debug_messenger;
+    VkPresentModeKHR         present_mode;
     SDL_Window              *window;
     char                     device_name[GRAPHICS_DEVICE_NAME_CAPACITY];
 } graphics_state_t;

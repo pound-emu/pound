@@ -186,9 +186,10 @@ add_sanitizers(PoundJit)
 message(STATUS "[PoundGraphics] Configuring Pound Graphics Library...")
 add_library(PoundGraphics STATIC
         src/graphics/graphics.c
+        src/graphics/swapchain.c
 )
 target_include_directories(PoundGraphics PUBLIC src/core)
-target_link_libraries(PoundGraphics PUBLIC PoundCore Vulkan::Vulkan SDL3::SDL3)
+target_link_libraries(PoundGraphics PUBLIC PoundCore Vulkan::Vulkan SDL3::SDL3 cimgui)
 add_compiler_flags(PoundGraphics)
 add_linker_flags(PoundGraphics)
 add_sanitizers(PoundGraphics)
