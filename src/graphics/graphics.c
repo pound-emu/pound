@@ -260,6 +260,55 @@ graphics_subsystem_destroy(void)
     POUND_LOG_DEBUG(&thread_logger, "Graphics subsystem destroyed.");
 }
 
+POUND_HOT bool
+graphics_subsystem_process_event(const SDL_Event *restrict event)
+{
+    const graphics_state_t *POUND_RESTRICT state = &g_graphics_state;
+
+    if (POUND_UNLIKELY(NULL == event))
+    {
+        POUND_LOG_ERROR(&thread_logger, "Aborting function: event is NULL.");
+        return false;
+    }
+
+    if (POUND_UNLIKELY(false == state->initialized))
+    {
+        return false;
+    }
+
+    return ImGui_ImplSDL3_ProcessEvent(event);
+}
+
+POUND_COLD pound_error_t
+graphics_subsystem_drain_pipeline(void)
+{
+    graphics_state_t *POUND_RESTRICT state = &g_graphics_state;
+
+    if (POUND_UNLIKELY(false == state->initialized))
+    {
+        POUND_LOG_ERROR(&thread_logger,
+                        "Aborting function: graphics subsystem is not initialized.");
+        return POUND_ERROR_GRAPHICS_NOT_INITIALIZED;
+    }
+
+    if (POUND_UNLIKELY(NULL == state->device))
+    {
+        POUND_LOG_ERROR(&thread_logger, "Aborting function: state->device is NULL.");
+        return POUND_ERROR_GRAPHICS_NOT_INITIALIZED;
+    }
+
+    const VkResult result = vkDeviceWaitIdle(state->device);
+
+    if (POUND_UNLIKELY(VK_SUCCESS != result))
+    {
+        POUND_LOG_ERROR(
+            &thread_logger, "Aborting function: vkDeviceWaitIdle returned %d.", (int)result);
+        state->status = VK_ERROR_DEVICE_LOST == result ? POUND_ERROR_GRAPHICS_DEVICE_LOST
+                                                       : POUND_ERROR_GRAPHICS_FENCE_WAIT_FAILED;
+        return state->status;
+    }
+}
+
 POUND_HOT SDL_Window *
 graphics_subsystem_get_window(void)
 {
