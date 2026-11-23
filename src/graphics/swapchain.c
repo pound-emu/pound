@@ -716,7 +716,7 @@ surface_format_select(graphics_state_t *POUND_RESTRICT state)
     result = vkGetPhysicalDeviceSurfaceFormatsKHR(
         state->physical_device, state->surface, &count, formats);
 
-    if (result == VK_SUCCESS)
+    if (result != VK_SUCCESS)
     {
         POUND_LOG_ERROR(&thread_logger,
                         "Aborting function: vkGetPhysicalDeviceSurfaceFormatsKHR() returned %d.",
