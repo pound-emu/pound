@@ -34,6 +34,7 @@ typedef enum
     // Graphics Errors
 
     POUND_ERROR_GRAPHICS_INIT_FAILED,
+    POUND_ERROR_GRAPHICS_ALREADY_INITIALIZED,
 } pound_error_t;
 
 #endif // POUND_ERRORS_H

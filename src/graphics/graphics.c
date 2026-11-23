@@ -5,6 +5,7 @@
 #include "SDL3/SDL_vulkan.h"
 #include "log.h"
 #include "memory/memory.h"
+#include "swapchain.h"
 
 #define GRAPHICS_MAX_INSTANCE_EXTENSIONS 64
 #define GRAPHICS_MAX_PHYSICAL_DEVICES    8
@@ -24,6 +25,7 @@ POUND_COLD static pound_error_t vulkan_physical_device_select(
     graphics_state_t *POUND_RESTRICT state);
 POUND_COLD static pound_error_t vulkan_device_create(graphics_state_t *POUND_RESTRICT state);
 POUND_COLD static pound_error_t vulkan_frame_objects_create(graphics_state_t *POUND_RESTRICT state);
+POUND_COLD static void vulkan_frame_objects_destroy(graphics_state_t *POUND_RESTRICT state);
 POUND_COLD static bool vulkan_is_graphics_layer_available(const char *POUND_RESTRICT layer_name);
 POUND_COLD static bool vulkan_is_device_extension_supported(VkPhysicalDevice           device,
                                                             const char *POUND_RESTRICT name);
@@ -33,6 +35,229 @@ graphics_debug_callback(VkDebugUtilsMessageSeverityFlagBitsEXT      severity,
                         VkDebugUtilsMessageTypeFlagsEXT             types,
                         const VkDebugUtilsMessengerCallbackDataEXT *data,
                         void                                       *user_data);
+
+POUND_COLD pound_error_t
+graphics_subsystem_init(const graphics_config_t *POUND_RESTRICT config)
+{
+    graphics_state_t *POUND_RESTRICT state = &g_graphics_state;
+
+    if (POUND_UNLIKELY(NULL == config))
+    {
+        POUND_LOG_ERROR(&thread_logger, "Aborting function: config is NULL.");
+        return POUND_ERROR_INVALID_ARGUMENT;
+    }
+
+    if (POUND_UNLIKELY(state->initialized))
+    {
+        POUND_LOG_ERROR(&thread_logger,
+                        "Aborting function: graphics system is already "
+                        "initialized.");
+        return POUND_ERROR_GRAPHICS_ALREADY_INITIALIZED;
+    }
+
+    if (POUND_UNLIKELY(0 == config->window_width || 0 == config->window_height))
+    {
+        POUND_LOG_ERROR(&thread_logger,
+                        "Aborting function: window size %ux%u must be non-zero.",
+                        config->window_width,
+                        config->window_height);
+        return POUND_ERROR_INVALID_ARGUMENT;
+    }
+
+    if (POUND_UNLIKELY(NULL == config->window_title))
+    {
+        POUND_LOG_ERROR(&thread_logger, "Aborting function: config->window_title is NULL.");
+        return POUND_ERROR_INVALID_ARGUMENT;
+    }
+
+    (void)memset(state, 0, sizeof(graphics_state_t));
+    state->status = POUND_SUCCESS;
+
+    if (config->enable_validation_layers)
+    {
+        state->state_flags |= GRAPHICS_STATE_FLAG_VALIDATION;
+    }
+
+    if (config->enable_fifo_vsync)
+    {
+        state->state_flags |= GRAPHICS_STATE_FLAG_VSYNC;
+    }
+
+    POUND_LOG_DEBUG(&thread_logger, "Configuring graphics subsystem...");
+
+    pound_error_t error = sdl_window_create(state, config);
+
+    if (POUND_UNLIKELY(POUND_SUCCESS != error))
+    {
+        graphics_subsystem_destroy();
+        return error;
+    }
+
+    error = vulkan_instance_create(state);
+    if (POUND_UNLIKELY(POUND_SUCCESS != error))
+    {
+        graphics_subsystem_destroy();
+        return error;
+    }
+
+    if ((state->state_flags & GRAPHICS_STATE_FLAG_VALIDATION) != 0)
+    {
+        error = vulkan_debug_messenger_create(state);
+
+        if (POUND_UNLIKELY(error != POUND_SUCCESS))
+        {
+            graphics_subsystem_destroy();
+            return error;
+        }
+    }
+
+    error = vulkan_surface_create(state);
+
+    if (POUND_UNLIKELY(error != POUND_SUCCESS))
+    {
+        graphics_subsystem_destroy();
+        return error;
+    }
+
+    error = vulkan_physical_device_select(state);
+
+    if (POUND_UNLIKELY(error != POUND_SUCCESS))
+    {
+        graphics_subsystem_destroy();
+        return error;
+    }
+
+    error = vulkan_device_create(state);
+
+    if (POUND_UNLIKELY(error != POUND_SUCCESS))
+    {
+        graphics_subsystem_destroy();
+        return error;
+    }
+
+    error = vulkan_frame_objects_create(state);
+
+    if (POUND_UNLIKELY(error != POUND_SUCCESS))
+    {
+        graphics_subsystem_destroy();
+        return error;
+    }
+
+    error = swapchain_create(state);
+
+    if (POUND_UNLIKELY(error != POUND_SUCCESS))
+    {
+        graphics_subsystem_destroy();
+        return error;
+    }
+
+    error = imgui_init(state);
+
+    if (POUND_UNLIKELY(error != POUND_SUCCESS))
+    {
+        graphics_subsystem_destroy();
+        return error;
+    }
+
+    state->initialized = true;
+    POUND_LOG_INFO(&thread_logger,
+                   "Successfully configured graphics subsystem on '%s' (%ux%u, %u images).",
+                   state->device_name,
+                   state->swapchain_extent.width,
+                   state->swapchain_extent.height,
+                   state->swapchain_image_count);
+    state->status = POUND_SUCCESS;
+    return state->status;
+}
+
+POUND_COLD void
+graphics_subsystem_destroy(void)
+{
+    graphics_state_t *POUND_RESTRICT state = &g_graphics_state;
+
+    if (state->device != NULL)
+    {
+        const VkResult result = vkDeviceWaitIdle(state->device);
+
+        if (POUND_UNLIKELY(result != VK_SUCCESS))
+        {
+            POUND_LOG_WARN(&thread_logger,
+                           "vkDeviceWaitIdle returned %d during shutdown, continuing.",
+                           (int)result);
+        }
+    }
+
+    if (state->imgui_context != NULL)
+    {
+        ImGui_ImplVulkan_Shutdown();
+        ImGui_ImplSDL3_Shutdown();
+        igDestroyContext(state->imgui_context);
+        state->imgui_context = NULL;
+    }
+
+    swapchain_destroy(state);
+
+    if (state->device != NULL && state->swapchain != NULL)
+    {
+        vkDestroySwapchainKHR(state->device, state->swapchain, NULL);
+        state->swapchain = NULL;
+    }
+
+    vulkan_frame_objects_destroy(state);
+
+    if (state->device != NULL && state->command_pool != NULL)
+    {
+        vkDestroyCommandPool(state->device, state->command_pool, NULL);
+        state->command_pool = NULL;
+    }
+
+    if (state->device != NULL)
+    {
+        vkDestroyDevice(state->device, NULL);
+        state->device = NULL;
+    }
+
+    if (state->instance != NULL && state->surface != NULL)
+    {
+        vkDestroySurfaceKHR(state->instance, state->surface, NULL);
+        state->surface = NULL;
+    }
+
+    if (state->instance != NULL && state->debug_messenger != NULL)
+    {
+        const PFN_vkDestroyDebugUtilsMessengerEXT destroy
+            = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(
+                state->instance, "vkDestroyDebugUtilsMessengerEXT");
+
+        if (destroy != NULL)
+        {
+            destroy(state->instance, state->debug_messenger, NULL);
+        }
+        else
+        {
+            POUND_LOG_WARN(&thread_logger,
+                           "vkDestroyDebugUtilsMessengerEXT() could not be resolved, leaking "
+                           "the messenger.");
+        }
+
+        state->debug_messenger = NULL;
+    }
+
+    if (state->instance != NULL)
+    {
+        vkDestroyInstance(state->instance, NULL);
+        state->instance = NULL;
+    }
+
+    if (state->window != NULL)
+    {
+        SDL_DestroyWindow(state->window);
+        state->window = NULL;
+    }
+
+    (void)memset(state, 0, sizeof(graphics_state_t));
+    POUND_LOG_DEBUG(&thread_logger, "Graphics subsystem destroyed.");
+}
 
 POUND_COLD static pound_error_t
 sdl_window_create(graphics_state_t *POUND_RESTRICT        state,
@@ -156,7 +381,7 @@ imgui_init(graphics_state_t *POUND_RESTRICT state)
 }
 
 POUND_COLD static pound_error_t
-vulkan_instance_create(graphics_state_t *restrict state)
+vulkan_instance_create(graphics_state_t *POUND_RESTRICT state)
 {
     if (state->status != POUND_SUCCESS)
     {
@@ -242,7 +467,7 @@ vulkan_instance_create(graphics_state_t *restrict state)
 }
 
 POUND_COLD static pound_error_t
-vulkan_debug_messenger_create(graphics_state_t *restrict state)
+vulkan_debug_messenger_create(graphics_state_t *POUND_RESTRICT state)
 {
     if (state->status != POUND_SUCCESS)
     {
@@ -286,7 +511,7 @@ vulkan_debug_messenger_create(graphics_state_t *restrict state)
 }
 
 POUND_COLD static pound_error_t
-vulkan_surface_create(graphics_state_t *restrict state)
+vulkan_surface_create(graphics_state_t *POUND_RESTRICT state)
 {
     if (state->status != POUND_SUCCESS)
     {
@@ -308,7 +533,7 @@ vulkan_surface_create(graphics_state_t *restrict state)
 }
 
 POUND_COLD static pound_error_t
-vulkan_physical_device_select(graphics_state_t *restrict state)
+vulkan_physical_device_select(graphics_state_t *POUND_RESTRICT state)
 {
     uint32_t count  = 0U;
     VkResult result = vkEnumeratePhysicalDevices(state->instance, &count, NULL);
@@ -507,7 +732,7 @@ vulkan_physical_device_select(graphics_state_t *restrict state)
 }
 
 POUND_COLD pound_error_t
-vulkan_device_create(graphics_state_t *restrict state)
+vulkan_device_create(graphics_state_t *POUND_RESTRICT state)
 {
     if (state->status != POUND_SUCCESS)
     {
@@ -597,7 +822,7 @@ vulkan_device_create(graphics_state_t *restrict state)
 }
 
 POUND_COLD static pound_error_t
-vulkan_frame_objects_create(graphics_state_t *restrict state)
+vulkan_frame_objects_create(graphics_state_t *POUND_RESTRICT state)
 {
     if (state->status != POUND_SUCCESS)
     {
@@ -670,6 +895,42 @@ vulkan_frame_objects_create(graphics_state_t *restrict state)
     return state->status;
 }
 
+void
+vulkan_frame_objects_destroy(graphics_state_t *POUND_RESTRICT state)
+{
+    if (NULL == state->device)
+    {
+        POUND_LOG_ERROR(&thread_logger, "Aborting function: state->device is NULL.");
+        return;
+    }
+
+    graphics_frame_t *POUND_RESTRICT frames_cursor = state->frames;
+
+    for (uint32_t i = 0; i < GRAPHICS_FRAMES_IN_FLIGHT; ++i)
+    {
+        if (frames_cursor->image_available_semaphore != NULL)
+        {
+            vkDestroySemaphore(state->device, frames_cursor->image_available_semaphore, NULL);
+            frames_cursor->image_available_semaphore = NULL;
+        }
+
+        if (frames_cursor->in_flight_fence != NULL)
+        {
+            vkDestroyFence(state->device, frames_cursor->in_flight_fence, NULL);
+            frames_cursor->in_flight_fence = NULL;
+        }
+
+        if (frames_cursor->command_buffer != NULL && state->command_pool != NULL)
+        {
+            vkFreeCommandBuffers(
+                state->device, state->command_pool, 1, &frames_cursor->command_buffer);
+            frames_cursor->command_buffer = NULL;
+        }
+
+        ++frames_cursor;
+    }
+}
+
 POUND_COLD static bool
 vulkan_is_graphics_layer_available(const char *POUND_RESTRICT layer_name)
 {
@@ -733,7 +994,7 @@ vulkan_is_graphics_layer_available(const char *POUND_RESTRICT layer_name)
 }
 
 POUND_COLD static bool
-vulkan_is_device_extension_supported(VkPhysicalDevice device, const char *restrict name)
+vulkan_is_device_extension_supported(VkPhysicalDevice device, const char *POUND_RESTRICT name)
 {
     uint32_t count  = 0U;
     VkResult result = vkEnumerateDeviceExtensionProperties(device, name, &count, NULL);
