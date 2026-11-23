@@ -9,6 +9,10 @@
 #include <stdint.h>
 #include <vulkan/vulkan.h>
 
+#define CIMGUI_DEFINE_ENUMS_AND_STRUCTS 1
+#include "cimgui.h"
+#include "cimgui_impl.h"
+
 /// THIS GRAPHICS SUBSYSTEM IS BEING DESIGNED AROUND 4GB VRAM.
 
 // Keep at 2 for the VRAM target.
@@ -127,6 +131,7 @@ POUND_ALIGNED(64) typedef struct
     VkDebugUtilsMessengerEXT debug_messenger;
     VkPresentModeKHR         present_mode;
     SDL_Window              *window;
+    ImGuiContext            *imgui_context;
     char                     device_name[GRAPHICS_DEVICE_NAME_CAPACITY];
 } graphics_state_t;
 

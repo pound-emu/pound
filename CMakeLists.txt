@@ -92,6 +92,7 @@ add_library(imgui SHARED
         ${cimgui_SOURCE_DIR}/imgui/imgui_widgets.cpp
         ${cimgui_SOURCE_DIR}/imgui/backends/imgui_impl_opengl3.cpp
         ${cimgui_SOURCE_DIR}/imgui/backends/imgui_impl_sdl3.cpp
+        ${cimgui_SOURCE_DIR}/imgui/backends/imgui_impl_vulkan.cpp
 )
 target_include_directories(imgui PUBLIC ${cimgui_SOURCE_DIR} ${cimgui_SOURCE_DIR}/imgui)
 target_compile_definitions(imgui PUBLIC "-DIMGUI_IMPL_API=extern \"C\" ")
@@ -189,7 +190,8 @@ add_library(PoundGraphics STATIC
         src/graphics/swapchain.c
 )
 target_include_directories(PoundGraphics PUBLIC src/core)
-target_link_libraries(PoundGraphics PUBLIC PoundCore Vulkan::Vulkan SDL3::SDL3 cimgui)
+target_link_libraries(PoundGraphics PUBLIC PoundCore Vulkan::Vulkan SDL3::SDL3 imgui)
+target_compile_definitions(PoundGraphics PUBLIC -DCIMGUI_USE_VULKAN -DCIMGUI_USE_SDL3)
 add_compiler_flags(PoundGraphics)
 add_linker_flags(PoundGraphics)
 add_sanitizers(PoundGraphics)

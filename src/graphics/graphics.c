@@ -15,6 +15,7 @@ graphics_state_t g_graphics_state = { 0 };
 
 POUND_COLD static pound_error_t sdl_window_create(graphics_state_t *POUND_RESTRICT        state,
                                                   const graphics_config_t *POUND_RESTRICT config);
+POUND_COLD static pound_error_t imgui_init(graphics_state_t *POUND_RESTRICT state);
 POUND_COLD static pound_error_t vulkan_instance_create(graphics_state_t *POUND_RESTRICT state);
 POUND_COLD static pound_error_t vulkan_debug_messenger_create(
     graphics_state_t *POUND_RESTRICT state);
@@ -94,6 +95,63 @@ sdl_window_create(graphics_state_t *POUND_RESTRICT        state,
 
     state->drawable_height = (uint32_t)height;
     state->drawable_width  = (uint32_t)width;
+    return state->status;
+}
+
+POUND_COLD static pound_error_t
+imgui_init(graphics_state_t *POUND_RESTRICT state)
+{
+    state->imgui_context = igCreateContext(NULL);
+
+    if (NULL == state->imgui_context)
+    {
+        POUND_LOG_ERROR(&thread_logger, "Aborting function: igCreateContext() returned NULL.");
+        state->status = POUND_ERROR_GRAPHICS_INIT_FAILED;
+        return state->status;
+    }
+
+    if (false == ImGui_ImplSDL3_InitForVulkan(state->window))
+    {
+        POUND_LOG_ERROR(&thread_logger, "Aborting function: ImGui_ImplSDL3_InitForVulkan failed.");
+        state->status = POUND_ERROR_GRAPHICS_INIT_FAILED;
+        return state->status;
+    }
+
+    ImGui_ImplVulkan_InitInfo info    = { 0 };
+    info.Instance                     = state->instance;
+    info.PhysicalDevice               = state->physical_device;
+    info.Device                       = state->device;
+    info.QueueFamily                  = state->capabilities.graphics_queue_family;
+    info.Queue                        = state->graphics_queue;
+    info.PipelineInfoMain.RenderPass  = state->render_pass;
+    info.PipelineInfoMain.Subpass     = 0;
+    info.MinImageCount                = state->swapchain_image_count;
+    info.ImageCount                   = state->swapchain_image_count;
+    info.PipelineInfoMain.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
+    info.DescriptorPoolSize           = 1000;
+
+    if (false == ImGui_ImplVulkan_Init(&info))
+    {
+        POUND_LOG_ERROR(&thread_logger, "Aborting function: ImGui_ImplVulkan_Init failed.");
+        state->status = POUND_ERROR_GRAPHICS_INIT_FAILED;
+        return state->status;
+    }
+
+    ImGuiIO *io = igGetIO_ContextPtr(state->imgui_context);
+
+    if (NULL == io)
+    {
+        POUND_LOG_WARN(&thread_logger,
+                       "ImGui IO is unavailable after initialization, continuing with defaults.");
+    }
+    else
+    {
+        io->ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+        io->ConfigErrorRecovery             = true;
+        io->ConfigErrorRecoveryEnableAssert = false;
+    }
+
+    igStyleColorsDark(NULL);
     return state->status;
 }
 

@@ -1,10 +1,6 @@
 #include "swapchain.h"
 #include "log.h"
 
-#define CIMGUI_DEFINE_ENUMS_AND_STRUCTS
-#include "cimgui.h"
-#include "cimgui_impl.h"
-
 #define GRAPHICS_MAX_SURFACE_FORMATS 32
 #define GRAPHICS_MAX_PRESENT_MODES   8
 
