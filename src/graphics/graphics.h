@@ -146,6 +146,7 @@ POUND_HOT pound_error_t graphics_subsystem_begin_frame(void);
 POUND_HOT pound_error_t graphics_subsystem_end_frame(void);
 POUND_HOT pound_error_t graphics_subsystem_recreate_swapchain(void);
 
-POUND_HOT SDL_Window *graphics_subsystem_get_window(void);
+POUND_HOT SDL_Window   *graphics_subsystem_get_window(void);
+POUND_HOT ImGuiContext *graphics_subsystem_get_imgui_context(void);
 
 #endif // POUND_GRAPHICS_H
