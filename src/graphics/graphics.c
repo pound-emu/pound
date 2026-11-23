@@ -94,7 +94,8 @@ graphics_subsystem_init(const graphics_config_t *POUND_RESTRICT config)
     }
 
     error = vulkan_instance_create(state);
-    if (POUND_UNLIKELY(POUND_SUCCESS != error))
+
+    if (POUND_UNLIKELY(error != POUND_SUCCESS))
     {
         graphics_subsystem_destroy();
         return error;
@@ -419,9 +420,9 @@ vulkan_instance_create(graphics_state_t *POUND_RESTRICT state)
     }
 
     uint32_t   extension_count = sdl_count;
-    const bool validation      = (1 != (state->state_flags & GRAPHICS_STATE_FLAG_VALIDATION));
+    const bool validation      = (state->state_flags & GRAPHICS_STATE_FLAG_VALIDATION) != 0;
 
-    if (validation)
+    if (validation == true)
     {
         if (false == vulkan_is_graphics_layer_available(GRAPHICS_VALIDATION_LAYER_NAME))
         {
@@ -433,37 +434,37 @@ vulkan_instance_create(graphics_state_t *POUND_RESTRICT state)
         }
         *extensions_cursor++ = VK_EXT_DEBUG_UTILS_EXTENSION_NAME;
         ++extension_count;
+    }
 
-        VkApplicationInfo application  = { 0 };
-        application.sType              = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-        application.pApplicationName   = "Pound";
-        application.applicationVersion = VK_MAKE_API_VERSION(0, 0, 1, 0);
-        application.pEngineName        = "Pound";
-        application.engineVersion      = VK_MAKE_API_VERSION(0, 0, 1, 0);
-        application.apiVersion         = VK_API_VERSION_1_1;
+    VkApplicationInfo application  = { 0 };
+    application.sType              = VK_STRUCTURE_TYPE_APPLICATION_INFO;
+    application.pApplicationName   = "Pound";
+    application.applicationVersion = VK_MAKE_API_VERSION(0, 0, 1, 0);
+    application.pEngineName        = "Pound";
+    application.engineVersion      = VK_MAKE_API_VERSION(0, 0, 1, 0);
+    application.apiVersion         = VK_API_VERSION_1_1;
 
-        VkInstanceCreateInfo create_info    = { 0 };
-        create_info.sType                   = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
-        create_info.pApplicationInfo        = &application;
-        create_info.enabledExtensionCount   = extension_count;
-        create_info.ppEnabledExtensionNames = extensions;
-        create_info.enabledLayerCount       = validation ? 1U : 0U;
-        create_info.ppEnabledLayerNames
-            = validation ? &(const char *) { GRAPHICS_VALIDATION_LAYER_NAME } : NULL;
+    VkInstanceCreateInfo create_info    = { 0 };
+    create_info.sType                   = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
+    create_info.pApplicationInfo        = &application;
+    create_info.enabledExtensionCount   = extension_count;
+    create_info.ppEnabledExtensionNames = extensions;
+    create_info.enabledLayerCount       = validation ? 1U : 0U;
+    create_info.ppEnabledLayerNames
+        = validation ? &(const char *) { GRAPHICS_VALIDATION_LAYER_NAME } : NULL;
 
-        const VkResult result = vkCreateInstance(&create_info, NULL, &state->instance);
+    const VkResult result = vkCreateInstance(&create_info, NULL, &state->instance);
 
-        if (POUND_UNLIKELY(VK_SUCCESS != result))
-        {
-            POUND_LOG_ERROR(
-                &thread_logger, "Aborting function: vkCreateInstance returned %d.", (int)result);
-            state->instance = NULL;
-            state->status   = POUND_ERROR_GRAPHICS_INIT_FAILED;
-            return state->status;
-        }
-
+    if (POUND_UNLIKELY(VK_SUCCESS != result))
+    {
+        POUND_LOG_ERROR(
+            &thread_logger, "Aborting function: vkCreateInstance returned %d.", (int)result);
+        state->instance = NULL;
+        state->status   = POUND_ERROR_GRAPHICS_INIT_FAILED;
         return state->status;
     }
+
+    return state->status;
 }
 
 POUND_COLD static pound_error_t
