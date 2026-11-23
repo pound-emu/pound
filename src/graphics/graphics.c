@@ -327,6 +327,8 @@ graphics_subsystem_drain_pipeline(void)
                                                        : POUND_ERROR_GRAPHICS_FENCE_WAIT_FAILED;
         return state->status;
     }
+
+    return state->status;
 }
 
 POUND_HOT SDL_Window *
@@ -486,6 +488,7 @@ vulkan_instance_create(graphics_state_t *POUND_RESTRICT state)
     if (state->status != POUND_SUCCESS)
     {
         POUND_LOG_ERROR(&thread_logger, "Aborting function: status->status != POUND_SUCCESS.");
+        return state->status;
     }
 
     uint32_t           sdl_count      = 0;
