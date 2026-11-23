@@ -17,6 +17,9 @@ graphics_state_t g_graphics_state = { 0 };
 POUND_COLD static pound_error_t sdl_window_create(graphics_state_t *POUND_RESTRICT        state,
                                                   const graphics_config_t *POUND_RESTRICT config);
 POUND_COLD static pound_error_t imgui_init(graphics_state_t *POUND_RESTRICT state);
+POUND_HOT static void           imgui_display_sync(graphics_state_t *POUND_RESTRICT state);
+POUND_HOT static pound_error_t  framebuffer_sync(graphics_state_t *POUND_RESTRICT state);
+
 POUND_COLD static pound_error_t vulkan_instance_create(graphics_state_t *POUND_RESTRICT state);
 POUND_COLD static pound_error_t vulkan_debug_messenger_create(
     graphics_state_t *POUND_RESTRICT state);
@@ -362,8 +365,8 @@ sdl_window_create(graphics_state_t *POUND_RESTRICT        state,
     }
 
     state->window = SDL_CreateWindow(config->window_title,
-                                     (int)config->window_height,
                                      (int)config->window_width,
+                                     (int)config->window_height,
                                      SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE
                                          | SDL_WINDOW_HIGH_PIXEL_DENSITY | SDL_WINDOW_HIDDEN);
 
