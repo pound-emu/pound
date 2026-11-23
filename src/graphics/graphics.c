@@ -694,6 +694,7 @@ vulkan_physical_device_select(graphics_state_t *POUND_RESTRICT state)
 
         if (0 == family_count)
         {
+            ++device_cursor;
             continue;
         }
 
@@ -733,6 +734,7 @@ vulkan_physical_device_select(graphics_state_t *POUND_RESTRICT state)
                                (int)present,
                                i,
                                f);
+                ++family_cursor;
                 continue;
             }
 
@@ -740,15 +742,19 @@ vulkan_physical_device_select(graphics_state_t *POUND_RESTRICT state)
             {
                 present_family = f;
             }
+
+            ++family_cursor;
         }
 
         if (UINT32_MAX == graphics_family || UINT32_MAX == present_family)
         {
+            ++device_cursor;
             continue;
         }
 
         if (false == vulkan_is_device_extension_supported(device, VK_KHR_SWAPCHAIN_EXTENSION_NAME))
         {
+            ++device_cursor;
             continue;
         }
 
@@ -757,6 +763,7 @@ vulkan_physical_device_select(graphics_state_t *POUND_RESTRICT state)
 
         if (result != VK_SUCCESS || 0 == format_count)
         {
+            ++device_cursor;
             continue;
         }
 
@@ -778,11 +785,12 @@ vulkan_physical_device_select(graphics_state_t *POUND_RESTRICT state)
 
         // Prefer discrete GPUs, then larger device-local heaps.
         uint32_t score
-            = (VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU == properties.deviceType) ? 1000000U : 0U;
+            = VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU == properties.deviceType ? 1000000U : 0U;
         score += (uint32_t)(device_local / (1024ULL * 1024ULL * 256ULL));
 
         if (score <= best_score && NULL != best_device)
         {
+            ++device_cursor;
             continue;
         }
 
@@ -809,6 +817,7 @@ vulkan_physical_device_select(graphics_state_t *POUND_RESTRICT state)
         best_score        = score;
         best_capabilities = capabilities;
         (void)memcpy(best_name, properties.deviceName, GRAPHICS_DEVICE_NAME_CAPACITY);
+        ++device_cursor;
     }
 
     if (NULL == best_device)
