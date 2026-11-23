@@ -367,8 +367,7 @@ graphics_subsystem_begin_frame(void)
 
     if (POUND_UNLIKELY((state->state_flags & GRAPHICS_STATE_FLAG_MINIMIZED) != 0))
     {
-        state->status = POUND_ERROR_GRAPHICS_ZERO_EXTENT;
-        return state->status;
+        return POUND_ERROR_GRAPHICS_ZERO_EXTENT;
     }
 
     if (POUND_UNLIKELY(NULL == state->swapchain))
@@ -645,8 +644,8 @@ graphics_subsystem_recreate_swapchain(void)
     {
         state->state_flags |= GRAPHICS_STATE_FLAG_MINIMIZED;
         POUND_LOG_DEBUG(&thread_logger, "Window minimized, deferring swapchain recreation.");
-        state->status = POUND_ERROR_GRAPHICS_ZERO_EXTENT;
-        return state->status;
+        return POUND_ERROR_GRAPHICS_ZERO_EXTENT;
+        ;
     }
 
     state->drawable_width  = (uint32_t)width;

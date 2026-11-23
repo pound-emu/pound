@@ -147,7 +147,7 @@ POUND_HOT pound_error_t graphics_subsystem_end_frame(void);
 POUND_HOT pound_error_t graphics_subsystem_recreate_swapchain(void);
 
 /// Returns true if ImGui consumed the event.
-POUND_HOT bool           graphics_subsystem_process_event(const SDL_Event *POUND_RESTRICT event);
+POUND_HOT bool           graphics_subsystem_process_event(SDL_Event *restrict event);
 POUND_COLD pound_error_t graphics_subsystem_drain_pipeline(void);
 
 POUND_HOT SDL_Window   *graphics_subsystem_get_window(void);

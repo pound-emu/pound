@@ -264,9 +264,9 @@ graphics_subsystem_destroy(void)
 }
 
 POUND_HOT bool
-graphics_subsystem_process_event(const SDL_Event *restrict event)
+graphics_subsystem_process_event(SDL_Event *restrict event)
 {
-    const graphics_state_t *POUND_RESTRICT state = &g_graphics_state;
+    graphics_state_t *POUND_RESTRICT state = &g_graphics_state;
 
     if (POUND_UNLIKELY(NULL == event))
     {
@@ -277,6 +277,23 @@ graphics_subsystem_process_event(const SDL_Event *restrict event)
     if (POUND_UNLIKELY(false == state->initialized))
     {
         return false;
+    }
+
+    switch (event->type)
+    {
+        case SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED:
+        case SDL_EVENT_WINDOW_MAXIMIZED:
+        case SDL_EVENT_WINDOW_RESTORED: {
+            state->state_flags |= GRAPHICS_STATE_FLAG_SWAPCHAIN_DIRTY;
+            break;
+        }
+        case SDL_EVENT_WINDOW_MINIMIZED: {
+            state->state_flags |= GRAPHICS_STATE_FLAG_MINIMIZED;
+            break;
+        }
+        default: {
+            break;
+        }
     }
 
     return ImGui_ImplSDL3_ProcessEvent(event);

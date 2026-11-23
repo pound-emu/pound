@@ -222,7 +222,7 @@ gui_render_frame(void *gui_state)
         panel_count = 0;
     }
 
-    if (POUND_UNLIKELY(panel_count > 0))
+    if (POUND_UNLIKELY(panel_count > GUI_PANEL_CAPACITY))
     {
         panel_count = GUI_PANEL_CAPACITY;
     }
