@@ -508,6 +508,107 @@ graphics_subsystem_begin_frame(void)
 }
 
 POUND_HOT pound_error_t
+graphics_subsystem_end_frame(void)
+{
+    graphics_state_t *POUND_RESTRICT state = &g_graphics_state;
+
+    if (POUND_UNLIKELY(false == state->initialized))
+    {
+        POUND_LOG_ERROR(&thread_logger,
+                        "Aborting function: graphics subsystem is not initialized.");
+        return POUND_ERROR_GRAPHICS_NOT_INITIALIZED;
+    }
+    if (POUND_UNLIKELY(0 == (state->state_flags & GRAPHICS_STATE_FLAG_FRAME_ACTIVE)))
+    {
+        POUND_LOG_ERROR(&thread_logger,
+                        "Aborting function: no frame is active, call begin_frame first.");
+        state->status = POUND_ERROR_GRAPHICS_END_FRAME_FAILED;
+        return state->status;
+    }
+
+    graphics_frame_t *POUND_RESTRICT frame = &state->frames[state->current_frame_slot];
+    const graphics_swapchain_image_t *POUND_RESTRICT image
+        = &state->swapchain_images[frame->image_index];
+
+    igRender();
+    ImGui_ImplVulkan_RenderDrawData(igGetDrawData(), frame->command_buffer, NULL);
+    vkCmdEndRenderPass(frame->command_buffer);
+    VkResult result = vkEndCommandBuffer(frame->command_buffer);
+
+    if (POUND_UNLIKELY(result != VK_SUCCESS))
+    {
+        POUND_LOG_ERROR(
+            &thread_logger, "Aborting function: vkEndCommandBuffer returned %d.", (int)result);
+        state->state_flags &= (uint32_t)~GRAPHICS_STATE_FLAG_FRAME_ACTIVE;
+        state->status = POUND_ERROR_GRAPHICS_COMMAND_BUFFER_END_FAILED;
+        return state->status;
+    }
+
+    const VkPipelineStageFlags wait_stage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+
+    VkSubmitInfo submit_info         = { 0 };
+    submit_info.sType                = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+    submit_info.waitSemaphoreCount   = 1;
+    submit_info.pWaitSemaphores      = &frame->image_available_semaphore;
+    submit_info.pWaitDstStageMask    = &wait_stage;
+    submit_info.commandBufferCount   = 1;
+    submit_info.pCommandBuffers      = &frame->command_buffer;
+    submit_info.signalSemaphoreCount = 1;
+    submit_info.pSignalSemaphores    = &image->render_finished_semaphore;
+
+    result = vkQueueSubmit(state->graphics_queue, 1, &submit_info, frame->in_flight_fence);
+
+    if (POUND_UNLIKELY(result != VK_SUCCESS))
+    {
+        POUND_LOG_ERROR(
+            &thread_logger, "Aborting function: vkQueueSubmit returned %d.", (int)result);
+        state->state_flags &= (uint32_t)~GRAPHICS_STATE_FLAG_FRAME_ACTIVE;
+        state->status = (VK_ERROR_DEVICE_LOST == result) ? POUND_ERROR_GRAPHICS_DEVICE_LOST
+                                                         : POUND_ERROR_GRAPHICS_QUEUE_SUBMIT_FAILED;
+        return state->status;
+    }
+
+    ++state->submit_count;
+    ++frame->submission_index;
+
+    VkPresentInfoKHR present_info   = { 0 };
+    present_info.sType              = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+    present_info.waitSemaphoreCount = 1;
+    present_info.pWaitSemaphores    = &image->render_finished_semaphore;
+    present_info.swapchainCount     = 1;
+    present_info.pSwapchains        = &state->swapchain;
+    present_info.pImageIndices      = &frame->image_index;
+
+    result = vkQueuePresentKHR(state->present_queue, &present_info);
+
+    if (VK_ERROR_OUT_OF_DATE_KHR == result || VK_SUBOPTIMAL_KHR == result)
+    {
+        state->state_flags |= GRAPHICS_STATE_FLAG_SWAPCHAIN_DIRTY;
+        POUND_LOG_DEBUG(
+            &thread_logger, "Swapchain needs recreation after present (%d).", (int)result);
+    }
+    else if (POUND_UNLIKELY(result != VK_SUCCESS))
+    {
+        POUND_LOG_ERROR(
+            &thread_logger, "Aborting function: vkQueuePresentKHR returned %d.", (int)result);
+        state->state_flags &= (uint32_t)~GRAPHICS_STATE_FLAG_FRAME_ACTIVE;
+        state->status = (VK_ERROR_DEVICE_LOST == result)
+                            ? POUND_ERROR_GRAPHICS_DEVICE_LOST
+                            : POUND_ERROR_GRAPHICS_QUEUE_PRESENT_FAILED;
+        return state->status;
+    }
+    else
+    {
+        ++state->present_count;
+    }
+
+    state->state_flags &= (uint32_t)~GRAPHICS_STATE_FLAG_FRAME_ACTIVE;
+    state->current_frame_slot = (state->current_frame_slot + 1U) % GRAPHICS_FRAMES_IN_FLIGHT;
+    ++state->frame_index;
+    return state->status;
+}
+
+POUND_HOT pound_error_t
 graphics_subsystem_recreate_swapchain(void)
 {
     graphics_state_t *POUND_RESTRICT state = &g_graphics_state;
