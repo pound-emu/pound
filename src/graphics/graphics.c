@@ -623,7 +623,7 @@ vulkan_physical_device_select(graphics_state_t *POUND_RESTRICT state)
             const VkResult present
                 = vkGetPhysicalDeviceSurfaceSupportKHR(device, f, state->surface, &supported);
 
-            if (VK_SUCCESS != present)
+            if (present != VK_SUCCESS)
             {
                 POUND_LOG_WARN(&thread_logger,
                                "vkGetPhysicalDeviceSurfaceSupportKHR() returned %d for device %u "
@@ -998,7 +998,7 @@ POUND_COLD static bool
 vulkan_is_device_extension_supported(VkPhysicalDevice device, const char *POUND_RESTRICT name)
 {
     uint32_t count  = 0U;
-    VkResult result = vkEnumerateDeviceExtensionProperties(device, name, &count, NULL);
+    VkResult result = vkEnumerateDeviceExtensionProperties(device, NULL, &count, NULL);
 
     if (result != VK_SUCCESS)
     {
