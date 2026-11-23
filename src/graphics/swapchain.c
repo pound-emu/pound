@@ -281,6 +281,56 @@ swapchain_create(graphics_state_t *POUND_RESTRICT state)
     return state->status;
 }
 
+POUND_HOT void
+swapchain_destroy(graphics_state_t *POUND_RESTRICT state)
+{
+    if (NULL == state)
+    {
+        POUND_LOG_ERROR(&thread_logger, "Aborting function: state is NULL.");
+        return;
+    }
+
+    if (NULL == state->device)
+    {
+        POUND_LOG_ERROR(&thread_logger, "Aborting function: state->device is NULL.");
+        return;
+    }
+
+    graphics_swapchain_image_t *POUND_RESTRICT swapchain_image_cursor = state->swapchain_images;
+
+    for (uint32_t i = 0; i < GRAPHICS_SWAPCHAIN_IMAGE_CAPACITY; ++i)
+    {
+        if (NULL != swapchain_image_cursor->render_finished_semaphore)
+        {
+            vkDestroySemaphore(
+                state->device, swapchain_image_cursor->render_finished_semaphore, NULL);
+            swapchain_image_cursor->render_finished_semaphore = NULL;
+        }
+        if (NULL != swapchain_image_cursor->framebuffer)
+        {
+            vkDestroyFramebuffer(state->device, swapchain_image_cursor->framebuffer, NULL);
+            swapchain_image_cursor->framebuffer = NULL;
+        }
+        if (NULL != swapchain_image_cursor->image_view)
+        {
+            vkDestroyImageView(state->device, swapchain_image_cursor->image_view, NULL);
+            swapchain_image_cursor->image_view = NULL;
+        }
+
+        // The VkImage is owned by the swapchain, not by us.
+        swapchain_image_cursor->image = NULL;
+        ++swapchain_image_cursor;
+    }
+
+    if (state->render_pass != NULL)
+    {
+        vkDestroyRenderPass(state->device, state->render_pass, NULL);
+        state->render_pass = NULL;
+    }
+
+    state->swapchain_image_count = 0;
+}
+
 POUND_HOT static pound_error_t
 surface_format_select(graphics_state_t *POUND_RESTRICT state)
 {
