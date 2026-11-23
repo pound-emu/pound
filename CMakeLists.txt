@@ -222,8 +222,10 @@ message(STATUS "[Pound] Configuring Pound Executable...")
 
 add_executable(${PROJECT_NAME} src/main.c)
 target_include_directories(${PROJECT_NAME} PRIVATE src/)
-target_link_libraries(${PROJECT_NAME} PRIVATE mimalloc PoundCore PoundJit PoundGui Ballistic::Engine SDL3::SDL3 imgui)
-target_compile_definitions(${PROJECT_NAME} PUBLIC -DCIMGUI_USE_OPENGL3 -DCIMGUI_USE_SDL3)
+target_link_libraries(${PROJECT_NAME} PRIVATE mimalloc PoundCore PoundJit PoundGraphics PoundGui Ballistic::Engine
+        SDL3::SDL3
+        imgui)
+target_compile_definitions(${PROJECT_NAME} PUBLIC -DCIMGUI_USE_VULKAN -DCIMGUI_USE_SDL3)
 add_compiler_flags(${PROJECT_NAME})
 add_linker_flags(${PROJECT_NAME})
 add_sanitizers(${PROJECT_NAME})

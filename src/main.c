@@ -1,5 +1,6 @@
 #include <mimalloc.h>
 
+#include "graphics/graphics.h"
 #include "gui/gui.h"
 #include "jit/guest_memory.h"
 #include "jit/jit_engine.h"
@@ -26,27 +27,20 @@
 
 typedef struct
 {
-    SDL_Window   *window;
-    SDL_GLContext gl_context;
-    ImGuiContext *imgui_context;
-    bool          running;
-    bool          gui_reload_request;
-    bool          gui_frozen;
-    char          gui_frozen_reason[GUI_FREEZE_REASON_SIZE];
-    char          pad[5];
-    char          gui_source_path[MAX_PATH];
-    uint64_t      gui_source_time;
-    uint64_t      gui_pending_time;
-    uint64_t      gui_pending_since;
-    uint64_t      gui_last_reload_attempt;
-    uint64_t      gui_next_retry_ticks;
-    gui_plugin_t  gui;
+    bool         running;
+    bool         gui_reload_request;
+    bool         gui_frozen;
+    char         gui_frozen_reason[GUI_FREEZE_REASON_SIZE];
+    char         pad[5];
+    char         gui_source_path[MAX_PATH];
+    uint64_t     gui_source_time;
+    uint64_t     gui_pending_time;
+    uint64_t     gui_pending_since;
+    uint64_t     gui_last_reload_attempt;
+    uint64_t     gui_next_retry_ticks;
+    gui_plugin_t gui;
 } app_t;
 
-static bool app_video_init(app_t *app);
-static bool app_video_shutdown(app_t *app);
-static bool app_gui_init(app_t *app);
-static bool app_gui_shutdown(app_t *app);
 static bool app_gui_update(app_t *app, bool force);
 static void app_gui_freeze(app_t *app, const char *reason);
 static void app_gui_unfreeze(app_t *app);
@@ -92,6 +86,27 @@ main(void)
 
     (void)memory_subsystem_set_bucket(MEMORY_BUCKET_UI);
 
+    const graphics_config_t graphics_config = {
+        .window_title             = "Pound Emulator",
+        .window_width             = 1270,
+        .window_height            = 720,
+        .enable_validation_layers = false,
+        .enable_fifo_vsync        = true,
+    };
+
+    if (POUND_UNLIKELY(POUND_SUCCESS != graphics_subsystem_init(&graphics_config)))
+    {
+        POUND_LOG_ERROR(&thread_logger, "Aborting process: graphics_subsystem_init failed.");
+        jit_engine_stop();
+        jit_engine_join();
+        jit_engine_destroy();
+        (void)guest_memory_destroy(&guest_memory);
+        memory_subsystem_destroy();
+        return EXIT_FAILURE;
+    }
+
+    SDL_ShowWindow(graphics_subsystem_get_window());
+
     if (!SDL_Init(SDL_INIT_VIDEO))
     {
         POUND_LOG_ERROR(&thread_logger,
@@ -102,21 +117,6 @@ main(void)
 
     app_t app   = { 0 };
     app.running = true;
-
-    if (false == app_video_init(&app))
-    {
-        app_video_shutdown(&app);
-        SDL_Quit();
-        return EXIT_FAILURE;
-    }
-
-    if (false == app_gui_init(&app))
-    {
-        app_gui_shutdown(&app);
-        app_video_shutdown(&app);
-        SDL_Quit();
-        return EXIT_FAILURE;
-    }
 
     if (false == app_hot_reload_init(&app))
     {
@@ -133,23 +133,6 @@ main(void)
             "Initial GUI load failed. GUI will remain frozen until hot reload succeeds.");
     }
 
-    if (NULL == app.window)
-    {
-        POUND_LOG_ERROR(&thread_logger, "Aborting process: window is missing before first show.");
-        app_hot_reload_shutdown(&app);
-        app_gui_shutdown(&app);
-        app_video_shutdown(&app);
-        SDL_Quit();
-        return EXIT_FAILURE;
-    }
-
-    SDL_ShowWindow(app.window);
-
-    if ((SDL_GetWindowFlags(app.window) & SDL_WINDOW_HIDDEN) != 0)
-    {
-        POUND_LOG_WARN(&thread_logger, "Window was shown but remains hidden, continuing anyway.");
-    }
-
     POUND_LOG_INFO(&thread_logger, "Starting main loop.");
 
     while (app.running)
@@ -159,254 +142,15 @@ main(void)
         app_render_frame(&app);
     }
 
-    app_gui_shutdown(&app);
-    app_video_shutdown(&app);
-
     jit_engine_stop();
     jit_engine_join();
     jit_engine_destroy();
     guest_memory_destroy(&guest_memory);
     memory_subsystem_destroy();
+    graphics_subsystem_destroy();
     SDL_Quit();
 
     return EXIT_SUCCESS;
-}
-
-static bool
-app_video_init(app_t *app)
-{
-    if (NULL == app)
-    {
-        POUND_LOG_ERROR(&thread_logger, "Aborting function: app context is NULL.");
-        return false;
-    }
-
-    if (0 == SDL_WasInit(SDL_INIT_VIDEO))
-    {
-        POUND_LOG_WARN(&thread_logger,
-                       "SDL video subsystem was not initialised. Attempting SDL_InitSubSystem.");
-
-        if (!SDL_InitSubSystem(SDL_INIT_VIDEO))
-        {
-            POUND_LOG_ERROR(
-                &thread_logger,
-                "Aborting function: failed to initialise SDL video subsystem because %s.",
-                SDL_GetError());
-            return false;
-        }
-    }
-
-    POUND_LOG_DEBUG(&thread_logger, "Configuring video subsystem...");
-    SDL_SetHint(SDL_HINT_APP_NAME, "Pound Emulator");
-
-    if (!SDL_SetHint(SDL_HINT_APP_NAME, "Pound Emulator"))
-    {
-        POUND_LOG_WARN(
-            &thread_logger, "Failed to set SDL application name because %s.", SDL_GetError());
-    }
-
-    const struct
-    {
-        SDL_GLAttr  attr;
-        int         value;
-        const char *name;
-    } gl_attributes[] = {
-        { .attr  = SDL_GL_CONTEXT_MAJOR_VERSION,
-          .value = 3,
-          .name  = "SDL_GL_CONTEXT_MAJOR_VERSION" },
-        { .attr  = SDL_GL_CONTEXT_MINOR_VERSION,
-          .value = 3,
-          .name  = "SDL_GL_CONTEXT_MINOR_VERSION" },
-        { .attr  = SDL_GL_CONTEXT_PROFILE_MASK,
-          .value = SDL_GL_CONTEXT_PROFILE_CORE,
-          .name  = "SDL_GL_CONTEXT_PROFILE_MASK" },
-        { .attr  = SDL_GL_CONTEXT_FLAGS,
-          .value = SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG,
-          .name  = "SDL_GL_CONTEXT_FLAGS" },
-        { .attr = SDL_GL_DOUBLEBUFFER, .value = 1, .name = "SDL_GL_DOUBLEBUFFER" },
-        { .attr = SDL_GL_DEPTH_SIZE, .value = 24, .name = "SDL_GL_DEPTH_SIZE" },
-        { .attr = SDL_GL_STENCIL_SIZE, .value = 8, .name = "SDL_GL_STENCIL_SIZE" },
-    };
-
-    for (size_t i = 0; i < sizeof(gl_attributes) / sizeof(gl_attributes[0]); ++i)
-    {
-        if (!SDL_GL_SetAttribute(gl_attributes[i].attr, gl_attributes[i].value))
-        {
-            POUND_LOG_WARN(&thread_logger,
-                           "Failed to set OpenGL attribute %s because %s.",
-                           gl_attributes[i].name,
-                           SDL_GetError());
-        }
-    }
-
-    app->window = SDL_CreateWindow("Pound Emulator",
-                                   1270,
-                                   720,
-                                   SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE
-                                       | SDL_WINDOW_HIGH_PIXEL_DENSITY | SDL_WINDOW_HIDDEN);
-
-    if (NULL == app->window)
-    {
-        POUND_LOG_ERROR(&thread_logger,
-                        "Aborting function: failed to create window because %s.",
-                        SDL_GetError());
-        return false;
-    }
-
-    app->gl_context = SDL_GL_CreateContext(app->window);
-
-    if (NULL == app->gl_context)
-    {
-        POUND_LOG_ERROR(&thread_logger,
-                        "Aborting function: failed to create OpenGL context because %s.",
-                        SDL_GetError());
-        return false;
-    }
-
-    if (false == SDL_GL_MakeCurrent(app->window, app->gl_context))
-    {
-        POUND_LOG_ERROR(&thread_logger,
-                        "Aborting function: failed to make OpenGL context current because %s.",
-                        SDL_GetError());
-        return false;
-    }
-
-    if (imgl3wInit() != GL3W_OK)
-    {
-        POUND_LOG_ERROR(&thread_logger,
-                        "Aborting function: failed to initialise OpenGL loader (imgl3wInit).");
-        return false;
-    }
-
-    if (false == SDL_GL_SetSwapInterval(1))
-    {
-        POUND_LOG_WARN(&thread_logger,
-                       "Aborting function: failed to set swap interval because %s.",
-                       SDL_GetError());
-    }
-
-    POUND_LOG_INFO(&thread_logger, "Successfully configured video subsystem.");
-    return true;
-}
-
-bool
-app_video_shutdown(app_t *app)
-{
-    if (NULL == app)
-    {
-        POUND_LOG_ERROR(&thread_logger, "Aborting function: app context is NULL.");
-        return false;
-    }
-
-    if (NULL == app->gl_context)
-    {
-        POUND_LOG_ERROR(&thread_logger, "Aborting function: OpenGL context is NULL.");
-        return false;
-    }
-
-    SDL_GL_MakeCurrent(app->window, NULL);
-    SDL_GL_DestroyContext(app->gl_context);
-    app->gl_context = NULL;
-
-    if (NULL == app->window)
-    {
-        POUND_LOG_ERROR(&thread_logger, "Aborting function: SDL window is NULL.");
-        return false;
-    }
-
-    SDL_DestroyWindow(app->window);
-    app->window = NULL;
-    return true;
-}
-
-bool
-app_gui_init(app_t *app)
-{
-    if (NULL == app)
-    {
-        POUND_LOG_ERROR(&thread_logger, "Aborting function: app context is NULL.");
-        return false;
-    }
-
-    if (NULL == app->window)
-    {
-        POUND_LOG_ERROR(&thread_logger, "Aborting function: SDL window is NULL.");
-        return false;
-    }
-
-    if (NULL == app->gl_context)
-    {
-        POUND_LOG_ERROR(&thread_logger, "Aborting function: OpenGL context is NULL.");
-        return false;
-    }
-
-    POUND_LOG_DEBUG(&thread_logger, "Configuring GUI subsystem...");
-    app->imgui_context = igCreateContext(NULL);
-
-    if (NULL == app->imgui_context)
-    {
-        POUND_LOG_ERROR(&thread_logger, "Aborting function: failed to create ImGui context.");
-        return false;
-    }
-
-    if (false == ImGui_ImplSDL3_InitForOpenGL(app->window, app->gl_context))
-    {
-        POUND_LOG_ERROR(&thread_logger,
-                        "Aborting function: failed to initialize ImGui SDL3 backend.");
-        igDestroyContext(app->imgui_context);
-        app->imgui_context = NULL;
-        return false;
-    }
-
-    if (false == ImGui_ImplOpenGL3_Init("#version 330"))
-    {
-        POUND_LOG_ERROR(&thread_logger, "Aborting function: failed to initialize OpenGL3 backend.");
-        ImGui_ImplOpenGL3_Shutdown();
-        igDestroyContext(app->imgui_context);
-        app->imgui_context = NULL;
-        return false;
-    }
-
-    ImGuiIO *io = igGetIO_ContextPtr(app->imgui_context);
-
-    if (NULL == io)
-    {
-        POUND_LOG_WARN(&thread_logger,
-                       "ImGui IO is unavailable after initialisation, continuing with defaults.");
-    }
-    else
-    {
-        io->ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
-        io->ConfigErrorRecovery             = true;
-        io->ConfigErrorRecoveryEnableAssert = false;
-    }
-
-    igStyleColorsDark(NULL);
-    POUND_LOG_INFO(&thread_logger, "Successfully configured GUI subsystem.");
-    return true;
-}
-
-bool
-app_gui_shutdown(app_t *app)
-{
-    if (NULL == app)
-    {
-        POUND_LOG_ERROR(&thread_logger, "Aborting function: app context is NULL.");
-        return false;
-    }
-
-    if (NULL == app->imgui_context)
-    {
-        POUND_LOG_ERROR(&thread_logger, "Aborting function: ImGui context is NULL.");
-        return false;
-    }
-
-    ImGui_ImplOpenGL3_Shutdown();
-    ImGui_ImplSDL3_Shutdown();
-    igDestroyContext(app->imgui_context);
-    gui_plugin_destroy(&app->gui);
-    app->imgui_context = NULL;
-    return true;
 }
 
 bool
@@ -718,17 +462,11 @@ app_poll_events(app_t *app)
         return;
     }
 
-    if (NULL == app->window)
-    {
-        POUND_LOG_ERROR(&thread_logger, "Aborting function: SDL window is NULL.");
-        return;
-    }
-
     SDL_Event event;
 
     while (SDL_PollEvent(&event))
     {
-        ImGui_ImplSDL3_ProcessEvent(&event);
+        graphics_subsystem_process_event(&event);
 
         switch (event.type)
         {
@@ -739,7 +477,7 @@ app_poll_events(app_t *app)
             }
 
             case SDL_EVENT_WINDOW_CLOSE_REQUESTED: {
-                if (event.window.windowID == SDL_GetWindowID(app->window))
+                if (event.window.windowID == SDL_GetWindowID(graphics_subsystem_get_window()))
                 {
                     POUND_LOG_INFO(&thread_logger, "Received window close request.");
                     app->running = false;
@@ -772,20 +510,6 @@ app_render_frame(app_t *app)
         return;
     }
 
-    if (POUND_UNLIKELY(NULL == app->window))
-    {
-        POUND_LOG_ERROR(&thread_logger, "Aborting function: SDL window is NULL.");
-        app->running = false;
-        return;
-    }
-
-    if (POUND_UNLIKELY(NULL == app->gl_context))
-    {
-        POUND_LOG_ERROR(&thread_logger, "Aborting function: OpenGL context is NULL.");
-        app->running = false;
-        return;
-    }
-
     if (POUND_UNLIKELY(false == app_gui_update(app, app->gui_reload_request)))
     {
         if (false == app->gui_frozen)
@@ -796,31 +520,32 @@ app_render_frame(app_t *app)
 
     app->gui_reload_request = false;
 
-    ImGui_ImplOpenGL3_NewFrame();
-    ImGui_ImplSDL3_NewFrame();
-    igNewFrame();
+    const pound_error_t frame_error = graphics_subsystem_begin_frame();
 
-    if (app->gui_frozen)
+    if (POUND_SUCCESS == frame_error)
     {
-        app_render_frozen_overlay(app);
+        if (app->gui_frozen)
+        {
+            app_render_frozen_overlay(app);
+        }
+        else if (app->gui.loaded && app->gui.gui_context && app->gui.exports.render_frame)
+        {
+            app->gui.exports.render_frame(app->gui.gui_context);
+        }
+        else
+        {
+            app_gui_freeze(app, "GUI plugin state became invalid.");
+            app_render_frozen_overlay(app);
+        }
+
+        (void)graphics_subsystem_end_frame();
     }
-    else if (app->gui.loaded && app->gui.gui_context && app->gui.exports.render_frame)
+    else if (POUND_ERROR_GRAPHICS_SWAPCHAIN_OUT_OF_DATE != frame_error
+             && POUND_ERROR_GRAPHICS_ZERO_EXTENT != frame_error)
     {
-        app->gui.exports.render_frame(app->gui.gui_context);
+        POUND_LOG_ERROR(&thread_logger, "Fatal graphics error %d, stopping.", (int)frame_error);
+        app->running = false;
     }
-    else
-    {
-        app_gui_freeze(app, "GUI plugin state became invalid.");
-        app_render_frozen_overlay(app);
-    }
-
-    igRender();
-
-    glClearColor(0.06f, 0.06f, 0.06f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
-
-    ImGui_ImplOpenGL3_RenderDrawData(igGetDrawData());
-    SDL_GL_SwapWindow(app->window);
 }
 
 void
@@ -832,13 +557,7 @@ app_render_frozen_overlay(app_t *app)
         return;
     }
 
-    if (NULL == app->imgui_context)
-    {
-        POUND_LOG_ERROR(&thread_logger, "Aborting function: ImGui context is NULL.");
-        return;
-    }
-
-    ImGuiIO *io = igGetIO_ContextPtr(app->imgui_context);
+    ImGuiIO *io = igGetIO_ContextPtr(graphics_subsystem_get_imgui_context());
 
     if (NULL == io)
     {
